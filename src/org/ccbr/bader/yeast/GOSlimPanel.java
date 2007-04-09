@@ -85,26 +85,26 @@ public class GOSlimPanel extends JPanel {
 //		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
 		this.setLayout(new GridLayout(8,1));
 		
-		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController);
+		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel(GONamespace.MolFun.name + " Coverage",molFunController);
 		bioProSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController);
 		celComSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController);
 		this.add(molFunSubPanel);
 		this.add(bioProSubPanel);
 		this.add(celComSubPanel);
 		
-		for(GONamespace namespace: GONamespace.values()) {
 
-		}
 		
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
 	}
+	
+	//public GOSlimPanel(Map<GONa>)
 
 	Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
 	Map<GONamespace,GOSlimmerController> namespaceController = new HashMap<GONamespace, GOSlimmerController>();
 	
-	private enum GONamespace{
+	public enum GONamespace{
 		MolFun("Molecular Function"),
 		BioPro("Biological Process"),
 		CelCom("Cellular Component");
