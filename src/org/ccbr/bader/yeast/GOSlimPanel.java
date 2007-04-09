@@ -7,6 +7,8 @@ import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.HashMap;
+import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -90,10 +92,36 @@ public class GOSlimPanel extends JPanel {
 		this.add(bioProSubPanel);
 		this.add(celComSubPanel);
 		
+		for(GONamespace namespace: GONamespace.values()) {
+
+		}
+		
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
 //		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
 	}
+
+	Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
+	Map<GONamespace,GOSlimmerController> namespaceController = new HashMap<GONamespace, GOSlimmerController>();
+	
+	private enum GONamespace{
+		MolFun("Molecular Function"),
+		BioPro("Biological Process"),
+		CelCom("Cellular Component");
+		
+		private String name;
+		
+		GONamespace(String name) {
+			this.name = name;
+		}
+
+		public String getName() {
+			return name;
+		}
+	
+	}
+	
+	private static final DecimalFormat coverageTextformatter = new DecimalFormat("00.00%");
 	
 	private class GOSlimmerNamespaceSubpanel extends JPanel{
 		
@@ -108,8 +136,17 @@ public class GOSlimPanel extends JPanel {
 			this.setLayout(new FlowLayout(FlowLayout.LEADING));
 			this.statBean = controller.getStatBean();
 			//String coverageStatisticText = String.v statBean.fractionCovered();
-			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered()));
+			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
+				
+				@Override
+				public void setText(String arg0) {
+					// TODO Auto-generated method stub
+					super.setText(coverageTextformatter.format(arg0));
+				}
+				
+			};
 			this.add(coverageStatisticLabel);
+			
 		}
 
 		public JLabel getCoverageStatisticLabel() {
@@ -123,6 +160,8 @@ public class GOSlimPanel extends JPanel {
 
 		
 	}
+	
+	
 	
 	
 

@@ -6,6 +6,7 @@ import giny.view.NodeView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.text.DecimalFormat;
 import java.util.List;
 
 import javax.swing.JButton;
@@ -206,8 +207,11 @@ public class GOSlimmerController  {
 		updateViewStatistics();
 	}
 	
+	
+	DecimalFormat formatter = new DecimalFormat("00.00%");
 	private void updateViewStatistics() {
-		this.coverageStatisticViewLabel.setText(String.valueOf(statBean.fractionCovered()));
+
+		this.coverageStatisticViewLabel.setText(String.valueOf(formatter.format(statBean.fractionCovered())));
 	}
 
 	public GOSlimmerCoverageStatBean getStatBean() {
