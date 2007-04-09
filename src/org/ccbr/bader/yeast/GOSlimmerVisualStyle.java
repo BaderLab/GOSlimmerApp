@@ -1,6 +1,7 @@
 package org.ccbr.bader.yeast;
 
 import java.awt.Color;
+import java.awt.Shape;
 import java.util.List;
 
 import giny.model.Node;
@@ -11,6 +12,7 @@ import cytoscape.visual.EdgeAppearanceCalculator;
 import cytoscape.visual.GlobalAppearanceCalculator;
 import cytoscape.visual.NodeAppearance;
 import cytoscape.visual.NodeAppearanceCalculator;
+import cytoscape.visual.ShapeNodeRealizer;
 import cytoscape.visual.VisualStyle;
 
 public class GOSlimmerVisualStyle extends VisualStyle {
@@ -59,6 +61,7 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 			
 			nodeAppearance.setHeight(nodeDim);
 			nodeAppearance.setWidth(nodeDim);
+			nodeAppearance.setShape(ShapeNodeRealizer.ELLIPSE);
 			
 			if (isSelectedForSlimSet(node)) { 
 				nodeAppearance.setFillColor(selectedNodeColor);
@@ -95,6 +98,8 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 			appr.setLabel(node.getIdentifier());
 			appr.setHeight(nodeDim);
 			appr.setWidth(nodeDim);
+			appr.setShape(ShapeNodeRealizer.ELLIPSE);
+			
 			
 			if (isSelectedForSlimSet(node)) { 
 				appr.setFillColor(selectedNodeColor);

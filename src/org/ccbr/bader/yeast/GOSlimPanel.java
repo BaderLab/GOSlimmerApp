@@ -22,104 +22,50 @@ public class GOSlimPanel extends JPanel {
 
 	private GOSlimmerControlPanelToGraphInterface cptgi = null;
 	
-	private JLabel celComCoverage;
-	private JLabel bioProCoverage;
-	private JLabel molFunCoverage;
+//	private JLabel celComCoverage;
+//	private JLabel bioProCoverage;
+//	private JLabel molFunCoverage;
+//	
+//	GOSlimmerNamespaceSubpanel molFunSubPanel = null;
+//	GOSlimmerNamespaceSubpanel bioProSubPanel = null;
+//	GOSlimmerNamespaceSubpanel celComSubPanel = null;
+//	
+//	public GOSlimPanel(GOSlimmerController molFunController, GOSlimmerController bioProController, GOSlimmerController celComController) {
+//		super();
+//		super.setName("GOSlimmer");
+////		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
+//		this.setLayout(new GridLayout(8,1));
+//		
+//		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel(GONamespace.MolFun.getName() + " Coverage",molFunController);
+//		bioProSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController);
+//		celComSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController);
+//		this.add(molFunSubPanel);
+//		this.add(bioProSubPanel);
+//		this.add(celComSubPanel);
+//		
+//
+//		
+////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
+////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
+////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
+//	}
 	
-	public GOSlimPanel() {
+	public GOSlimPanel(Map<GONamespace,GOSlimmerController> namespaceToController) {
 		super();
 		super.setName("GOSlimmer");
-//		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
 		this.setLayout(new GridLayout(8,1));
-//		this.setLayout(new BorderLayout());
-//		JButton recalculateButton = new JButton("Recalculate");
-//		this.add(recalculateButton);
-//		recalculateButton.addActionListener(cptgi);
-		
-//		JLabel molFunSlimCoverageLabel = new JLabel("MOLECULAR.FUNCTION Slim Coverage:");
-//		this.add(molFunSlimCoverageLabel);
-//		JLabel bioProSlimCoverageLabel = new JLabel("BIOLOGICAL.PROCESS Slim Coverage:");
-//		this.add(molFunSlimCoverageLabel);
-//		JLabel celComSlimCoverageLabel = new JLabel("CELLULAR.COMPONENT Slim Coverage:");
-//		this.add(molFunSlimCoverageLabel);
-		//molFunSlimCoverageLabel
-		JPanel molFunPanel = new JPanel(new GridLayout(1,2));
-		molFunPanel.add(new JLabel("MOLECULAR.FUNCTION Slim Coverage:"));
-		molFunCoverage = new JLabel("0");
-		molFunPanel.add(molFunCoverage);
-		//molFunPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));;
-		this.add(molFunPanel);
-		//this.add(molFunPanel,BorderLayout.NORTH);
-		
-		JPanel bioProPanel = new JPanel(new GridLayout(1,2));
-		bioProPanel.add(new JLabel("BIOLOGICAL.PROCESS Slim Coverage:"));
-		bioProCoverage = new JLabel("0");
-		bioProPanel.add(bioProCoverage);
-		this.add(bioProPanel);
-//		this.add(bioProPanel, BorderLayout.CENTER);
-		
-		JPanel celComPanel = new JPanel(new GridLayout(1,2));
-		celComPanel.add(new JLabel("CELLULAR.COMPONENT Slim Coverage:"));
-		celComCoverage = new JLabel("0");
-		celComPanel.add(celComCoverage);
-		this.add(celComPanel);
-//		this.add(celComPanel,BorderLayout.SOUTH);
-		
-		
-		
-		
-//		this.setSize(molFunPanel.getSize());
-		
-		
+		for(GONamespace namespace: namespaceToController.keySet()) {
+			GOSlimmerController controller = namespaceToController.get(namespace);
+			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
+			GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName(),namespace.getName() + " Coverage: ",controller);
+			namespaceToSubpanel.put(namespace,namespaceSubPanel);
+			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
+		}
+		this.namespaceToController = namespaceToController;
 	}
-
-	
-	
-	GOSlimmerNamespaceSubpanel molFunSubPanel = null;
-	GOSlimmerNamespaceSubpanel bioProSubPanel = null;
-	GOSlimmerNamespaceSubpanel celComSubPanel = null;
-	
-	public GOSlimPanel(GOSlimmerController molFunController, GOSlimmerController bioProController, GOSlimmerController celComController) {
-		super();
-		super.setName("GOSlimmer");
-//		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
-		this.setLayout(new GridLayout(8,1));
-		
-		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel(GONamespace.MolFun.name + " Coverage",molFunController);
-		bioProSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController);
-		celComSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController);
-		this.add(molFunSubPanel);
-		this.add(bioProSubPanel);
-		this.add(celComSubPanel);
-		
-
-		
-//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
-//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
-//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
-	}
-	
-	//public GOSlimPanel(Map<GONa>)
 
 	Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
-	Map<GONamespace,GOSlimmerController> namespaceController = new HashMap<GONamespace, GOSlimmerController>();
-	
-	public enum GONamespace{
-		MolFun("Molecular Function"),
-		BioPro("Biological Process"),
-		CelCom("Cellular Component");
-		
-		private String name;
-		
-		GONamespace(String name) {
-			this.name = name;
-		}
-
-		public String getName() {
-			return name;
-		}
-	
-	}
+	Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
 	
 	private static final DecimalFormat coverageTextformatter = new DecimalFormat("00.00%");
 	
@@ -136,17 +82,15 @@ public class GOSlimPanel extends JPanel {
 			this.setLayout(new FlowLayout(FlowLayout.LEADING));
 			this.statBean = controller.getStatBean();
 			//String coverageStatisticText = String.v statBean.fractionCovered();
-			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
-				
-				@Override
-				public void setText(String arg0) {
-					// TODO Auto-generated method stub
-					super.setText(coverageTextformatter.format(arg0));
-				}
-				
-			};
+			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
+			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered()));
 			this.add(coverageStatisticLabel);
-			
+		
+		}
+		
+		public GOSlimmerNamespaceSubpanel(String title,String coverageLabelTitle, GOSlimmerController controller) {
+			this(coverageLabelTitle,controller);
+			this.setBorder(BorderFactory.createTitledBorder(title));
 		}
 
 		public JLabel getCoverageStatisticLabel() {
@@ -162,31 +106,36 @@ public class GOSlimPanel extends JPanel {
 	}
 	
 	
-	
-	
-
 	public JLabel getBioProCoverage() {
-		return bioProSubPanel.getCoverageStatisticLabel();
+		return getCoverage(GONamespace.BioPro);
 	}
 
-	public void setBioProCoverage(JLabel bioProCoverage) {
-		this.bioProSubPanel.setCoverageStatisticLabel(bioProCoverage);
+	public void setBioProCoverage(JLabel coverage) {
+		setCoverageLabel(GONamespace.BioPro,coverage);
 	}
 
 	public JLabel getCelComCoverage() {
-		return celComSubPanel.getCoverageStatisticLabel();
+		return getCoverage(GONamespace.CelCom);
 	}
 
-	public void setCelComCoverage(JLabel celComCoverage) {
-		this.celComSubPanel.setCoverageStatisticLabel(celComCoverage);
+	public void setCelComCoverage(JLabel coverage) {
+		setCoverageLabel(GONamespace.CelCom,coverage);
 	}
 
 	public JLabel getMolFunCoverage() {
-		return molFunSubPanel.getCoverageStatisticLabel();
+		return getCoverage(GONamespace.MolFun);
 	}
 
-	public void setMolFunCoverage(JLabel molFunCoverage) {
-		this.molFunSubPanel.setCoverageStatisticLabel(molFunCoverage);
+	public void setMolFunCoverage(JLabel coverage) {
+		setCoverageLabel(GONamespace.MolFun,coverage);
+	}
+	
+	private JLabel getCoverage(GONamespace ns) {
+		return namespaceToSubpanel.get(ns).getCoverageStatisticLabel();
+	}
+	
+	private void setCoverageLabel(GONamespace ns, JLabel coverage) {
+		namespaceToSubpanel.get(ns).setCoverageStatisticLabel(coverage);
 	}
 	
 }

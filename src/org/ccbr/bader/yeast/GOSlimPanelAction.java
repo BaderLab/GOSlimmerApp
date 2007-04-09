@@ -33,6 +33,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -293,10 +294,15 @@ public class GOSlimPanelAction implements ActionListener {
 		
 		if (!alreadyOpened) {
 			//initialize the goSlimPanel and add it to the cytopanel
-			goSlimPanel = new GOSlimPanel(molFunController,bioProController,celComController);
-			bioProController.setCoverageStatisticViewLabel(goSlimPanel.getBioProCoverage()); //TODO revise getter method
-			molFunController.setCoverageStatisticViewLabel(goSlimPanel.getMolFunCoverage());
-			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage());
+			Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
+			namespaceToController.put(GONamespace.BioPro, bioProController);
+			namespaceToController.put(GONamespace.MolFun,molFunController);
+			namespaceToController.put(GONamespace.CelCom, celComController);
+			
+			goSlimPanel = new GOSlimPanel(namespaceToController);
+			bioProController.setCoverageStatisticViewLabel(goSlimPanel.getBioProCoverage()); //TODO revise so that this step is unnecessary
+			molFunController.setCoverageStatisticViewLabel(goSlimPanel.getMolFunCoverage()); //TODO revise so that this step is unnecessary
+			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage()); //TODO revise so that this step is unnecessary
 			cytoPanel.add(goSlimPanel);
 			alreadyOpened = true;
 		}
