@@ -1,15 +1,20 @@
 package org.ccbr.bader.yeast;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
+import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 
 public class GOSlimPanel extends JPanel {
 
@@ -40,8 +45,9 @@ public class GOSlimPanel extends JPanel {
 		molFunPanel.add(new JLabel("MOLECULAR.FUNCTION Slim Coverage:"));
 		molFunCoverage = new JLabel("0");
 		molFunPanel.add(molFunCoverage);
+		//molFunPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK,1));;
 		this.add(molFunPanel);
-//		this.add(molFunPanel,BorderLayout.NORTH);
+		//this.add(molFunPanel,BorderLayout.NORTH);
 		
 		JPanel bioProPanel = new JPanel(new GridLayout(1,2));
 		bioProPanel.add(new JLabel("BIOLOGICAL.PROCESS Slim Coverage:"));
@@ -57,48 +63,91 @@ public class GOSlimPanel extends JPanel {
 		this.add(celComPanel);
 //		this.add(celComPanel,BorderLayout.SOUTH);
 		
+		
+		
+		
 //		this.setSize(molFunPanel.getSize());
 		
 		
 	}
 
+	
+	
+	GOSlimmerNamespaceSubpanel molFunSubPanel = null;
+	GOSlimmerNamespaceSubpanel bioProSubPanel = null;
+	GOSlimmerNamespaceSubpanel celComSubPanel = null;
+	
 	public GOSlimPanel(GOSlimmerController molFunController, GOSlimmerController bioProController, GOSlimmerController celComController) {
-		this();
+		super();
+		super.setName("GOSlimmer");
+//		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
+		this.setLayout(new GridLayout(8,1));
 		
+		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController);
+		bioProSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController);
+		celComSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController);
+		this.add(molFunSubPanel);
+		this.add(bioProSubPanel);
+		this.add(celComSubPanel);
+		
+//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
+//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
+//		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
 	}
 	
-	private class GOSlimmerNamespaceSubpanel {
+	private class GOSlimmerNamespaceSubpanel extends JPanel{
+		
+		GOSlimmerCoverageStatBean statBean = null;
+		
+		JLabel coverageStatisticLabel;
+		
+		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
 		public GOSlimmerNamespaceSubpanel(String name,GOSlimmerController controller) {
-			
+			this.add(new JLabel(name));
+			this.setLayout(new FlowLayout(FlowLayout.LEADING));
+			this.statBean = controller.getStatBean();
+			//String coverageStatisticText = String.v statBean.fractionCovered();
+			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered()));
+			this.add(coverageStatisticLabel);
 		}
+
+		public JLabel getCoverageStatisticLabel() {
+			return coverageStatisticLabel;
+		}
+
+		public void setCoverageStatisticLabel(JLabel coverageStatisticLabel) {
+			this.coverageStatisticLabel = coverageStatisticLabel;
+		}
+		
+
 		
 	}
 	
 	
 
 	public JLabel getBioProCoverage() {
-		return bioProCoverage;
+		return bioProSubPanel.getCoverageStatisticLabel();
 	}
 
 	public void setBioProCoverage(JLabel bioProCoverage) {
-		this.bioProCoverage = bioProCoverage;
+		this.bioProSubPanel.setCoverageStatisticLabel(bioProCoverage);
 	}
 
 	public JLabel getCelComCoverage() {
-		return celComCoverage;
+		return celComSubPanel.getCoverageStatisticLabel();
 	}
 
 	public void setCelComCoverage(JLabel celComCoverage) {
-		this.celComCoverage = celComCoverage;
+		this.celComSubPanel.setCoverageStatisticLabel(celComCoverage);
 	}
 
 	public JLabel getMolFunCoverage() {
-		return molFunCoverage;
+		return molFunSubPanel.getCoverageStatisticLabel();
 	}
 
 	public void setMolFunCoverage(JLabel molFunCoverage) {
-		this.molFunCoverage = molFunCoverage;
+		this.molFunSubPanel.setCoverageStatisticLabel(molFunCoverage);
 	}
 	
 }

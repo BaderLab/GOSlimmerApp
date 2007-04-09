@@ -26,7 +26,7 @@ public class GOSlimmerController  {
 	private CyNetwork network;
 	private CyNetworkView networkView;
 	private GOSlimmerCoverageStatBean statBean;
-	private JLabel viewStatLabel;
+	private JLabel coverageStatisticViewLabel;
 
 	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean) {
 		this.network=network;
@@ -38,7 +38,7 @@ public class GOSlimmerController  {
 		this.network=network;
 		this.networkView = networkView;
 		this.statBean = statBean;
-		this.viewStatLabel = viewStatLabel; 
+		this.coverageStatisticViewLabel = viewStatLabel; 
 	}
 
 	private String collapseButtonText = "Collapse";
@@ -207,7 +207,7 @@ public class GOSlimmerController  {
 	}
 	
 	private void updateViewStatistics() {
-		this.viewStatLabel.setText(String.valueOf(statBean.fractionCovered()));
+		this.coverageStatisticViewLabel.setText(String.valueOf(statBean.fractionCovered()));
 	}
 
 	public GOSlimmerCoverageStatBean getStatBean() {
@@ -232,6 +232,14 @@ public class GOSlimmerController  {
 
 	public void setNetworkView(CyNetworkView networkView) {
 		this.networkView = networkView;
+	}
+
+	public JLabel getCoverageStatisticViewLabel() {
+		return coverageStatisticViewLabel;
+	}
+
+	public void setCoverageStatisticViewLabel(JLabel coverageStatisticViewLabel) {
+		this.coverageStatisticViewLabel = coverageStatisticViewLabel;
 	}
 	
 

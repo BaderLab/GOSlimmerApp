@@ -98,12 +98,12 @@ public class GOSlimPanelAction implements ActionListener {
 
 		
 
-		if (!alreadyOpened) {
-			//initialize the goSlimPanel and add it to the cytopanel
-			goSlimPanel = new GOSlimPanel();
-			cytoPanel.add(goSlimPanel);
-			alreadyOpened = true;
-		}
+//		if (!alreadyOpened) {
+//			//initialize the goSlimPanel and add it to the cytopanel
+//			goSlimPanel = new GOSlimPanel();
+//			cytoPanel.add(goSlimPanel);
+//			alreadyOpened = true;
+//		}
 		VisualMappingManager vmm = Cytoscape.getVisualMappingManager();
         if (!vmm.getCalculatorCatalog().getVisualStyleNames().contains("GOSLIMMERVS")) {
             vmm.getCalculatorCatalog().addVisualStyle(new GOSlimmerVisualStyle(vmm.getVisualStyle(),"GOSLIMMERVS"));
@@ -290,14 +290,23 @@ public class GOSlimPanelAction implements ActionListener {
 			//TODO perhaps shift focus to goslimpanel, or give info message
 		}
 
-		goSlimPanel = new GOSlimPanel(molFunController,bioProController,celComController);
+		
+		if (!alreadyOpened) {
+			//initialize the goSlimPanel and add it to the cytopanel
+			goSlimPanel = new GOSlimPanel(molFunController,bioProController,celComController);
+			bioProController.setCoverageStatisticViewLabel(goSlimPanel.getBioProCoverage()); //TODO revise getter method
+			molFunController.setCoverageStatisticViewLabel(goSlimPanel.getMolFunCoverage());
+			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage());
+			cytoPanel.add(goSlimPanel);
+			alreadyOpened = true;
+		}
+		
 		
 		
 		//get the index of the panel and tell it to dock it
 		int index = cytoPanel.indexOfComponent(goSlimPanel);
 		cytoPanel.setSelectedIndex(index);
 		cytoPanel.setState(CytoPanelState.DOCK);
-
 
 	}
 	
@@ -310,9 +319,15 @@ public class GOSlimPanelAction implements ActionListener {
 		GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(garu.getBiologicalProcessGeneIds().size());
 		GOSlimmerCoverageStatBean celComStatBean = new GOSlimmerCoverageStatBean(garu.getCellularComponentGeneIds().size());
 		
-		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean,goSlimPanel.getMolFunCoverage());
-		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean,goSlimPanel.getBioProCoverage());
-		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
+//		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean,goSlimPanel.getMolFunCoverage());
+//		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean,goSlimPanel.getBioProCoverage());
+//		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
+		
+		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
+		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
+		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
+		
+		
 		
 	}
 	
