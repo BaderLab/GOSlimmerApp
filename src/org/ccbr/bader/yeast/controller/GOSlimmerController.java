@@ -47,55 +47,7 @@ public class GOSlimmerController  {
 	private String pruneButtonText = "Prune";
 	private String cancelButtonText = "Cancel";
 	
-//	public void actionPerformed(ActionEvent e) {
-//		List<NodeView> selected = Cytoscape.getCurrentNetworkView().getSelectedNodes();
-//		
-//		Object source = e.getSource();
-//		if (source instanceof JMenuItem) {
-//			JMenuItem jbSource = (JMenuItem) source;
-//			
-//			if (jbSource.getText().equals(collapseButtonText)) {
-//				for (NodeView snode: selected) {
-//					System.out.println(snode.getRootGraphIndex());
-//					collapseNode(snode.getNode());
-//				}
-//				//the dialog has fulfilled it's purpose, so dispose of it
-//			}
-//			else if (jbSource.getText().equals(expandButtonText)) {
-//				System.out.println("expand button depressed");
-//				for (NodeView snode: selected) {
-//					System.out.println(snode.getRootGraphIndex());
-//					expandNode(snode.getNode());
-//				}
-//			}
-//			else if (jbSource.getText().equals(pruneButtonText)) {
-//				System.out.println("Prune button depressed");
-//				//TODO check to make sure we aren't pruning the root
-//				for (NodeView snode: selected) {
-//					System.out.println(snode.getRootGraphIndex());
-//					pruneNode(snode.getNode());
-//				}
-//			}
-//			else if (jbSource.getText().equals(cancelButtonText)) {
-//				System.out.println("Cancel button depressed");
-//				//obsolete testing code
-////				VisualMappingManager vmm = Cytoscape.getVisualMappingManager();
-////				vmm.getVisualStyle();
-////				vmm.applyNodeAppearances();
-//				
-//			}
-//			else {
-//				//TODO deal with unexpecte button press
-//			}
-//			//redraw the graph with the appropriate changes
-//			networkView.redrawGraph(false, false);
-//			//collapseExpandDialog.dispose();
-//		}
-//		else {
-//			//TODO deal with unexpected event
-//		}
-//		
-//	}
+
 	
 	//two ways to implement:  hide as we go down, or hide only as we find edges without childre
 	//two kinds of parents:  those which are part of the dag to be collapsed, and those which aren't
@@ -176,6 +128,41 @@ public class GOSlimmerController  {
 		}
 	}
 	
+	/**
+	 * @param snode the node to expand
+	 * @param depth the depth to which the DAG should be expanded
+	 */
+	public void expandNode(Node snode,int depth) {
+		if (depth <=0) return;
+		networkView.showGraphObject(networkView.getNodeView(snode));
+		
+		//retrieve the incoming edges, such that we can expand them
+		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
+		for (int incomingEdge:incomingEdges) {
+			EdgeView ev = networkView.getEdgeView(incomingEdge);
+			
+			int edgeId =ev.getEdge().getRootGraphIndex();
+			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
+			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
+			//if (edgeIsHiddenPropertyValue== null || edgeIsHiddenPropertyValue) {
+				networkView.putClientData(edgeIsHiddenPropertyName, false);
+				networkView.showGraphObject(ev);
+//				BioDataServer server = Cytoscape.getBioDataServer();
+//				AnnotationDescription[] desc = server.getAnnotationDescriptions();
+//				desc[0].getCurator();
+				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
+				String[] attNames = nodeAtt.getAttributeNames();
+				
+				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
+				expandNode(ev.getEdge().getSource(),depth -1);
+			//}
+			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
+		}
+	}
+	
+	
+	
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 	private static final CyAttributes netAtt = Cytoscape.getNetworkAttributes();
 	
@@ -246,5 +233,10 @@ public class GOSlimmerController  {
 		this.coverageStatisticViewLabel = coverageStatisticViewLabel;
 	}
 	
-
+	public void removeCoverageAttributes() {
+		nodeAtt.deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
+		nodeAtt.deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
+	}
+	
+	
 }
