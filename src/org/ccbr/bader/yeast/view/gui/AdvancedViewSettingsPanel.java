@@ -3,37 +3,31 @@ package org.ccbr.bader.yeast.view.gui;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
+
+import org.ccbr.bader.yeast.controller.GOSlimmerController;
 
 import cytoscape.Cytoscape;
 import cytoscape.view.CyNetworkView;
 
 public class AdvancedViewSettingsPanel extends JPanel implements ActionListener {
 
-	public AdvancedViewSettingsPanel() {
+	private Collection<GOSlimmerController> controllers;
+
+	public AdvancedViewSettingsPanel(Collection<GOSlimmerController> controllers) {
 		super();
-		// TODO Auto-generated constructor stub
+		this.controllers = controllers;
 	}
-
-	public AdvancedViewSettingsPanel(boolean isDoubleBuffered) {
-		super(isDoubleBuffered);
-		// TODO Auto-generated constructor stub
-	}
-
-	public AdvancedViewSettingsPanel(LayoutManager layout, boolean isDoubleBuffered) {
-		super(layout, isDoubleBuffered);
-		// TODO Auto-generated constructor stub
-	}
-
-	public AdvancedViewSettingsPanel(LayoutManager layout) {
-		super(layout);
-		// TODO Auto-generated constructor stub
-	}
-
+	
+	
+	
 	{
 		initComponents();
 	}
@@ -67,12 +61,44 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 		return labelNodesWithOntologyName;
 	}
 	
+	private JCheckBox expandNodeDepthCheckbox;
+	private JTextField expandNodeDepthTextField;
+	
+	private String expandNodeDepthTooltip = "If checked, a node's descendant tree will only be expanded to the specified depth."
+		+ lsep + " If uncheck, the full descendant tree will be expanded.";
+	
+	private String expandNodeDepthCheckboxText = "Expand nodes to specified depth";
+	
+	private JCheckBox getExpandNodeDepthCheckbox() {
+		if (expandNodeDepthCheckbox==null) {
+			expandNodeDepthCheckbox = new JCheckBox(expandNodeDepthCheckboxText);
+			expandNodeDepthCheckbox.setToolTipText(expandNodeDepthTooltip);
+			expandNodeDepthCheckbox.addActionListener(this);
+		}
+		return expandNodeDepthCheckbox;
+	}
+	
+	
+	
+	private JTextField getExpandNodeTextField() {
+		if (expandNodeDepthTextField == null) {
+			expandNodeDepthTextField = new JTextField("1");
+			expandNodeDepthTextField.setEnabled(false);
+			expandNodeDepthTextField.addActionListener(this);
+		}
+		return expandNodeDepthTextField;
+	}
+	
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Advanced View Settings"));
 		this.add(getIncludeDeCheckBox());
 		this.add(getLCheckBox());
+		this.add(getExpandNodeDepthCheckbox());
+		this.add(getExpandNodeTextField());
 	}
 
+	
+	
 	
 	
 	public void actionPerformed(ActionEvent event) {
@@ -85,8 +111,30 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 			else if (src == labelNodesWithOntologyName) {
 				GOSlimmerGUIViewSettings.labelNodesWithOntologyName = labelNodesWithOntologyName.isSelected();
 			}
+			else if (src == expandNodeDepthCheckbox) {
+				boolean useFiniteExpansionDepth = expandNodeDepthCheckbox.isSelected();
+				//only enable the text field for specifying the node expansion depth if the  feature is enabled.
+				expandNodeDepthTextField.setEnabled(useFiniteExpansionDepth);
+				for(GOSlimmerController controller: controllers) controller.setUseFiniteExpansionDepth(useFiniteExpansionDepth);
+			}
 			CyNetworkView curNet = Cytoscape.getCurrentNetworkView();
 			if (curNet!=null) curNet.redrawGraph(false, true);
+		}
+		else if (src instanceof JTextField) {
+			if (src == expandNodeDepthTextField) {
+				//retrieve the new expansion depth, and see if it is a valid integer entry:
+				int newExpansionDepth;
+				try {
+					newExpansionDepth = Integer.parseInt(expandNodeDepthTextField.getText());
+				}
+				catch (NumberFormatException e) {
+					JOptionPane.showMessageDialog(this, "Invalid value '" + expandNodeDepthTextField.getText() + "' for expansion depth;  expanded node depth must be a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
+					for(GOSlimmerController controller: controllers) expandNodeDepthTextField.setText(String.valueOf(controller.getExpansionDepth()));
+					return;
+				}
+				//this next line is only performed if the text was successfully parsed as an integer
+				for(GOSlimmerController controller: controllers) controller.setExpansionDepth(newExpansionDepth);
+			}
 		}
 		
 	}
