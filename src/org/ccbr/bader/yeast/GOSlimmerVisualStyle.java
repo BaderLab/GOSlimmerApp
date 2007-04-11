@@ -4,6 +4,8 @@ import java.awt.Color;
 import java.awt.Shape;
 import java.util.List;
 
+import org.ccbr.bader.yeast.view.gui.GOSlimmerGUIViewSettings;
+
 import giny.model.Node;
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -47,31 +49,10 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 		@Override
 		public NodeAppearance calculateNodeAppearance(Node node, CyNetwork network) {
-			// TODO Auto-generated method stub
 
-			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, false);
-			
-			double nodeDim = numDirectlyCoveredGenes>0?numDirectlyCoveredGenes*minNodeSize:minNodeSize;
-			
-			nodeDim +=1; //to ensure we don't get any negative values when we calculate the logarithm
-			if (nodeDim >1) nodeDim = Math.log(nodeDim);
-			nodeDim *= 10;
-			
 			NodeAppearance nodeAppearance = new NodeAppearance();
+			modifyNodeAppearance(nodeAppearance, node, network);
 			
-			nodeAppearance.setHeight(nodeDim);
-			nodeAppearance.setWidth(nodeDim);
-			nodeAppearance.setShape(ShapeNodeRealizer.ELLIPSE);
-			
-			if (isSelectedForSlimSet(node)) { 
-				nodeAppearance.setFillColor(selectedNodeColor);
-			}
-			else {
-				//nodeAppearance.setFillColor(Color.RED);
-				nodeAppearance.setFillColor(unselectedNodeColor);
-			}
-			//TODO verify if this commented out statement is unnecessary
-			//nodeAppearance.applyBypass(node);
 			return nodeAppearance;
 			//return new GoSlimmerNodeAppearance(numDirectlyCoveredGenes,numDirectlyCoveredGenes);
 
@@ -80,7 +61,7 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 
 
 		
-		private static final int minNodeSize = 1;
+		private static final int minNodeSize = 2;
 		
 		Color selectedNodeColor = Color.CYAN;
 		Color unselectedNodeColor = new Color(255,150,150);
@@ -88,7 +69,22 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 		@Override
 		public void calculateNodeAppearance(NodeAppearance appr, Node node, CyNetwork network) {
 			
-			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, false);
+			modifyNodeAppearance(appr, node, network);
+			
+			appr.applyBypass(node);
+
+		}
+		
+		private static final int maxNodeLabelLength = 25;
+		
+		private boolean isSelectedForSlimSet(Node node) {
+			Boolean isSelected = nodeAtt.getBooleanAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
+			if (isSelected == null) return false;
+			return isSelected;
+		}
+		
+		private void modifyNodeAppearance(NodeAppearance appr, Node node, CyNetwork network) {
+			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations);
 			
 			double nodeDim = numDirectlyCoveredGenes>0?numDirectlyCoveredGenes*minNodeSize:minNodeSize;
 			nodeDim +=1; //to ensure we don't get any negative values when we calculate the logarithm
@@ -108,16 +104,20 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 				//appr.setFillColor(Color.RED);
 				appr.setFillColor(unselectedNodeColor);
 			}
-			appr.applyBypass(node);
 			
+			
+			if (GOSlimmerGUIViewSettings.labelNodesWithOntologyName) {
+				String ontname = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.name");
+				//only use the first maxNodeLabelLength characters of ontname for the label;  TODO comment out when node tooltips are properly implemented
+//				appr.setLabel(ontname.length()<maxNodeLabelLength?ontname:ontname.substring(0, maxNodeLabelLength));
+//				appr.setToolTip(ontname);
+				appr.setLabel(ontname);
+			}
+			else {
+				appr.setLabel(node.getIdentifier());
+			}
+
 		}
-		
-		private boolean isSelectedForSlimSet(Node node) {
-			Boolean isSelected = nodeAtt.getBooleanAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
-			if (isSelected == null) return false;
-			return isSelected;
-		}
-		
 		
 	}
 
