@@ -42,7 +42,9 @@ import java.util.Set;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JComponent;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
@@ -55,10 +57,13 @@ import javax.xml.bind.JAXBException;
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
+import org.ccbr.bader.yeast.view.gui.AdvancedViewSettingsPanel;
+import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.NodeContextMenuActionListener;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
+import cytoscape.bookmarks.Attribute;
 import cytoscape.bookmarks.Bookmarks;
 import cytoscape.bookmarks.DataSource;
 import cytoscape.data.CyAttributes;
@@ -69,6 +74,7 @@ import cytoscape.util.BookmarksUtil;
 import cytoscape.view.CyNetworkView;
 import cytoscape.view.CytoscapeDesktop;
 import cytoscape.view.cytopanels.CytoPanel;
+import cytoscape.view.cytopanels.CytoPanelContainer;
 import cytoscape.view.cytopanels.CytoPanelState;
 import cytoscape.visual.VisualMappingManager;
 import cytoscape.visual.VisualStyle;
@@ -118,6 +124,7 @@ public class GOSlimPanelAction implements ActionListener {
 		//List<CyNetwork> subNetworks = createOntologyNamespaceSubGraphs(network);
 		List<CyNetwork> subNetworks = new ArrayList<CyNetwork>();
 
+		GOSlimmer.ontologyName = network.getTitle();
 
 		GOSlimmerCoverageStatBean statBean=null;
 		
@@ -151,7 +158,7 @@ public class GOSlimPanelAction implements ActionListener {
 			try {
 				//initialize the gene association reader for SCer 
 				//GeneAssociationReaderUtil garu = new GeneAssociationReaderUtil("Gene Association file for Saccharomyces cerevisiae",new URL("http://www.geneontology.org/cgi-bin/downloadGOGA.pl/gene_association.sgd.gz"),"GO:ID");
-				GeneAssociationReaderUtil garu = new GeneAssociationReaderUtil("Yeast GO slim",new URL("http://www.geneontology.org/cgi-bin/downloadGOGA.pl/gene_association.sgd.gz"),"GO:ID");
+				GeneAssociationReaderUtil garu = new GeneAssociationReaderUtil(GOSlimmer.ontologyName,new URL("http://www.geneontology.org/cgi-bin/downloadGOGA.pl/gene_association.sgd.gz"),"GO:ID");
 				//process the gene association file
 				garu.readTable();
 				//retrieve the mapping of GOIDs to GeneIDs from the parsed asssociation file
@@ -303,7 +310,12 @@ public class GOSlimPanelAction implements ActionListener {
 			bioProController.setCoverageStatisticViewLabel(goSlimPanel.getBioProCoverage()); //TODO revise so that this step is unnecessary
 			molFunController.setCoverageStatisticViewLabel(goSlimPanel.getMolFunCoverage()); //TODO revise so that this step is unnecessary
 			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage()); //TODO revise so that this step is unnecessary
+			
+			//add the advanced view settings panel to the goSlimPanel
+			goSlimPanel.add(new AdvancedViewSettingsPanel());
+			
 			cytoPanel.add(goSlimPanel);
+			goSlimPanel.add(new GOSlimmerGeneAssociationDialog(namespaceToController),0);
 			alreadyOpened = true;
 		}
 		
@@ -316,6 +328,75 @@ public class GOSlimPanelAction implements ActionListener {
 
 	}
 	
+	private void promptUserForGeneAssociationFile() {
+//		GOSlimmerGeneAssociationDialog gad = new GOSlimmerGeneAssociationDialog();
+		
+		//TODO remove obsolete prototype code of JDialog subclass, as we've copied the contents to a non-anonymous type
+//		JDialog dialog = new JDialog(){
+//			
+//			{
+//				//TODO revise with proper exception handling
+//				try {
+//					add(createAnnotationComboBox());
+//				}
+//				catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//			
+//			//TODO inform developers that they should use the covert exceptions design pattern and not throw a jaxbexception, since this method should abstract above the details of xml parsing
+//			private JComboBox createAnnotationComboBox() throws JAXBException, IOException {
+//				
+//				//create the new combo box
+//				JComboBox acb = new JComboBox();
+//				
+//				Map<String,String> annotationURLMap = new HashMap<String, String>();
+//				
+//				
+//				//retrieve the gene association annotations from the bookmarks library
+//				Bookmarks bookmarks = Cytoscape.getBookmarks();
+//				List<DataSource> annotations = BookmarksUtil.getDataSourceList("annotation", bookmarks.getCategory());
+//				
+//				//intialize the annotation to url map, and populate the combo box with the annotation names
+//				for(DataSource annot:  annotations) {
+//					String annotName = annot.getName();
+//					annotationURLMap.put(annotName, annot.getHref());
+//					acb.addItem(annotName);
+//					//TODO see if we need to extract the source attributes
+//				}
+//				return null;
+//			}
+//		};
+		
+	}
+	
+	//TODO remove this commented out method, as it was copied from the ucsd.edu ontology and annotation TableImport plugin
+//	private void setAnnotationComboBox() throws JAXBException, IOException {
+//		Bookmarks bookmarks = Cytoscape.getBookmarks();
+//		List<DataSource> annotations = BookmarksUtil.getDataSourceList("annotation",
+//		                                                               bookmarks.getCategory());
+//		String key = null;
+//
+//		annotationComboBox.addItem(DEF_ANNOTATION_ITEM);
+//
+//		for (DataSource source : annotations) {
+//			key = source.getName();
+//			annotationComboBox.addItem(key);
+//			annotationUrlMap.put(key, source.getHref());
+//			annotationFormatMap.put(key, source.getFormat());
+//
+//			final Map<String, String> attrMap = new HashMap<String, String>();
+//
+//			for (Attribute attr : source.getAttribute()) {
+//				attrMap.put(attr.getName(), attr.getContent());
+//			}
+//
+//			annotationAttributesMap.put(key, attrMap);
+//		}
+//
+//		// annotationComboBox.setToolTipText(getAnnotationTooltip());
+//	}
+
 	private GOSlimmerController molFunController = null;
 	private GOSlimmerController bioProController = null;
 	private GOSlimmerController celComController = null;
