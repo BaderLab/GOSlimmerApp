@@ -7,13 +7,17 @@ import giny.view.NodeView;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 
 import cytoscape.CyNetwork;
@@ -234,8 +238,70 @@ public class GOSlimmerController  {
 	}
 	
 	public void removeCoverageAttributes() {
-		nodeAtt.deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
-		nodeAtt.deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
+		//TODO possibly do this only for this graph's nodes, by iterating over the nodes of this network
+		Iterator<Node> nodeI = network.nodesIterator();
+		while(nodeI.hasNext()) {
+			Node node = nodeI.next();
+			nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedGenesAttributeName);
+			nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedGenesAttributeName);
+		}
+//		nodeAtt.deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
+//		nodeAtt.deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
+	}
+
+	public void assignCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneIdMap) {
+		//scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
+		Iterator<Node> nodeI = network.nodesIterator();
+		while (nodeI.hasNext()) {
+			Node node = nodeI.next();
+			String nodeGoId = node.getIdentifier();
+			//get the genes which this go term annotates, according to the gene association file
+			List<String> nodeAnnotatedGeneIds = goIdToGeneIdMap.get(nodeGoId);
+			
+			//attach the gene id list as an attribute, if it exists 
+			if (nodeAnnotatedGeneIds!=null && nodeAnnotatedGeneIds.size()>0) {
+				nodeAtt.setListAttribute(nodeGoId, GOSlimmer.directlyAnnotatedGenesAttributeName, nodeAnnotatedGeneIds);
+			}
+			
+		}
+		//now annotated each node with the genes it annotated indirectly, through inference, from the genes which it's children inference
+		nodeI = network.nodesIterator();
+		
+		while(nodeI.hasNext()) {
+			Node node = nodeI.next();
+			//see if the inferred coverred genes list attribute has already been calculated and set
+			List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName);
+			if (inferredCoveredGenesL ==null || inferredCoveredGenesL.size()==0) {
+				//inferred coverred genes list has not already been calculated, so calculate and set it
+				Set<String> inferredCoveredGenesS = GOSlimmerUtil.getGenesCoveredByChildren(node, network);
+				nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName, GOSlimmerUtil.setToList(inferredCoveredGenesS));
+			}
+			
+		}
+		
+	}
+
+	/**This method resents the coverage statistics in the model layer, and recalculates them based on which nodes have been selected 
+	 * for inclusion in the slim set (based on the GOSlimmer.goNodeInSimlSetAttributeName CyAttribute of the node).
+	 * It then updates the view layer to reflect the new statistics information.
+	 * 
+	 * 
+	 * @param maxGeneSetSize the new maxGeneSetSize to be used for initializing the coverage statistics bean
+	 */
+	public void resetAndRecalculateStatisticsBean(int maxGeneSetSize) {
+		//initialize the new stats bean
+		this.statBean = new GOSlimmerCoverageStatBean(maxGeneSetSize);
+		//iterate through the network and add nodes which have their .. attribute set to true  to the slimset, updating statistics accordingly
+		//TODO possibly do this only for this graph's nodes, by iterating over the nodes of this network
+		Iterator<Node> nodeI = network.nodesIterator();
+		while(nodeI.hasNext()) {
+			Node node = nodeI.next();
+			//determine if node has been selected for inclusion in slimset
+			Boolean isInSlimSet = nodeAtt.getBooleanAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
+			//add to the stats bean's statistics info
+			if (isInSlimSet!=null && isInSlimSet) this.statBean.addToSlimSet(node);
+		}
+		this.updateViewStatistics();
 	}
 	
 	
