@@ -51,6 +51,8 @@ public class GOSlimmerController  {
 	private String pruneButtonText = "Prune";
 	private String cancelButtonText = "Cancel";
 	
+	private boolean useFiniteExpansionDepth = false;
+	private int nodeExpansionDepth = 1;
 
 	
 	//two ways to implement:  hide as we go down, or hide only as we find edges without childre
@@ -104,7 +106,18 @@ public class GOSlimmerController  {
 		updateViewStatistics();
 	}
 	
+
+	
 	public void expandNode(Node snode) {
+		if (useFiniteExpansionDepth) {
+			expandNodeToDepth(snode, nodeExpansionDepth);
+		}
+		else {
+			expandNodeUnlimited(snode);
+		}
+	}
+	
+	public void expandNodeUnlimited(Node snode) {
 		networkView.showGraphObject(networkView.getNodeView(snode));
 		
 		//retrieve the incoming edges, such that we can expand them
@@ -136,7 +149,7 @@ public class GOSlimmerController  {
 	 * @param snode the node to expand
 	 * @param depth the depth to which the DAG should be expanded
 	 */
-	public void expandNode(Node snode,int depth) {
+	public void expandNodeToDepth(Node snode,int depth) {
 		if (depth <=0) return;
 		networkView.showGraphObject(networkView.getNodeView(snode));
 		
@@ -159,7 +172,7 @@ public class GOSlimmerController  {
 				String[] attNames = nodeAtt.getAttributeNames();
 				
 				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
-				expandNode(ev.getEdge().getSource(),depth -1);
+				expandNodeToDepth(ev.getEdge().getSource(),depth -1);
 			//}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
 		}
@@ -240,10 +253,16 @@ public class GOSlimmerController  {
 	public void removeCoverageAttributes() {
 		//TODO possibly do this only for this graph's nodes, by iterating over the nodes of this network
 		Iterator<Node> nodeI = network.nodesIterator();
+		
+		boolean daganAttDefined = false;
+		boolean iaganAttDefined = false;
+		if (nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.directlyAnnotatedGenesAttributeName)>0) daganAttDefined = true;
+		if (nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.inferredAnnotatedGenesAttributeName)>0) iaganAttDefined = true;
 		while(nodeI.hasNext()) {
 			Node node = nodeI.next();
-			nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedGenesAttributeName);
-			nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedGenesAttributeName);
+			
+			if (daganAttDefined) nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedGenesAttributeName);
+			if (iaganAttDefined) nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedGenesAttributeName);
 		}
 //		nodeAtt.deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
 //		nodeAtt.deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
@@ -302,6 +321,24 @@ public class GOSlimmerController  {
 			if (isInSlimSet!=null && isInSlimSet) this.statBean.addToSlimSet(node);
 		}
 		this.updateViewStatistics();
+	}
+
+	public int getExpansionDepth() {
+		return nodeExpansionDepth;
+	}
+
+	public void setExpansionDepth(int newExpansionDepth) {
+		this.nodeExpansionDepth = newExpansionDepth;
+		
+	}
+
+	/**This sets the controllers behaviour when expanding node views, for whether it will expand nodes without limit, or only to a finite depth
+	 * The depth to which the node will be expanded is set based on the getExpansionDepth and setExpansionDepth methods.
+	 * 
+	 * @param useFiniteExpansionDepth whether or not to use finite expansion depth
+	 */
+	public void setUseFiniteExpansionDepth(boolean useFiniteExpansionDepth) {
+		this.useFiniteExpansionDepth = useFiniteExpansionDepth;
 	}
 	
 	
