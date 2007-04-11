@@ -67,6 +67,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.ccbr.bader.yeast.GONamespace;
+
 import edu.ucsd.bioeng.coreplugin.tableImport.reader.TextTableReader;
 
 /**
@@ -206,12 +208,14 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		// GA file is only for nodes!
 		this.nodeAliases = Cytoscape.getOntologyServer().getNodeAliases();
 		this.nodeAttributes = Cytoscape.getNodeAttributes();
-
+		
 		final Ontology testOntology = Cytoscape.getOntologyServer().getOntologies().get(ontologyName);
 
 		/*
 		 * Ontology type should be GO.
 		 */
+		//I Omit this test since I don't know whether or not the ontology has been loaded into the ontology server or not -- mmatan 20070411
+		//TODO when retreiving the ontology, add this one to the server
 		if (testOntology.getClass() == GeneOntology.class) {
 			this.geneOntology = (GeneOntology) testOntology;
 		} else {
@@ -561,6 +565,19 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		return molecularFunctionGeneIds;
 	}
 
+	public Set<String> getNamespaceGeneIds(GONamespace ns) {
+		if (ns == GONamespace.BioPro) {
+			return biologicalProcessGeneIds;
+		}
+		else if (ns == GONamespace.CelCom) {
+			return cellularComponentGeneIds;
+		}
+		else if (ns == GONamespace.MolFun) {
+			return molecularFunctionGeneIds;
+		}
+		else throw new RuntimeException(ns.getName() + " is not a known Gene Ontology Namespace");
+	}
+	
 	
 	
 	
