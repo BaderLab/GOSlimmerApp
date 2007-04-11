@@ -68,6 +68,7 @@ import cytoscape.bookmarks.Bookmarks;
 import cytoscape.bookmarks.DataSource;
 import cytoscape.data.CyAttributes;
 import cytoscape.data.annotation.AnnotationDescription;
+import cytoscape.data.attr.MultiHashMapDefinition;
 import cytoscape.data.servers.BioDataServer;
 import cytoscape.ding.DingNetworkView;
 import cytoscape.util.BookmarksUtil;
@@ -96,7 +97,15 @@ public class GOSlimPanelAction implements ActionListener {
 	//A boolean is attached to the networkview with this property name to indicate whether or not is has already had a goslimmer attached to it
 	private String networkViewGoSlimClientDataPropertyName = "GoSlimmerAttached";
 	
-	private GOSlimmerController controller;
+	//private GOSlimmerController controller;
+	
+//	{
+//		//define attributes
+//		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//		
+//			nodeAtt.getMultiHashMapDefinition().defineAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName, MultiHashMapDefinition., keyTypes)
+//		}
+//	}
 	
 	public void actionPerformed(ActionEvent arg0) {
 		//display GOSlimmer Main Panel in left cytopanel
@@ -120,13 +129,13 @@ public class GOSlimPanelAction implements ActionListener {
 		CyNetworkView networkView = Cytoscape.getCurrentNetworkView();
 		CyNetwork network = Cytoscape.getCurrentNetwork();
 		
-	
+		
 		//List<CyNetwork> subNetworks = createOntologyNamespaceSubGraphs(network);
 		List<CyNetwork> subNetworks = new ArrayList<CyNetwork>();
 
 		GOSlimmer.ontologyName = network.getTitle();
 
-		GOSlimmerCoverageStatBean statBean=null;
+		//GOSlimmerCoverageStatBean statBean=null;
 		
 		Boolean goSlimmerAttachedToView = (Boolean) networkView.getClientData(networkViewGoSlimClientDataPropertyName);
 		
@@ -150,103 +159,21 @@ public class GOSlimPanelAction implements ActionListener {
 			CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 			
 			int associatedGeneCount = 0;
-//			int molFunAssociatedGeneCount = 0;
-//			int bioProAssociatedGeneCount = 0;
-//			int celComAssociatedGeneCount = 0;
-			
-			//set attach gene annotation attributes to go terms, for the genes which they are annotated to:
-			try {
-				//initialize the gene association reader for SCer 
-				//GeneAssociationReaderUtil garu = new GeneAssociationReaderUtil("Gene Association file for Saccharomyces cerevisiae",new URL("http://www.geneontology.org/cgi-bin/downloadGOGA.pl/gene_association.sgd.gz"),"GO:ID");
-				GeneAssociationReaderUtil garu = new GeneAssociationReaderUtil(GOSlimmer.ontologyName,new URL("http://www.geneontology.org/cgi-bin/downloadGOGA.pl/gene_association.sgd.gz"),"GO:ID");
-				//process the gene association file
-				garu.readTable();
-				//retrieve the mapping of GOIDs to GeneIDs from the parsed asssociation file
-				Map<String,List<String>> goIdToGeneIdMap = garu.getGOIDToGeneIDMap();
-				
-				Set<String> associatedGeneIds = garu.getGeneIds();
-				
-				associatedGeneCount = associatedGeneIds.size();
-				
-				//create the subgraphs
-				createOntologyNamespaceSubGraphs(network);
-				//initialize the subgraphs with their controllers and coverage statistics beans
-				initializeControllersForSubGraphs(garu);
-				
-				subNetworks.add(molFunSubGraph);
-				subNetworks.add(bioProSubGraph);
-				subNetworks.add(celComSubGraph);
-				
-				//initialize the nodecontextmenu's for each of the subgraphs views
-				Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
-				Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
-				Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
-				
-				//molFunAssociatedGeneCount = garu.getMolecularFunctionGeneIds().size();
-				//bioProAssociatedGeneCount = garu.getBiologicalProcessGeneIds().size();
-				//celComAssociatedGeneCount = garu.getCellularComponentGeneIds().size();
-				
-				//initialize the statbean which will keep track of the degree of coverage of the gene set for the GO Slim set
-				statBean = new GOSlimmerCoverageStatBean(associatedGeneIds.size());
-				
-				//with the statbean, which is part of the model layer, initialized, we can now initialize the controller bean
-				controller = new GOSlimmerController(network,networkView,statBean);
-				
-				//iterate through the keyset of the goIdToGeneIdMap, attaching the geneid list attributes to the nodes of the GO DAG as you go along
-//				for(String goid:goIdToGeneIdMap.keySet()) {
-//					
-//					int[] nodes = network.getNodeIndicesArray();
-//				}
-				//scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
-				Iterator<Node> nodeI = network.nodesIterator();
-				while (nodeI.hasNext()) {
-					Node node = nodeI.next();
-					String nodeGoId = node.getIdentifier();
-					//get the genes which this go term annotates, according to the gene association file
-					List<String> nodeAnnotatedGeneIds = goIdToGeneIdMap.get(nodeGoId);
-					
-					//attach the gene id list as an attribute, if it exists 
-					if (nodeAnnotatedGeneIds!=null && nodeAnnotatedGeneIds.size()>0) {
-						nodeAtt.setListAttribute(nodeGoId, directlyAnnotatedGenesAttributeName, nodeAnnotatedGeneIds);
-					}
-					
-				}
-				//now annotated each node with the genes it annotated indirectly, through inference, from the genes which it's children inference
-				nodeI = network.nodesIterator();
-				
-				while(nodeI.hasNext()) {
-					Node node = nodeI.next();
-					//see if the inferred coverred genes list attribute has already been calculated and set
-					List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), inferredAnnotatedGenesAttributeName);
-					if (inferredCoveredGenesL ==null || inferredCoveredGenesL.size()==0) {
-						//inferred coverred genes list has not already been calculated, so calculate and set it
-						Set<String> inferredCoveredGenesS = getGenesCoveredByChildren(node, network);
-						nodeAtt.setListAttribute(node.getIdentifier(), inferredAnnotatedGenesAttributeName, setToList(inferredCoveredGenesS));
-					}
-					
-				}
-				/* annotated the nodes of the DAG with the genes covered by inference from coverage by descendant nodes
-				 * pseudocode:  
-				 * 	select a node of the graph at random
-				 * 	ascend to the root node
-				 *  call the initInferedGeneCoverageAttribute(node) on the root node, which will descend the tree, setting up inferred coverage
-				 * flaw:  this will not work, since there are three separate graphs at present
-				*/
-				
-				//now that the graph and its attributes have been initialized, apply the GOSlimmer visual style, which makes use of those attributes
-				//networkView.setVisualStyle("org.ccbr.bader.yeast.GOSlimmerVisualStyle");
-				
-				
 
-				
-			} catch (MalformedURLException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			//create the subgraphs
+			createOntologyNamespaceSubGraphs(network);
+			//initialize the subgraphs with their controllers and coverage statistics beans
+			initializeControllersForSubGraphs();
 			
+			subNetworks.add(molFunSubGraph);
+			subNetworks.add(bioProSubGraph);
+			subNetworks.add(celComSubGraph);
+			
+			//initialize the nodecontextmenu's for each of the subgraphs views
+			Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
+			Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
+			Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
+				
 
 			for (CyNetwork subNetwork:subNetworks) {	
 				CyNetworkView subNetworkView = Cytoscape.createNetworkView(subNetwork);
@@ -261,8 +188,8 @@ public class GOSlimPanelAction implements ActionListener {
 			//TODO implement this in a better manner
 			networkView.putClientData(networkViewGoSlimClientDataPropertyName,Boolean.TRUE);
 			
-			NodeContextMenuListener ncml = getGOSlimmerNodeContextMenuListener(controller);
-			networkView.addNodeContextMenuListener(ncml);
+			//NodeContextMenuListener ncml = getGOSlimmerNodeContextMenuListener(controller);
+			//networkView.addNodeContextMenuListener(ncml);
 			
 //			GOSlimmerCoverageStatBean molFunStatBean = new GOSlimmerCoverageStatBean(molFunAssociatedGeneCount);
 //			GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(bioProAssociatedGeneCount);
@@ -312,7 +239,7 @@ public class GOSlimPanelAction implements ActionListener {
 			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage()); //TODO revise so that this step is unnecessary
 			
 			//add the advanced view settings panel to the goSlimPanel
-			goSlimPanel.add(new AdvancedViewSettingsPanel());
+			goSlimPanel.add(new AdvancedViewSettingsPanel(namespaceToController.values()));
 			
 			cytoPanel.add(goSlimPanel);
 			goSlimPanel.add(new GOSlimmerGeneAssociationDialog(namespaceToController),0);
@@ -401,18 +328,22 @@ public class GOSlimPanelAction implements ActionListener {
 	private GOSlimmerController bioProController = null;
 	private GOSlimmerController celComController = null;
 	
-	private void initializeControllersForSubGraphs(GeneAssociationReaderUtil garu) {
-		GOSlimmerCoverageStatBean molFunStatBean = new GOSlimmerCoverageStatBean(garu.getMolecularFunctionGeneIds().size());
-		GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(garu.getBiologicalProcessGeneIds().size());
-		GOSlimmerCoverageStatBean celComStatBean = new GOSlimmerCoverageStatBean(garu.getCellularComponentGeneIds().size());
+	private void initializeControllersForSubGraphs() {
+//		GOSlimmerCoverageStatBean molFunStatBean = new GOSlimmerCoverageStatBean(garu.getMolecularFunctionGeneIds().size());
+//		GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(garu.getBiologicalProcessGeneIds().size());
+//		GOSlimmerCoverageStatBean celComStatBean = new GOSlimmerCoverageStatBean(garu.getCellularComponentGeneIds().size());
 		
 //		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean,goSlimPanel.getMolFunCoverage());
 //		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean,goSlimPanel.getBioProCoverage());
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
 		
-		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
-		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
-		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
+		
+		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+//		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
+//		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
+//		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
 		
 		
 		
