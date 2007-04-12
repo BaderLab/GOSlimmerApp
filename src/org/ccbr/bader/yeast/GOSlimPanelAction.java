@@ -163,16 +163,13 @@ public class GOSlimPanelAction implements ActionListener {
 			//create the subgraphs
 			createOntologyNamespaceSubGraphs(network);
 			//initialize the subgraphs with their controllers and coverage statistics beans
-			initializeControllersForSubGraphs();
+
 			
 			subNetworks.add(molFunSubGraph);
 			subNetworks.add(bioProSubGraph);
 			subNetworks.add(celComSubGraph);
 			
-			//initialize the nodecontextmenu's for each of the subgraphs views
-			Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
-			Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
-			Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
+
 				
 
 			for (CyNetwork subNetwork:subNetworks) {	
@@ -184,41 +181,17 @@ public class GOSlimPanelAction implements ActionListener {
 				subNetworkView.setVisualStyle("GOSLIMMERVS");
 				
 			}
+			//Note, this must be done after the network views are created, since the controllers are associated with a particular view ; TODO eliminate this dependancy, view should be modifiable on it's own, though the hiding and unhiding of nodes should effect the model
+			//TODO continues from above:  view should need to know about the controller, but controller shouldn't need to know view enough to do detailed view manipulation;  implement view manipulation code in node context menu listener, and have it call the controller only when it needs to select/deselect nodes based on their being hidden or not
+			initializeControllersForSubGraphs();
+			
+			//initialize the nodecontextmenu's for each of the subgraphs views;  NOTE if a networkview does not yet exist for these graphs, then this fail without any warning or indication
+			Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
+			Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
+			Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
 			
 			//TODO implement this in a better manner
 			networkView.putClientData(networkViewGoSlimClientDataPropertyName,Boolean.TRUE);
-			
-			//NodeContextMenuListener ncml = getGOSlimmerNodeContextMenuListener(controller);
-			//networkView.addNodeContextMenuListener(ncml);
-			
-//			GOSlimmerCoverageStatBean molFunStatBean = new GOSlimmerCoverageStatBean(molFunAssociatedGeneCount);
-//			GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(bioProAssociatedGeneCount);
-//			GOSlimmerCoverageStatBean celComStatBean = new GOSlimmerCoverageStatBean(celComAssociatedGeneCount);
-//			
-//			for(CyNetwork subNetwork:subNetworks) {
-//				CyNetworkView subNetworkView = Cytoscape.getNetworkView(subNetwork.getIdentifier());
-//				String subNetworkTitle = subNetwork.getTitle();
-//				GOSlimmerCoverageStatBean subNetworkStatBean;
-//				if (subNetworkTitle.matches(".*_molecular_function")) {
-//					subNetworkStatBean = new GOSlimmerCoverageStatBean(molFunAssociatedGeneCount);
-//				}
-//				else if (subNetworkTitle.matches(".*_biological_process")) {
-//					subNetworkStatBean = new GOSlimmerCoverageStatBean(bioProAssociatedGeneCount);
-//				}
-//				else if (subNetworkTitle.matches(".*_cellular_component")) {
-//					subNetworkStatBean = new GOSlimmerCoverageStatBean(celComAssociatedGeneCount);
-//				}
-//				else {
-//					throw new RuntimeException("Graph title '" + subNetworkTitle + "' is not recognized.");
-//				}
-//				
-//				GOSlimmerController subNetworkController = new GOSlimmerController(subNetwork,subNetworkView,subNetworkStatBean);
-//				NodeContextMenuListener subNetworkNcml = getGOSlimmerNodeContextMenuListener(subNetworkController);
-//				subNetworkView.addNodeContextMenuListener(subNetworkNcml);
-//			}
-			
-			//set the controllers for the goSlimPanel
-			
 			
 		}
 		else {
