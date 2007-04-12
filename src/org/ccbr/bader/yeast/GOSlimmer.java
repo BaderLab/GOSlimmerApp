@@ -17,4 +17,7 @@ public class GOSlimmer {
 	
 	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
 	public static String ontologyName;
+	
+	
+	
 }
