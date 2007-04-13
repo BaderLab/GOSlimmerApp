@@ -59,6 +59,7 @@ import java.net.URL;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,6 +69,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.ccbr.bader.yeast.GONamespace;
+import org.ccbr.bader.yeast.export.GOFormatException;
 
 import edu.ucsd.bioeng.coreplugin.tableImport.reader.TextTableReader;
 
@@ -164,11 +166,12 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 	 * @param isColumnName
 	 * @param type
 	 * @throws IOException
+	 * @throws GOFormatException 
 	 * @throws NoOntologyException
 	 * @throws
 	 */
 	public GeneAssociationReaderUtil(final String ontologyName, final URL url,
-	                             final String keyAttributeName) throws IOException {
+	                             final String keyAttributeName) throws IOException, GOFormatException {
 		this(ontologyName, URLUtil.getInputStream(url), keyAttributeName, false);
 	}
 
@@ -181,10 +184,11 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 	 * @param importAll  DOCUMENT ME!
 	 *
 	 * @throws IOException  DOCUMENT ME!
+	 * @throws GOFormatException 
 	 */
 	public GeneAssociationReaderUtil(final String ontologyName, final URL url,
 	                             final String keyAttributeName, final boolean importAll)
-	    throws IOException {
+	    throws IOException, GOFormatException {
 		this(ontologyName, URLUtil.getInputStream(url), keyAttributeName, importAll);
 	}
 
@@ -197,10 +201,11 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 	 * @param importAll  DOCUMENT ME!
 	 *
 	 * @throws IOException  DOCUMENT ME!
+	 * @throws GOFormatException 
 	 */
 	public GeneAssociationReaderUtil(final String ontologyName, final InputStream is,
 	                             final String keyAttributeName, final boolean importAll)
-	    throws IOException {
+	    throws IOException, GOFormatException {
 		this.importAll = importAll;
 		this.is = is;
 		this.keyAttributeName = keyAttributeName;
@@ -219,7 +224,7 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		if (testOntology.getClass() == GeneOntology.class) {
 			this.geneOntology = (GeneOntology) testOntology;
 		} else {
-			throw new IOException("Given ontology is not GO.");
+			throw new GOFormatException("Given ontology is not GO.");
 		}
 
 		final BufferedReader taxonFileReader = new BufferedReader(new InputStreamReader(getClass()
@@ -371,6 +376,10 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		return null;
 	}
 
+	//this will store a copy of the entries for latter use when outputting a modified version of the file -- mmatan 20070412
+	//consider implementing this as a map
+	Collection<String[]> annotationEntries = new ArrayList<String[]>();
+	
 	/**
 	 * All fields are saved as Strings.
 	 *
@@ -380,6 +389,9 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 			return;
 		}
 
+		//save the entry array to the entries list
+		this.annotationEntries.add(entries);
+		
 		//add this (goid,gene) pair to the GOIDToGeneID map
 		String curGOID = entries[GOID];
 		List<String> annotatedGeneIDs = GOIDToGeneID.containsKey(curGOID)?GOIDToGeneID.get(curGOID):new ArrayList<String>();
@@ -576,6 +588,10 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 			return molecularFunctionGeneIds;
 		}
 		else throw new RuntimeException(ns.getName() + " is not a known Gene Ontology Namespace");
+	}
+
+	public Collection<String[]> getAnnotationEntries() {
+		return annotationEntries;
 	}
 	
 	
