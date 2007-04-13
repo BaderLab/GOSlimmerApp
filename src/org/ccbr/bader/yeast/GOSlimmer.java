@@ -3,6 +3,7 @@ package org.ccbr.bader.yeast;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 
 import cytoscape.CyNetwork;
@@ -18,6 +19,6 @@ public class GOSlimmer {
 	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
 	public static String ontologyName;
 	
-	
+	public static GeneAssociationReaderUtil geneAssociationReader; 
 	
 }
