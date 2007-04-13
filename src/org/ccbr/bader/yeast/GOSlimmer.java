@@ -16,9 +16,9 @@ public class GOSlimmer {
 	
 	public static final Map<CyNetwork,GOSlimmerCoverageStatBean> networkToCoverageStatMap = new HashMap<CyNetwork, GOSlimmerCoverageStatBean>();
 	
-	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
-	public static String ontologyName;
-	
-	public static GeneAssociationReaderUtil geneAssociationReader; 
+//	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
+//	public static String ontologyName;
+//	
+//	public static GeneAssociationReaderUtil geneAssociationReader; 
 	
 }

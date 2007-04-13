@@ -28,9 +28,16 @@ public class PracticePlugin extends CytoscapePlugin
         //MCODE submenu
         JMenu submenu = new JMenu("GOSlimmer");
 
+        GOSlimPanelAction actionListener = new GOSlimPanelAction();
+        
         //MCODE panel
+        //add the start goslimmer option
         item = new JMenuItem("Start GOSlimmer");
-        item.addActionListener(new GOSlimPanelAction());
+        item.addActionListener(actionListener);
+        submenu.add(item);
+        //add the exit goslimmer option
+        item = new JMenuItem("Exit GOSlimmer");
+        item.addActionListener(actionListener);
         submenu.add(item);
         menu.add(submenu);
     }

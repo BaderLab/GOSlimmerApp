@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
@@ -28,8 +29,11 @@ public class FileExportPanel extends JPanel implements ActionListener {
 
 	private Collection<GOSlimmerController> controllers;
 
-	public FileExportPanel(Collection<GOSlimmerController> controllers) {
+	private GOSlimmerSession session;
+	
+	public FileExportPanel(Collection<GOSlimmerController> controllers,GOSlimmerSession session) {
 		this.controllers = controllers;
+		this.session=session;
 	}
 
 	{
@@ -71,11 +75,11 @@ public class FileExportPanel extends JPanel implements ActionListener {
 					}
 					try {
 						//make sure an annotation file has been loaded
-						if (GOSlimmer.geneAssociationReader==null) {
+						if (session.getGaru()==null) {
 							JOptionPane.showMessageDialog(this,"You must load an annotation file first","Error",JOptionPane.ERROR_MESSAGE);
 							return;
 						}
-						createRemappedGeneAnnotationFile(GOSlimmer.geneAssociationReader, exportFile, goTermRemap);
+						createRemappedGeneAnnotationFile(session.getGaru(), exportFile, goTermRemap);
 					} catch (IOException e) {
 						JOptionPane.showMessageDialog(this,"Failed to create remapped Gene Annotation File due to IO Error: "+ e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 					}

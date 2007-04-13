@@ -48,8 +48,10 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
+import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 import javax.swing.text.AsyncBoxView.ChildState;
 import javax.xml.bind.JAXBException;
@@ -86,7 +88,7 @@ public class GOSlimPanelAction implements ActionListener {
 
 	/*Notes whether or not the GOSlimPanel has been opened yet or now */
 	boolean alreadyOpened = false;
-	GOSlimPanel goSlimPanel =null;
+//	GOSlimPanel goSlimPanel =null;
 
 	protected String directlyAnnotatedGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENES";
 	protected String inferredAnnotatedGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENES";
@@ -108,128 +110,84 @@ public class GOSlimPanelAction implements ActionListener {
 //		}
 //	}
 	
-	public void actionPerformed(ActionEvent arg0) {
-		//display GOSlimmer Main Panel in left cytopanel
+	private static final String lsep = System.getProperty("line.separator");
+	
+	public void actionPerformed(ActionEvent event) {
+//		display GOSlimmer Main Panel in left cytopanel
 		CytoscapeDesktop desktop = Cytoscape.getDesktop();
 		CytoPanel cytoPanel = desktop.getCytoPanel(SwingConstants.WEST);
-
 		
-
-//		if (!alreadyOpened) {
-//			//initialize the goSlimPanel and add it to the cytopanel
-//			goSlimPanel = new GOSlimPanel();
-//			cytoPanel.add(goSlimPanel);
-//			alreadyOpened = true;
-//		}
-		VisualMappingManager vmm = Cytoscape.getVisualMappingManager();
-        if (!vmm.getCalculatorCatalog().getVisualStyleNames().contains("GOSLIMMERVS")) {
-            vmm.getCalculatorCatalog().addVisualStyle(new GOSlimmerVisualStyle(vmm.getVisualStyle(),"GOSLIMMERVS"));
-        }
-		vmm.setVisualStyle("GOSLIMMERVS");
-		
-		CyNetworkView networkView = Cytoscape.getCurrentNetworkView();
-		CyNetwork network = Cytoscape.getCurrentNetwork();
-		
-		
-		//List<CyNetwork> subNetworks = createOntologyNamespaceSubGraphs(network);
-		List<CyNetwork> subNetworks = new ArrayList<CyNetwork>();
-
-		GOSlimmer.ontologyName = network.getTitle();
-
-		//GOSlimmerCoverageStatBean statBean=null;
-		
-		Boolean goSlimmerAttachedToView = (Boolean) networkView.getClientData(networkViewGoSlimClientDataPropertyName);
-		
-		if (goSlimmerAttachedToView==null || !goSlimmerAttachedToView){
-			
-			//Get the list of available annotations
-			Bookmarks bookmarks = null;
-			try {
-				bookmarks = Cytoscape.getBookmarks();
-			} catch (JAXBException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+		if (event.getSource() instanceof JMenuItem) {
+			JMenuItem src = (JMenuItem) event.getSource();
+			if (src.getText().equals("Exit GOSlimmer")) {
+				cytoPanel.remove(goSlimmerSessionsTabbedPane);
+				goSlimmerSessionsTabbedPane = null;
+				alreadyOpened=false;
 			}
+			else if (src.getText().equals("Start GOSlimmer")) {
+				
+				
+				//Unfortuntately, because cyattributes are defined globally for all nodes with the same id, we can't at this time 
+				//use goslimmer on two dags at the same time
+				
+				if (alreadyOpened) {
+					JOptionPane.showMessageDialog(desktop, "GOSlimmer cannot be used to edit more than one GO Tree at a time."
+							+ lsep + "To edit a new graph, select to close GOSlimmer from Pluggins->GOSlimmer and then start "
+							+ lsep + "on the new GO Tree you wish to edit.");
+					return;
+				}
+				
 
-			//we can use this to get a list of the ontology names
-			//Set<String> ontologyNames = Cytoscape.getOntologyServer().getOntologyNames();
-
-			CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-			
-			int associatedGeneCount = 0;
-
-			//create the subgraphs
-			createOntologyNamespaceSubGraphs(network);
-			//initialize the subgraphs with their controllers and coverage statistics beans
-
-			
-			subNetworks.add(molFunSubGraph);
-			subNetworks.add(bioProSubGraph);
-			subNetworks.add(celComSubGraph);
-			
 
 				
 
-			for (CyNetwork subNetwork:subNetworks) {	
-				CyNetworkView subNetworkView = Cytoscape.createNetworkView(subNetwork);
+//				if (!alreadyOpened) {
+//					//initialize the goSlimPanel and add it to the cytopanel
+//					goSlimPanel = new GOSlimPanel();
+//					cytoPanel.add(goSlimPanel);
+//					alreadyOpened = true;
+//				}
+				VisualMappingManager vmm = Cytoscape.getVisualMappingManager();
+		        if (!vmm.getCalculatorCatalog().getVisualStyleNames().contains("GOSLIMMERVS")) {
+		            vmm.getCalculatorCatalog().addVisualStyle(new GOSlimmerVisualStyle(vmm.getVisualStyle(),"GOSLIMMERVS"));
+		        }
+				vmm.setVisualStyle("GOSLIMMERVS");
 				
-				VisualStyle vs = Cytoscape.getVisualMappingManager().setVisualStyle("GOSLIMMERVS");
-				subNetworkView.redrawGraph(false,false);
-				//Cytoscape.getVisualMappingManager().setVisualStyle(vs);
-				subNetworkView.setVisualStyle("GOSLIMMERVS");
+				//create a new goslimmersession and add it to the gomainpanel tabbed panel
+				//note that we probably can't manipulate multiple go graphs at the same time due to the way attributes are saved
 				
+				CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+				
+				GOSlimmerSession newSession =  new GOSlimmerSession(currentNetwork);
+				GOSlimPanel newSessionPanel = new GOSlimPanel(newSession.getNamespaceToController());
+				
+				//add the advanced view settings panel to the goSlimPanel 
+				//TODO revise so that these are automatically created within GOSlimPanel
+				newSessionPanel.add(new AdvancedViewSettingsPanel(newSession.getNamespaceToController().values()));
+				newSessionPanel.add(new FileExportPanel(newSession.getNamespaceToController().values(),newSession));
+//				newSessionPanel.add(new GOSlimmerGeneAssociationDialog(newSession.getNamespaceToController(),newSession.getOntologyName()),0);
+				newSessionPanel.add(new GOSlimmerGeneAssociationDialog(newSession.getNamespaceToController(), newSession.getOntologyName(),newSession),0);
+				if (!alreadyOpened) {
+					goSlimmerSessionsTabbedPane = new JTabbedPane();
+					
+					cytoPanel.add("GOSlimmer",goSlimmerSessionsTabbedPane);
+					alreadyOpened = true;
+				}
+				
+				//add the new session pane to the goslimmer cytopanel
+				goSlimmerSessionsTabbedPane.add(currentNetwork.getTitle(),newSessionPanel);
+				
+				//get the index of the panel and tell it to dock it
+				int index = cytoPanel.indexOfComponent(goSlimmerSessionsTabbedPane);
+				cytoPanel.setSelectedIndex(index);
+				cytoPanel.setState(CytoPanelState.DOCK);
 			}
-			//Note, this must be done after the network views are created, since the controllers are associated with a particular view ; TODO eliminate this dependancy, view should be modifiable on it's own, though the hiding and unhiding of nodes should effect the model
-			//TODO continues from above:  view should need to know about the controller, but controller shouldn't need to know view enough to do detailed view manipulation;  implement view manipulation code in node context menu listener, and have it call the controller only when it needs to select/deselect nodes based on their being hidden or not
-			initializeControllersForSubGraphs();
-			
-			//initialize the nodecontextmenu's for each of the subgraphs views;  NOTE if a networkview does not yet exist for these graphs, then this fail without any warning or indication
-			Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
-			Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
-			Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
-			
-			//TODO implement this in a better manner
-			networkView.putClientData(networkViewGoSlimClientDataPropertyName,Boolean.TRUE);
-			
 		}
-		else {
-			//TODO perhaps shift focus to goslimpanel, or give info message
-		}
+		
 
-		
-		if (!alreadyOpened) {
-			//initialize the goSlimPanel and add it to the cytopanel
-			Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
-			namespaceToController.put(GONamespace.BioPro, bioProController);
-			namespaceToController.put(GONamespace.MolFun,molFunController);
-			namespaceToController.put(GONamespace.CelCom, celComController);
-			
-			goSlimPanel = new GOSlimPanel(namespaceToController);
-			bioProController.setCoverageStatisticViewLabel(goSlimPanel.getBioProCoverage()); //TODO revise so that this step is unnecessary
-			molFunController.setCoverageStatisticViewLabel(goSlimPanel.getMolFunCoverage()); //TODO revise so that this step is unnecessary
-			celComController.setCoverageStatisticViewLabel(goSlimPanel.getCelComCoverage()); //TODO revise so that this step is unnecessary
-			
-			//add the advanced view settings panel to the goSlimPanel
-			goSlimPanel.add(new AdvancedViewSettingsPanel(namespaceToController.values()));
-			
-			goSlimPanel.add(new FileExportPanel(namespaceToController.values()));
-			
-			cytoPanel.add(goSlimPanel);
-			goSlimPanel.add(new GOSlimmerGeneAssociationDialog(namespaceToController),0);
-			alreadyOpened = true;
-		}
-		
-		
-		
-		//get the index of the panel and tell it to dock it
-		int index = cytoPanel.indexOfComponent(goSlimPanel);
-		cytoPanel.setSelectedIndex(index);
-		cytoPanel.setState(CytoPanelState.DOCK);
 
 	}
+	private JTabbedPane goSlimmerSessionsTabbedPane;
 	
 	private void promptUserForGeneAssociationFile() {
 //		GOSlimmerGeneAssociationDialog gad = new GOSlimmerGeneAssociationDialog();
@@ -304,26 +262,7 @@ public class GOSlimPanelAction implements ActionListener {
 	private GOSlimmerController bioProController = null;
 	private GOSlimmerController celComController = null;
 	
-	private void initializeControllersForSubGraphs() {
-//		GOSlimmerCoverageStatBean molFunStatBean = new GOSlimmerCoverageStatBean(garu.getMolecularFunctionGeneIds().size());
-//		GOSlimmerCoverageStatBean bioProStatBean = new GOSlimmerCoverageStatBean(garu.getBiologicalProcessGeneIds().size());
-//		GOSlimmerCoverageStatBean celComStatBean = new GOSlimmerCoverageStatBean(garu.getCellularComponentGeneIds().size());
-		
-//		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean,goSlimPanel.getMolFunCoverage());
-//		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean,goSlimPanel.getBioProCoverage());
-//		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
-		
-		
-		molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-//		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
-//		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
-//		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
-		
-		
-		
-	}
+
 	
 
 	

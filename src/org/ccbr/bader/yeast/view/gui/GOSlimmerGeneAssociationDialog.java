@@ -37,6 +37,7 @@ import javax.xml.bind.JAXBException;
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GONamespace;
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GOFormatException;
 
@@ -49,10 +50,16 @@ import cytoscape.util.BookmarksUtil;
 public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionListener {
 	
 	Map<GONamespace, GOSlimmerController> namespaceToController;
+
+	private String ontologyName;
+	private GOSlimmerSession session;
 	
-	public GOSlimmerGeneAssociationDialog(Map<GONamespace, GOSlimmerController> namespaceToController) throws HeadlessException {
+	
+	public GOSlimmerGeneAssociationDialog(Map<GONamespace, GOSlimmerController> namespaceToController,String ontologyName,GOSlimmerSession session) throws HeadlessException {
 		super();
 		this.namespaceToController = namespaceToController;
+		this.ontologyName = ontologyName;
+		this.session = session;
 	}
 
 	private Map<String,String> annotationURLMap = new HashMap<String, String>();
@@ -250,7 +257,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		GeneAssociationReaderUtil garu;
 		//process the annotation file
 		try {
-			garu = new GeneAssociationReaderUtil(GOSlimmer.ontologyName,annotURL,"GO:ID");
+			garu = new GeneAssociationReaderUtil(ontologyName,annotURL,"GO:ID");
 			garu.readTable();
 		} catch (MalformedURLException e) {
 			throw new RuntimeException("Failed to access gene association file",e);
@@ -278,7 +285,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 		//record the gene association reader in the GOSlimmer static field, since it will be needed when exporting remapped versions of the file
 		//TODO store the gene association reader in a more model centric place
-		GOSlimmer.geneAssociationReader = garu;
+		session.setGaru(garu);
 	}
 	
 	private URL getSelectedAnnotationURL() throws MalformedURLException {

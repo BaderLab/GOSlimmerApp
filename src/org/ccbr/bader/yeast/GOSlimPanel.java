@@ -59,6 +59,7 @@ public class GOSlimPanel extends JPanel {
 			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
 			GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName(),namespace.getName() + " Coverage: ",controller);
 			namespaceToSubpanel.put(namespace,namespaceSubPanel);
+			controller.setCoverageStatisticViewLabel(namespaceSubPanel.coverageStatisticLabel);
 			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
 		}
 		this.namespaceToController = namespaceToController;
