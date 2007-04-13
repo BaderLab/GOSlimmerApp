@@ -3,9 +3,13 @@ package org.ccbr.bader.yeast;
 import giny.model.Node;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -119,5 +123,100 @@ public class GOSlimmerUtil {
 		list.addAll(set);
 		return list;
 	}
+	
+	public static Node getRootNode(CyNetwork network) {
+		Iterator<Node> nodeI = network.nodesIterator();
+		//pick a node arbitrarily TODO ensure that nodeI is not biased towards nodes away from the root
+		if (!nodeI.hasNext()) return null;
+		Node node = nodeI.next();
+		
+		//follow the node's ancestors until we get to the ancestor with no ancestors, which must be the root; note that children direct 'is_a' edges to parents
+		int[] ancestorEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, false, true);
+		while (ancestorEdges!=null && ancestorEdges.length>0) {
+			//get the parent node
+			node = network.getNode(network.getEdgeTargetIndex(ancestorEdges[0]));
+			ancestorEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, false, true);
+		}
+		return node;
+	}
+	
+	public static  Map<String, String> createGoTermRemap(CyNetwork godag) {
+		Map<String, String> goTermRemap = new HashMap<String, String>();
+		Node rootNode = GOSlimmerUtil.getRootNode(godag);
+		/*
+		 * pseudo code for remapping:
+		 * descent the tree depth first, keeping track of the last selected node;  
+		 * 	we'll probably need to keep a stack of said selected nodes, popping the stack as we ascend above it again
+		 * 	TODO figure out how to deal with the nodes with multiple possible parents:  how should we remap them?  
+		 * 		For now, just do it stochastically, but we'll need to find a consistent way, or at least alert users to when this is done.
+		 * on finding a node which is not selected, map it to the last selected node which was encountered.  Nodes which are selected for 
+		 * go slim set inclusion either need not be mapped or can be mapped to themselves (for consistencies sake, this is probably the better 
+		 * option, for then we can use the null mapping case as an exceptional one)
+		 * 
+		 */
+		//this stack will keep track of the last selected term as we descend the list;  upon going above the term, we can pop the stack
+		Stack<String> lastSelectedTermId = new Stack<String>();
+//		Node curNode = rootNode;
+		if (isSelected(rootNode)) {
+			lastSelectedTermId.push(rootNode.getIdentifier());
+			goTermRemap.put(rootNode.getIdentifier(), rootNode.getIdentifier());
+		}
+		else {
+			throw new RuntimeException("Cannot remap because root node is not selected; some annotations would be lost.");
+		}
+		int[] childEdges = godag.getAdjacentEdgeIndicesArray(rootNode.getRootGraphIndex(), false, true, false);
+		remapGoTerms(childEdges, lastSelectedTermId, godag, goTermRemap);
+		//TODO insert sanity check to ensure stack only contains the root node term, as it should
+		return goTermRemap;
+	}
+	
+	private static  void remapGoTerms(int[] childEdges,Stack<String> lastSelectedTermId,CyNetwork godag,Map remap) {
+		if (childEdges == null) return;
+		for(int childEdge:childEdges) {
+			/*
+			 * pseudo code:
+			 * get the child node
+			 * if (child node is selected) {
+			 *   push child node's GO ID onto the lastSelectedTermId stack
+			 *   get child Edges for child node
+			 *   recursive call to remap on child nodes
+			 *   pop stack
+			 * else {
+			 *   peek at stack and remap child node's go term to that term
+			 *   get child edges for child node
+			 *   recursive call to remap on child nodes
+			 * }
+			 */
+			Node node = godag.getNode(godag.getEdgeSourceIndex(childEdge));
+			if (isSelected(node)) {
+				String goTerm = node.getIdentifier();
+				remap.put(goTerm,goTerm);
+				lastSelectedTermId.push(goTerm);
+				int[]  grandChildEdges =godag.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+				remapGoTerms(grandChildEdges, lastSelectedTermId, godag, remap);
+				if (goTerm != lastSelectedTermId.pop()) {
+					//sanity check failed:  pop should have returned the same go term which was pushed onto it by this method call
+					throw new RuntimeException("element at top of stack is not the same one which was placed there, as is expected by algorithm logic.");
+				}
+			}
+			else {
+				String lastSelectedTerm = lastSelectedTermId.peek();
+				//sanity check
+				if (lastSelectedTerm ==null) throw new RuntimeException("cannot remap because no term on stack");
+				//map this unselected go term to the last selected go term, so that it's annotations will be remapped to the selected term 
+				remap.put(node.getIdentifier(), lastSelectedTerm);
+				int[]  grandChildEdges =godag.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+				remapGoTerms(grandChildEdges, lastSelectedTermId, godag, remap);
+			}
+		}
+	}
+	
+
+	private static boolean isSelected(Node goNode) {
+		Boolean isSelected =  nodeAtt.getBooleanAttribute(goNode.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
+		if (isSelected ==null) return false;
+		return isSelected;
+	}
+	
 	
 }
