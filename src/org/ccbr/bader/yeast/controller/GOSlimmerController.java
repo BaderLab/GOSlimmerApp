@@ -6,6 +6,10 @@ import giny.view.NodeView;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
@@ -16,8 +20,11 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JMenuItem;
 
+import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
+import org.ccbr.bader.yeast.GONamespace;
 import org.ccbr.bader.yeast.GOSlimmer;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
+import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 
 import cytoscape.CyNetwork;
@@ -32,19 +39,21 @@ public class GOSlimmerController  {
 	private CyNetworkView networkView;
 	private GOSlimmerCoverageStatBean statBean;
 	private JLabel coverageStatisticViewLabel;
+	private GONamespace namespace;
 
-	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean) {
+	public GOSlimmerController(GONamespace namespace,CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean) {
+		this.namespace = namespace;
 		this.network=network;
 		this.networkView = networkView;
 		this.statBean = statBean;
 	}
 
-	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
-		this.network=network;
-		this.networkView = networkView;
-		this.statBean = statBean;
-		this.coverageStatisticViewLabel = viewStatLabel; 
-	}
+//	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
+//		this.network=network;
+//		this.networkView = networkView;
+//		this.statBean = statBean;
+//		this.coverageStatisticViewLabel = viewStatLabel; 
+//	}
 
 	private String collapseButtonText = "Collapse";
 	private String expandButtonText = "Expand";
