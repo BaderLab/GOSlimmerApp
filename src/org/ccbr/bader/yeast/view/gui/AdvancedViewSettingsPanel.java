@@ -1,5 +1,6 @@
 package org.ccbr.bader.yeast.view.gui;
 
+import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -67,11 +68,12 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	private String expandNodeDepthTooltip = "If checked, a node's descendant tree will only be expanded to the specified depth."
 		+ lsep + " If uncheck, the full descendant tree will be expanded.";
 	
-	private String expandNodeDepthCheckboxText = "Expand nodes to specified depth";
+	private final String expandNodeDepthCheckboxText = "Expand nodes to specified depth";
 	
 	private JCheckBox getExpandNodeDepthCheckbox() {
 		if (expandNodeDepthCheckbox==null) {
 			expandNodeDepthCheckbox = new JCheckBox(expandNodeDepthCheckboxText);
+			//expandNodeDepthCheckbox.setText(expandNodeDepthCheckboxText);
 			expandNodeDepthCheckbox.setToolTipText(expandNodeDepthTooltip);
 			expandNodeDepthCheckbox.addActionListener(this);
 		}
@@ -85,12 +87,14 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 			expandNodeDepthTextField = new JTextField("1");
 			expandNodeDepthTextField.setEnabled(false);
 			expandNodeDepthTextField.addActionListener(this);
+//			expandNodeDepthTextField.sets
 		}
 		return expandNodeDepthTextField;
 	}
 	
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Advanced View Settings"));
+		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
 		this.add(getLCheckBox());
 		this.add(getExpandNodeDepthCheckbox());
