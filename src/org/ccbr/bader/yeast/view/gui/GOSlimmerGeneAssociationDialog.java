@@ -1,10 +1,13 @@
 package org.ccbr.bader.yeast.view.gui;
 
 import java.awt.BorderLayout;
+import java.awt.ComponentOrientation;
 import java.awt.Dialog;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
+import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -21,11 +24,13 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.xml.bind.JAXBException;
 
@@ -33,6 +38,7 @@ import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GONamespace;
 import org.ccbr.bader.yeast.GOSlimmer;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
+import org.ccbr.bader.yeast.export.GOFormatException;
 
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
@@ -60,12 +66,34 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		this.setBorder(BorderFactory.createTitledBorder("Select Gene Association Data to use for Coverage Calculation"));
 		
 		this.setLayout(new BorderLayout());
+//		this.setLayout(new GridLayout(0,1));
 //			this.setLayout(new FlowLayout());
+//		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
 		
-		this.add(getAnnotationComboBox(),BorderLayout.WEST);
-		this.add(getAnnotationBrowseButton(),BorderLayout.EAST);
-		this.add(getSelectedAnnotationFileLabel(), BorderLayout.NORTH);
-		this.add(getApplyButton(),BorderLayout.PAGE_END);
+//		this.add(getAnnotationComboBox(),BorderLayout.WEST);
+//		this.add(getAnnotationBrowseButton(),BorderLayout.EAST);
+//		this.add(getSelectedAnnotationFileLabel(), BorderLayout.NORTH);
+//		this.add(getApplyButton(),BorderLayout.PAGE_END);
+//		this.add(getAnnotationComboBox());
+//		this.add(getAnnotationBrowseButton());
+		this.add(getSelectedAnnotationFileLabel(),BorderLayout.NORTH);
+		this.add(getSelectionPanel(),BorderLayout.CENTER);
+//		this.add(getAnnotationComboBox());
+//		this.add(getAnnotationBrowseButton());
+		this.add(getApplyButton(),BorderLayout.SOUTH);
+	}
+	
+	private JPanel selectionPanel;
+	private JPanel getSelectionPanel() {
+		if (selectionPanel == null) {
+			selectionPanel = new JPanel();
+//			selectionPanel.setLayout(new GridLayout(1,2));
+			selectionPanel.setLayout(new FlowLayout());
+//			selectionPanel.setComponentOrientation(ComponentOrientation.))));
+			selectionPanel.add(getAnnotationComboBox());
+			selectionPanel.add(getAnnotationBrowseButton());
+		}
+		return selectionPanel;
 	}
 	
 	JButton applyButton;
@@ -77,7 +105,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 		applyButton = new JButton(applyButtonText);
 		applyButton.addActionListener(this);
-		
+		int height = applyButton.getHeight();
+//		applyButton.setMaximumSize(new Dimension(height*6, height));
 		return applyButton;
 	}
 	
@@ -104,6 +133,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 		//create the new combo box
 		annotationComboBox = new JComboBox();
+		annotationComboBox.setMaximumSize(new Dimension(60,15));
 		
 		
 		//retrieve the gene association annotations from the bookmarks library
@@ -133,6 +163,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 		//initialize the JLabel
 		selectedAnnotationFileLabel = new JLabel();
+		int height = selectedAnnotationFileLabel.getHeight();
+//		selectedAnnotationFileLabel.setSize(height*6,height);
 		
 		updateSelectedAnnotationFileLabelText();
 		return selectedAnnotationFileLabel;
@@ -182,9 +214,11 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 				try {
 					applySelectedAnnotationToGOGraphs();
 				} catch (FileNotFoundException e) {
-					throw new RuntimeException("Failed to apply gene association data to sub graphs",e);
+					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
 				} catch (MalformedURLException e) {
-					throw new RuntimeException("Failed to apply gene association data to sub graphs",e);
+					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because URL is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+				} catch (GOFormatException e) {
+					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because annotation file is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
 				}
 			}
 			else {
@@ -207,9 +241,10 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 	 * as stored in namespaceToController.
 	 * @throws FileNotFoundException 
 	 * @throws MalformedURLException 
+	 * @throws GOFormatException 
 	 * 
 	 */
-	private void applySelectedAnnotationToGOGraphs() throws FileNotFoundException, MalformedURLException {
+	private void applySelectedAnnotationToGOGraphs() throws FileNotFoundException, MalformedURLException, GOFormatException {
 		//construct the annotation url, whether it is remote or local
 		URL annotURL = getSelectedAnnotationURL();
 		GeneAssociationReaderUtil garu;
@@ -221,6 +256,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			throw new RuntimeException("Failed to access gene association file",e);
 		} catch (IOException e) {
 			throw new RuntimeException("Failed to access gene association file",e);
+		} catch (GOFormatException e) {
+			throw new GOFormatException("Failed to parse Gene Annotation file because it is not a valid Gene Annotation File",e);
 		}
 		
 //		retrieve the mapping of GOIDs to GeneIDs from the parsed asssociation file;  this will be used to assign directly and indirectlly inferred attributes to the networks
@@ -238,6 +275,10 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			controller.getNetworkView().applyVizmapper(Cytoscape.getVisualMappingManager().getVisualStyle());
 			//TODO either unselect all nodes, or recalculate the statistics based on the new coverage attributes
 		}
+		
+		//record the gene association reader in the GOSlimmer static field, since it will be needed when exporting remapped versions of the file
+		//TODO store the gene association reader in a more model centric place
+		GOSlimmer.geneAssociationReader = garu;
 	}
 	
 	private URL getSelectedAnnotationURL() throws MalformedURLException {
