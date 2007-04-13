@@ -58,6 +58,7 @@ import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 import org.ccbr.bader.yeast.view.gui.AdvancedViewSettingsPanel;
+import org.ccbr.bader.yeast.view.gui.FileExportPanel;
 import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.NodeContextMenuActionListener;
 
@@ -214,6 +215,8 @@ public class GOSlimPanelAction implements ActionListener {
 			//add the advanced view settings panel to the goSlimPanel
 			goSlimPanel.add(new AdvancedViewSettingsPanel(namespaceToController.values()));
 			
+			goSlimPanel.add(new FileExportPanel(namespaceToController.values()));
+			
 			cytoPanel.add(goSlimPanel);
 			goSlimPanel.add(new GOSlimmerGeneAssociationDialog(namespaceToController),0);
 			alreadyOpened = true;
@@ -311,9 +314,9 @@ public class GOSlimPanelAction implements ActionListener {
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
 		
 		
-		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
 //		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
 //		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
