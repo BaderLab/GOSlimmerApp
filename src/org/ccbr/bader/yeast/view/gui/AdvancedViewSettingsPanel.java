@@ -41,6 +41,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	private JCheckBox getIncludeDeCheckBox() {
 		if (includeDescendentCoverageInNodeSizeCalculationCheckBox==null) {
 			includeDescendentCoverageInNodeSizeCalculationCheckBox = new JCheckBox(includeDescendentCoverageInNodeSizeCalculationText);
+			includeDescendentCoverageInNodeSizeCalculationCheckBox.setSelected(GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations);
 			includeDescendentCoverageInNodeSizeCalculationCheckBox.setToolTipText("If checked, then the size of the node will be proportional to the number of genes"
 					+ lsep +" directly annotated by the node + the number of genes annotated by all of the nodes descendants in the graph. "
 					+ lsep + " If unchecked, size is proportional to the directly annotated nodes only.");
@@ -55,6 +56,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	private JCheckBox getLCheckBox() {
 		if (labelNodesWithOntologyName==null) {
 			labelNodesWithOntologyName = new JCheckBox(labelNodesWithOntologyNameLabel);
+			labelNodesWithOntologyName.setSelected(GOSlimmerGUIViewSettings.labelNodesWithOntologyName);
 			labelNodesWithOntologyName.setToolTipText("If checked, nodes will be labelled with their biologically meaningful ontology term name."
 					+ lsep + "  Otherwise, they will be labelled with their GO ID.");
 			labelNodesWithOntologyName.addActionListener(this);
