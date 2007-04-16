@@ -25,6 +25,8 @@ import org.ccbr.bader.yeast.view.gui.FileExportPanel;
 import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.NodeContextMenuActionListener;
 
+import csplugins.layout.algorithms.hierarchicalLayout.HierarchicalLayoutListener;
+
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
@@ -89,20 +91,9 @@ public class GOSlimmerSession {
 
 		//GOSlimmerCoverageStatBean statBean=null;
 		
-		//Get the list of available annotations
-//		Bookmarks bookmarks = null;
-//		try {
-//			bookmarks = Cytoscape.getBookmarks();
-//		} catch (JAXBException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		} catch (IOException e1) {
-//			// TODO Auto-generated catch block
-//			e1.printStackTrace();
-//		}
-
 		//we can use this to get a list of the ontology names
 		//Set<String> ontologyNames = Cytoscape.getOntologyServer().getOntologyNames();
+//		Cytoscape.getOntologyServer().addOntology(onto);
 
 		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 		
@@ -119,9 +110,15 @@ public class GOSlimmerSession {
 		
 
 			
-
+		HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
 		for (CyNetwork subNetwork:subNetworks) {	
 			CyNetworkView subNetworkView = Cytoscape.createNetworkView(subNetwork);
+			//TODO replace these with undeprecated analogues
+			Cytoscape.setCurrentNetwork(subNetwork.getIdentifier());
+			Cytoscape.setCurrentNetworkView(subNetworkView.getIdentifier());
+			//apply the heirarchical layout onto the newly created view
+			//hll will execute the layout algorithm on the currently selected view, which should be our newly created one
+			hll.actionPerformed(null);
 			
 			VisualStyle vs = Cytoscape.getVisualMappingManager().setVisualStyle("GOSLIMMERVS");
 			subNetworkView.redrawGraph(false,false);
