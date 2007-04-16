@@ -5,6 +5,10 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.HashMap;
@@ -50,10 +54,10 @@ public class GOSlimPanel extends JPanel {
 ////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
 //	}
 	
-	public GOSlimPanel(Map<GONamespace,GOSlimmerController> namespaceToController) {
+	public GOSlimPanel(final Map<GONamespace,GOSlimmerController> namespaceToController) {
 		super();
 		super.setName("GOSlimmer");
-		this.setLayout(new GridLayout(8,1));
+		this.setLayout(new GridLayout(0,1));
 		for(GONamespace namespace: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(namespace);
 			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
@@ -78,7 +82,7 @@ public class GOSlimPanel extends JPanel {
 		
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
-		public GOSlimmerNamespaceSubpanel(String name,GOSlimmerController controller) {
+		public GOSlimmerNamespaceSubpanel(String name,final GOSlimmerController controller) {
 			this.add(new JLabel(name));
 			this.setLayout(new FlowLayout(FlowLayout.LEADING));
 			this.statBean = controller.getStatBean();
@@ -86,7 +90,34 @@ public class GOSlimPanel extends JPanel {
 			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
 			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered()));
 			this.add(coverageStatisticLabel);
-		
+			this.addMouseListener(new MouseListener() {
+
+				public void mouseClicked(MouseEvent e) {
+					controller.getNetworkViewFocus();
+					
+				}
+
+				public void mouseEntered(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mouseExited(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mousePressed(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mouseReleased(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			});
 		}
 		
 		public GOSlimmerNamespaceSubpanel(String title,String coverageLabelTitle, GOSlimmerController controller) {
