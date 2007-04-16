@@ -6,6 +6,7 @@ import giny.view.NodeView;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -31,6 +32,9 @@ import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
 import cytoscape.data.CyAttributes;
+import cytoscape.task.Task;
+import cytoscape.task.TaskMonitor;
+import cytoscape.task.util.TaskManager;
 import cytoscape.view.CyNetworkView;
 import cytoscape.view.cytopanels.CytoPanelState;
 import cytoscape.visual.VisualMappingManager;
@@ -110,20 +114,37 @@ public class GOSlimmerSession {
 		
 
 			
-		HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
-		for (CyNetwork subNetwork:subNetworks) {	
-			CyNetworkView subNetworkView = Cytoscape.createNetworkView(subNetwork);
-			//TODO replace these with undeprecated analogues
-			Cytoscape.setCurrentNetwork(subNetwork.getIdentifier());
-			Cytoscape.setCurrentNetworkView(subNetworkView.getIdentifier());
-			//apply the heirarchical layout onto the newly created view
-			//hll will execute the layout algorithm on the currently selected view, which should be our newly created one
-			hll.actionPerformed(null);
-			
-			VisualStyle vs = Cytoscape.getVisualMappingManager().setVisualStyle("GOSLIMMERVS");
-			subNetworkView.redrawGraph(false,false);
-			//Cytoscape.getVisualMappingManager().setVisualStyle(vs);
-			subNetworkView.setVisualStyle("GOSLIMMERVS");
+
+		for (final CyNetwork subNetwork:subNetworks) {	
+			TaskManager.executeTask(new Task() {
+
+				public String getTitle() {
+					return "Creating View for Namespace Subgraph";
+				}
+
+				public void halt() {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void run() {
+					CyNetworkView subNetworkView = Cytoscape.createNetworkView(subNetwork);
+					//TODO replace these with undeprecated analogues
+					
+					VisualStyle vs = Cytoscape.getVisualMappingManager().setVisualStyle("GOSLIMMERVS");
+					subNetworkView.redrawGraph(false,false);
+					//Cytoscape.getVisualMappingManager().setVisualStyle(vs);
+					subNetworkView.setVisualStyle("GOSLIMMERVS");
+					
+				}
+
+				public void setTaskMonitor(TaskMonitor arg0) throws IllegalThreadStateException {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			}, null);
+
 			
 		}
 		//Note, this must be done after the network views are created, since the controllers are associated with a particular view ; TODO eliminate this dependancy, view should be modifiable on it's own, though the hiding and unhiding of nodes should effect the model
@@ -134,15 +155,34 @@ public class GOSlimmerSession {
 		Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
 		Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
 		Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
-		
 
 		
-		
-		
-		//get the index of the panel and tell it to dock it
-//		int index = cytoPanel.indexOfComponent(goSlimPanel);
-//		cytoPanel.setSelectedIndex(index);
-//		cytoPanel.setState(CytoPanelState.DOCK);
+		//perform some initialization of the subgraph views, so that the user isn't confronted with a hugh and covoluted network
+		HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
+		//For starters, show only the first few levels of the heirarchy
+		for(GOSlimmerController controller:namespaceToController.values()) {
+			Node rootNode  = GOSlimmerUtil.getRootNode(controller.getNetwork());
+			//collapse the root node; TODO revise to do in a more efficient manner (e.g.
+			
+			controller.collapseNode(rootNode);
+			Collection<Node> expandedNodes = controller.expandNodeToDepthAndReturnDAGNodes(rootNode,2);
+			
+//			controller.getNetworkView().fitContent();
+			
+			//select the dag nodes, and apply heirarchical layout upon them
+			//first we have to select the unhidden nodes, so that the heirarchical layout is only applied to them
+			controller.getNetwork().setSelectedNodeState(expandedNodes, true);
+			Cytoscape.setCurrentNetwork(controller.getNetwork().getIdentifier());
+			Cytoscape.setCurrentNetworkView(controller.getNetworkView().getIdentifier());
+			//apply the heirarchical layout onto the newly created view
+			//hll will execute the layout algorithm on the currently selected view, which should be our newly created one
+			hll.actionPerformed(null);
+			
+			//I only want the first level of expansion shown at first, though I want the 2nd level layout out properly for later expansion.
+			//TODO determine if this is acceptable given the performance penalty it entails.
+			controller.collapseNode(rootNode);
+			controller.expandNodeToDepth(rootNode, 1);
+		}
 		
 	}
 	

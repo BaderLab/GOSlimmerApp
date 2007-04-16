@@ -11,6 +11,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -77,11 +79,11 @@ public class GOSlimmerController  {
 		for (int outgoingEdge:outgoingEdges) {
 			EdgeView ev = networkView.getEdgeView(outgoingEdge);
 			
-			int edgeId =ev.getEdge().getRootGraphIndex();
-			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
-			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
+//			int edgeId =ev.getEdge().getRootGraphIndex();
+//			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
+//			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
-				networkView.putClientData(edgeIsHiddenPropertyName, true);
+//				networkView.putClientData(edgeIsHiddenPropertyName, true);
 				networkView.hideGraphObject(ev);
 				
 				pruneNode(ev.getEdge().getSource());
@@ -100,11 +102,11 @@ public class GOSlimmerController  {
 		for (int outgoingEdge:outgoingEdges) {
 			EdgeView ev = networkView.getEdgeView(outgoingEdge);
 			
-			int edgeId =ev.getEdge().getRootGraphIndex();
-			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
-			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
+//			int edgeId =ev.getEdge().getRootGraphIndex();
+//			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
+//			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
-				networkView.putClientData(edgeIsHiddenPropertyName, true);
+//				networkView.putClientData(edgeIsHiddenPropertyName, true);
 				networkView.hideGraphObject(ev);
 				
 				pruneNode(ev.getEdge().getSource());
@@ -135,19 +137,19 @@ public class GOSlimmerController  {
 			EdgeView ev = networkView.getEdgeView(incomingEdge);
 			
 			int edgeId =ev.getEdge().getRootGraphIndex();
-			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
-			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
+//			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
+//			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || edgeIsHiddenPropertyValue) {
-				networkView.putClientData(edgeIsHiddenPropertyName, false);
+//				networkView.putClientData(edgeIsHiddenPropertyName, false);
 				networkView.showGraphObject(ev);
 //				BioDataServer server = Cytoscape.getBioDataServer();
 //				AnnotationDescription[] desc = server.getAnnotationDescriptions();
 //				desc[0].getCurator();
-				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
-				String[] attNames = nodeAtt.getAttributeNames();
+//				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
+//				String[] attNames = nodeAtt.getAttributeNames();
 				
-				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
+//				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
 				expandNode(ev.getEdge().getSource());
 			//}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
@@ -171,23 +173,61 @@ public class GOSlimmerController  {
 			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
 			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || edgeIsHiddenPropertyValue) {
-				networkView.putClientData(edgeIsHiddenPropertyName, false);
+//				networkView.putClientData(edgeIsHiddenPropertyName, false);
 				networkView.showGraphObject(ev);
 //				BioDataServer server = Cytoscape.getBioDataServer();
 //				AnnotationDescription[] desc = server.getAnnotationDescriptions();
 //				desc[0].getCurator();
-				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
-				String[] attNames = nodeAtt.getAttributeNames();
+//				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
+//				String[] attNames = nodeAtt.getAttributeNames();
 				
-				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
+//				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
 				expandNodeToDepth(ev.getEdge().getSource(),depth -1);
 			//}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
 		}
 	}
 	
-	
+	/**
+	 * @param snode the node to expand
+	 * @param depth the depth to which the DAG should be expanded
+	 */
+	public Collection<Node> expandNodeToDepthAndReturnDAGNodes(Node snode,int depth) {
+		List<Node> l= new ArrayList<Node>();
+		l.add(snode);
+		if (depth <=0) {
+			l.add(snode);
+			return l;
+		}
+		networkView.showGraphObject(networkView.getNodeView(snode));
+		
+		//retrieve the incoming edges, such that we can expand them
+		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
+		for (int incomingEdge:incomingEdges) {
+			EdgeView ev = networkView.getEdgeView(incomingEdge);
+			
+			int edgeId =ev.getEdge().getRootGraphIndex();
+			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
+			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
+			//if (edgeIsHiddenPropertyValue== null || edgeIsHiddenPropertyValue) {
+//				networkView.putClientData(edgeIsHiddenPropertyName, false);
+				networkView.showGraphObject(ev);
+				
+//				BioDataServer server = Cytoscape.getBioDataServer();
+//				AnnotationDescription[] desc = server.getAnnotationDescriptions();
+//				desc[0].getCurator();
+//				CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//				nodeAtt.getListAttribute(snode.getIdentifier(), "peh");
+//				String[] attNames = nodeAtt.getAttributeNames();
+				
+//				List annotIDList = nodeAtt.getListAttribute(snode.getIdentifier(), "annotation.DB_Object_ID");
+				l.addAll(expandNodeToDepthAndReturnDAGNodes(ev.getEdge().getSource(),depth -1));
+			//}
+			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
+		}
+		return l;
+	}
 	
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 	private static final CyAttributes netAtt = Cytoscape.getNetworkAttributes();
@@ -223,8 +263,8 @@ public class GOSlimmerController  {
 	
 	DecimalFormat formatter = new DecimalFormat("00.00%");
 	private void updateViewStatistics() {
-
-		this.coverageStatisticViewLabel.setText(String.valueOf(formatter.format(statBean.fractionCovered())));
+		//TODO consider revising this condition, since it might hide the face that the coverageStatisticViewLabel hasn't been initialized
+		if (this.coverageStatisticViewLabel!=null) this.coverageStatisticViewLabel.setText(String.valueOf(formatter.format(statBean.fractionInferredCovered())));
 	}
 
 	public GOSlimmerCoverageStatBean getStatBean() {

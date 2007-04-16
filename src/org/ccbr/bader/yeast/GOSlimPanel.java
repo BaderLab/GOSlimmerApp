@@ -88,7 +88,7 @@ public class GOSlimPanel extends JPanel {
 			this.statBean = controller.getStatBean();
 			//String coverageStatisticText = String.v statBean.fractionCovered();
 			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
-			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered()));
+			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionInferredCovered()));
 			this.add(coverageStatisticLabel);
 			this.addMouseListener(new MouseListener() {
 

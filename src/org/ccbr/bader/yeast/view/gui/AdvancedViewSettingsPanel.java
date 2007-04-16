@@ -77,6 +77,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 			expandNodeDepthCheckbox = new JCheckBox(expandNodeDepthCheckboxText);
 			//expandNodeDepthCheckbox.setText(expandNodeDepthCheckboxText);
 			expandNodeDepthCheckbox.setToolTipText(expandNodeDepthTooltip);
+			expandNodeDepthCheckbox.setSelected(true);
 			expandNodeDepthCheckbox.addActionListener(this);
 		}
 		return expandNodeDepthCheckbox;
@@ -87,7 +88,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	private JTextField getExpandNodeTextField() {
 		if (expandNodeDepthTextField == null) {
 			expandNodeDepthTextField = new JTextField("1");
-			expandNodeDepthTextField.setEnabled(false);
+			expandNodeDepthTextField.setEnabled(expandNodeDepthCheckbox.isSelected());
 			expandNodeDepthTextField.addActionListener(this);
 //			expandNodeDepthTextField.sets
 		}

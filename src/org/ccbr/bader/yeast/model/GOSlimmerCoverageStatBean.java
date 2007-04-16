@@ -30,6 +30,12 @@ public class GOSlimmerCoverageStatBean {
 		this.numGenesTotal = numGenesTotal;
 	}
 
+	Set<Node> slimGoNodes = new HashSet<Node>();
+	
+	Set<String> inferredCoveredGeneIds = new HashSet<String>();
+	Set<String> directlyCoveredGeneIds = new HashSet<String>();
+	
+	
 	public void addToSlimSet(Node goNode) {
 		String goid = goNode.getIdentifier();
 		if (slimGoNodes.contains(goNode)) return; // set already contains this go id, so no need to re-add it
@@ -37,15 +43,20 @@ public class GOSlimmerCoverageStatBean {
 		/* Update the covered gene set */
 		
 		//get the count of genes covered by this go term, both directly and by descendant inference
-		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true);
-		coveredGeneIds.addAll(coveredGenes);
+		List<String> directlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(goNode);
+		List<String> inferredCoveredGenes = GOSlimmerUtil.getInferredCoveredGenes(goNode);
+		
+		inferredCoveredGeneIds.addAll(directlyCoveredGenes);
+		inferredCoveredGeneIds.addAll(inferredCoveredGenes);
+		
+		directlyCoveredGeneIds.addAll(directlyCoveredGenes);
 		
 		/* Update the fraction covered statistic */
 		updateFractionCovered();
 		
 		/* Update the GO Slim set */
 		slimGoNodes.add(goNode);
-		System.out.println(fractionCovered);
+		System.out.println(fractionInferredCovered);
 	}
 	
 	public void removeFromSlimSet(Node goNode) {
@@ -57,7 +68,8 @@ public class GOSlimmerCoverageStatBean {
 		//brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
 		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true);
 		for(String coveredGene:coveredGenes) {
-			boolean isStillCovered = false;
+			boolean isStillInferredCovered = false;
+			boolean isStillDirectlyCovered = false;
 			//iterate through remaining slim set goid's, and for each one see if it also contains the gene covered by the goNode being removed
 			for (Node slimGoNode:slimGoNodes) {
 				if (slimGoNode == goNode) continue;
@@ -70,14 +82,25 @@ public class GOSlimmerCoverageStatBean {
 //				}
 				List<String> slimDirectlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(slimGoNode);
 				List<String> slimInferredCoveredGenes = GOSlimmerUtil.getInferredCoveredGenes(slimGoNode);
-				if (slimInferredCoveredGenes.contains(coveredGene) || slimDirectlyCoveredGenes.contains(coveredGene)) {
-					isStillCovered = true;
-					break; //no need to continue iterating, we've found the gene of interest
+//				if (slimInferredCoveredGenes.contains(coveredGene) || slimDirectlyCoveredGenes.contains(coveredGene)) {
+//					isStillInferredCovered = true;
+//					break; //no need to continue iterating, we've found the gene of interest
+//				}
+				
+				if (slimDirectlyCoveredGenes.contains(coveredGene)) {
+					isStillDirectlyCovered = true;
+					isStillInferredCovered = true;
 				}
+				else if (slimInferredCoveredGenes.contains(coveredGene)) {
+					isStillInferredCovered = true;
+				}
+				
+				if (isStillDirectlyCovered && isStillInferredCovered) break;
 				
 				
 			}
-			if (!isStillCovered) coveredGeneIds.remove(coveredGene);
+			if (!isStillInferredCovered) inferredCoveredGeneIds.remove(coveredGene);
+			if (!isStillDirectlyCovered) directlyCoveredGeneIds.remove(coveredGene);
 		}
 		
 		/* Update the fraction covered statistic */
@@ -85,23 +108,29 @@ public class GOSlimmerCoverageStatBean {
 		
 		slimGoNodes.remove(goNode);
 		
-		System.out.println(fractionCovered);
+		System.out.println(fractionInferredCovered);
 		
 	}
 	
 	
 	private void updateFractionCovered() {
-		fractionCovered = ((double) coveredGeneIds.size())/((double) numGenesTotal);
+		fractionInferredCovered = ((double) inferredCoveredGeneIds.size())/((double) numGenesTotal);
+		fractionDirectlyCovered = ((double) directlyCoveredGeneIds.size())/((double) numGenesTotal);
 	}
 	
-	Set<Node> slimGoNodes = new HashSet<Node>();
 	
-	Set<String> coveredGeneIds = new HashSet<String>();
+	/**
+	 * The fraction of genes covered by the term directly and by inference from it's descendant terms' respective coverages
+	 */
+	private double fractionInferredCovered;
+	private double fractionDirectlyCovered;
 	
-	private double fractionCovered;
+	public double fractionInferredCovered() {
+		return fractionInferredCovered;
+	}
 	
-	public double fractionCovered() {
-		return fractionCovered;
+	public double fractionDirectlyCovered() {
+		return fractionDirectlyCovered;
 	}
 	
 	//TODO perhaps implement listener interface so that gui can be updated upon change, though this might be better handled by a view or controller component.

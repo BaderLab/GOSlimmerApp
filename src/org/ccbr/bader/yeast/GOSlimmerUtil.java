@@ -11,9 +11,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.ccbr.bader.yeast.export.GOFormatException;
+
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;
+import cytoscape.data.ontology.GeneOntology;
+import cytoscape.data.ontology.Ontology;
 
 public class GOSlimmerUtil {
 
@@ -216,6 +220,25 @@ public class GOSlimmerUtil {
 		Boolean isSelected =  nodeAtt.getBooleanAttribute(goNode.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
 		if (isSelected ==null) return false;
 		return isSelected;
+	}
+
+	public static void deleteGOSlimmerAttributes() {
+		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
+		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
+		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.goNodeInSlimSetAttributeName);
+	}
+
+	public static boolean isOntology(String ontologyName) {
+		final Ontology testOntology = Cytoscape.getOntologyServer().getOntologies().get(ontologyName);
+
+		/*
+		 * Ontology type should be GO.
+		 */
+		if (testOntology!=null && testOntology.getClass() == GeneOntology.class) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 	
 	

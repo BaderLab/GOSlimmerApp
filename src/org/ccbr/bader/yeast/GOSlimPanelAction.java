@@ -1,4 +1,4 @@
-package org.ccbr.bader.yeast;
+ package org.ccbr.bader.yeast;
 
 import giny.model.Edge;
 import giny.model.Node;
@@ -122,10 +122,11 @@ public class GOSlimPanelAction implements ActionListener {
 			if (src.getText().equals("Exit GOSlimmer")) {
 				cytoPanel.remove(goSlimmerSessionsTabbedPane);
 				goSlimmerSessionsTabbedPane = null;
+				//delete goslimmer specific attributes:
+				GOSlimmerUtil.deleteGOSlimmerAttributes();
 				alreadyOpened=false;
 			}
 			else if (src.getText().equals("Start GOSlimmer")) {
-				
 				
 				//Unfortuntately, because cyattributes are defined globally for all nodes with the same id, we can't at this time 
 				//use goslimmer on two dags at the same time
@@ -157,6 +158,21 @@ public class GOSlimPanelAction implements ActionListener {
 				//note that we probably can't manipulate multiple go graphs at the same time due to the way attributes are saved
 				
 				CyNetwork currentNetwork = Cytoscape.getCurrentNetwork();
+				
+				//ensure that the network is not null
+				if (currentNetwork==null) {
+					JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Cannot start GOSlimmer without a GO Tree Network.  Please load a GO Ontology Tree, selected it as the current network, and then start GOSlimmer","Error - cannot start GOSlimmer",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
+				
+				//ensure that the network corresponds to a loaded Gene Ontology
+				if (!GOSlimmerUtil.isOntology(currentNetwork.getTitle())) {
+					JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Cannot start GOSlimmer without a Gene Ontology Tree Network."
+							+ lsep + "Network name '" + currentNetwork.getTitle() + "' does not match the name of a loaded Gene Ontology."
+							+ lsep + "Please load a GO Tree through the \"File->Import->Ontology and Annotation\" dialog,"
+							+ lsep + "selected it as the current network, and then start GOSlimmer","Error - cannot start GOSlimmer",JOptionPane.ERROR_MESSAGE);
+					return;
+				}
 				
 				GOSlimmerSession newSession =  new GOSlimmerSession(currentNetwork);
 				GOSlimPanel newSessionPanel = new GOSlimPanel(newSession.getNamespaceToController());

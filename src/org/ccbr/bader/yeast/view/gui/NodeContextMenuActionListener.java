@@ -12,6 +12,9 @@ import javax.swing.JMenuItem;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 
 import cytoscape.Cytoscape;
+import cytoscape.task.Task;
+import cytoscape.task.TaskMonitor;
+import cytoscape.task.util.TaskManager;
 import cytoscape.visual.VisualStyle;
 
 public class NodeContextMenuActionListener implements ActionListener {
@@ -61,7 +64,29 @@ public class NodeContextMenuActionListener implements ActionListener {
 				controller.addNodeToSlimSet(node);
 			}
 			else if (jbSource.getText().equals(deselectButtonText)) {
-				controller.removeNodeFromSlimSet(node);
+				TaskManager.executeTask(new Task() {
+
+					public String getTitle() {
+						return "Recalculating Coverage Statistics";
+					}
+
+					public void halt() {
+						// TODO Auto-generated method stub
+						
+					}
+
+					public void run() {
+						controller.removeNodeFromSlimSet(node);
+						
+					}
+
+					public void setTaskMonitor(TaskMonitor arg0) throws IllegalThreadStateException {
+						// TODO Auto-generated method stub
+						
+					}
+					
+				}, null);
+				
 			}
 			else {
 				//TODO deal with unexpecte button press

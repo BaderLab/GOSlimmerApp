@@ -44,6 +44,9 @@ import org.ccbr.bader.yeast.export.GOFormatException;
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
 import cytoscape.bookmarks.DataSource;
+import cytoscape.task.Task;
+import cytoscape.task.TaskMonitor;
+import cytoscape.task.util.TaskManager;
 import cytoscape.util.BookmarksUtil;
 
 //public class GOSlimmerGeneAssociationDialog extends JDialog implements ActionListener {
@@ -218,15 +221,39 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			else if (bSource.getText().equals(applyButtonText)) {
 				//TODO apply the selected annotation to the go dags
 				System.out.println("Apply button pressed");
-				try {
-					applySelectedAnnotationToGOGraphs();
-				} catch (FileNotFoundException e) {
-					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
-				} catch (MalformedURLException e) {
-					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because URL is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
-				} catch (GOFormatException e) {
-					JOptionPane.showMessageDialog(this,"Failed to apply gene annotation data because annotation file is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
-				}
+				
+				TaskManager.executeTask(new Task() {
+
+					public String getTitle() {
+						// TODO Auto-generated method stub
+						return "Retrieving and applying Gene Annotation Data";
+					}
+
+					public void halt() {
+						// TODO Auto-generated method stub
+						
+					}
+
+					public void run() {
+						try {
+							applySelectedAnnotationToGOGraphs();
+						} catch (FileNotFoundException e) {
+							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+						} catch (MalformedURLException e) {
+							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because URL is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+						} catch (GOFormatException e) {
+							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because annotation file is not valid: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
+						}
+						
+					}
+
+					public void setTaskMonitor(TaskMonitor arg0) throws IllegalThreadStateException {
+						// TODO Auto-generated method stub
+						
+					}
+					
+				}, null);
+
 			}
 			else {
 				throw new RuntimeException("Unrecognized button press event received: " + event.getSource());
