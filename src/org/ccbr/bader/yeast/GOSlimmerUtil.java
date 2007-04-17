@@ -144,7 +144,7 @@ public class GOSlimmerUtil {
 		return node;
 	}
 	
-	public static  Map<String, String> createGoTermRemap(CyNetwork godag) {
+	public static  Map<String, String> createGoTermRemap(CyNetwork godag) throws GOSlimmerException {
 		Map<String, String> goTermRemap = new HashMap<String, String>();
 		Node rootNode = GOSlimmerUtil.getRootNode(godag);
 		/*
@@ -166,7 +166,7 @@ public class GOSlimmerUtil {
 			goTermRemap.put(rootNode.getIdentifier(), rootNode.getIdentifier());
 		}
 		else {
-			throw new RuntimeException("Cannot remap because root node is not selected; some annotations would be lost.");
+			throw new GOSlimmerException("Cannot remap because root node is not selected; some annotations would be lost.");
 		}
 		int[] childEdges = godag.getAdjacentEdgeIndicesArray(rootNode.getRootGraphIndex(), false, true, false);
 		remapGoTerms(childEdges, lastSelectedTermId, godag, goTermRemap);
