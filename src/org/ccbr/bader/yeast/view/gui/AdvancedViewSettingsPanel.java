@@ -1,5 +1,6 @@
 package org.ccbr.bader.yeast.view.gui;
 
+import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
@@ -14,6 +15,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
+import org.ccbr.bader.yeast.view.gui.misc.JCheckBoxMod;
 
 import cytoscape.Cytoscape;
 import cytoscape.view.CyNetworkView;
@@ -29,22 +31,25 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	
 	
 	
-	{
-		initComponents();
-	}
-	
-	JCheckBox includeDescendentCoverageInNodeSizeCalculationCheckBox;
-	private final String includeDescendentCoverageInNodeSizeCalculationText = "Include child nodes when calculating node size";
+
 	
 	private final String lsep = System.getProperty("line.separator");
 	
+	JCheckBox includeDescendentCoverageInNodeSizeCalculationCheckBox;
+	private final String includeDescendentCoverageInNodeSizeCalculationText = "Include child nodes when calculating node size";
+	private final String includeDescendentCoverageInNodeSizeCalculationToolTip = 
+				"If checked, then the size of the node will be proportional to the number of genes" 
+		+ lsep +"directly annotated by the node + the number of genes annotated by all of the nodes " 
+		+ lsep +"descendants in the graph. If unchecked, size is proportional to the directly " 
+		+ lsep +"annotated nodes only.";
+	
+	
+	
 	private JCheckBox getIncludeDeCheckBox() {
 		if (includeDescendentCoverageInNodeSizeCalculationCheckBox==null) {
-			includeDescendentCoverageInNodeSizeCalculationCheckBox = new JCheckBox(includeDescendentCoverageInNodeSizeCalculationText);
+			includeDescendentCoverageInNodeSizeCalculationCheckBox = new JCheckBoxMod(includeDescendentCoverageInNodeSizeCalculationText);
 			includeDescendentCoverageInNodeSizeCalculationCheckBox.setSelected(GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations);
-			includeDescendentCoverageInNodeSizeCalculationCheckBox.setToolTipText("If checked, then the size of the node will be proportional to the number of genes"
-					+ lsep +" directly annotated by the node + the number of genes annotated by all of the nodes descendants in the graph. "
-					+ lsep + " If unchecked, size is proportional to the directly annotated nodes only.");
+			includeDescendentCoverageInNodeSizeCalculationCheckBox.setToolTipText(includeDescendentCoverageInNodeSizeCalculationToolTip);
 			includeDescendentCoverageInNodeSizeCalculationCheckBox.addActionListener(this);
 		}
 		return includeDescendentCoverageInNodeSizeCalculationCheckBox;
@@ -52,13 +57,14 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	
 	JCheckBox labelNodesWithOntologyName;
 	private final String labelNodesWithOntologyNameLabel = "Label nodes with Ontology Term Name";
+	private final String labelNodesWithOntologyNameToolTip = "If checked, nodes will be labelled with their biologically meaningful " +
+													  lsep + "ontology term name.  Otherwise, they will be labelled with their GO ID.";
 	
 	private JCheckBox getLCheckBox() {
 		if (labelNodesWithOntologyName==null) {
-			labelNodesWithOntologyName = new JCheckBox(labelNodesWithOntologyNameLabel);
+			labelNodesWithOntologyName = new JCheckBoxMod(labelNodesWithOntologyNameLabel);
 			labelNodesWithOntologyName.setSelected(GOSlimmerGUIViewSettings.labelNodesWithOntologyName);
-			labelNodesWithOntologyName.setToolTipText("If checked, nodes will be labelled with their biologically meaningful ontology term name."
-					+ lsep + "  Otherwise, they will be labelled with their GO ID.");
+			labelNodesWithOntologyName.setToolTipText(labelNodesWithOntologyNameToolTip);
 			labelNodesWithOntologyName.addActionListener(this);
 		}
 		return labelNodesWithOntologyName;
@@ -67,14 +73,15 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	private JCheckBox expandNodeDepthCheckbox;
 	private JTextField expandNodeDepthTextField;
 	
-	private String expandNodeDepthTooltip = "If checked, a node's descendant tree will only be expanded to the specified depth."
-		+ lsep + " If uncheck, the full descendant tree will be expanded.";
+	private final String expandNodeDepthTooltip = 
+				 "If checked, a node's descendant tree will only be expanded to the " +
+			lsep+"specified depth.  If uncheck, the full descendant tree will be expanded.";
 	
 	private final String expandNodeDepthCheckboxText = "Expand nodes to specified depth";
 	
 	private JCheckBox getExpandNodeDepthCheckbox() {
 		if (expandNodeDepthCheckbox==null) {
-			expandNodeDepthCheckbox = new JCheckBox(expandNodeDepthCheckboxText);
+			expandNodeDepthCheckbox = new JCheckBoxMod(expandNodeDepthCheckboxText);
 			//expandNodeDepthCheckbox.setText(expandNodeDepthCheckboxText);
 			expandNodeDepthCheckbox.setToolTipText(expandNodeDepthTooltip);
 			expandNodeDepthCheckbox.setSelected(true);
@@ -96,6 +103,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	}
 	
 	private void initComponents() {
+//		this.setPreferredSize(new Dimension(10,40));
 		this.setBorder(BorderFactory.createTitledBorder("Advanced View Settings"));
 		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
@@ -144,6 +152,10 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 			}
 		}
 		
+	}
+	
+	{
+		initComponents();
 	}
 	
 }
