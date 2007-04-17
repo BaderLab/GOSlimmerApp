@@ -21,6 +21,10 @@ import javax.swing.JPanel;
 
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
+import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
+
+import cytoscape.Cytoscape;
+import cytoscape.view.CytoscapeDesktop;
 
 public class GOSlimPanel extends JPanel {
 
@@ -82,8 +86,14 @@ public class GOSlimPanel extends JPanel {
 		JLabel inferredCoverageStatisticLabel;
 		JLabel directCoverageStatisticLabel;
 		
-		String inferredCoverageStatisticLabelToolTip = "The percentage of gene annotation file genes covered directly by the GO terms selected for inclusion in the slim set, as well as those genes annotated by descendant terms within this tree(whether expanded or collapsed)";
-		String directCoverageStatisticLabelToolTip = "The percentage of gene annotation file genes covered directly by the GO terms explicitely selected for inclusion in the slim set";
+		private final String lsep = System.getProperty("line.separator");
+		
+		String inferredCoverageStatisticLabelToolTip =         "The percentage of gene annotation file genes covered directly " +
+														lsep + "by the GO terms selected for inclusion in the slim set, as " +
+														lsep + "well as those genes annotated by descendant terms within this " +
+														lsep + "tree(whether expanded or collapsed)";
+		String directCoverageStatisticLabelToolTip =            "The percentage of gene annotation file genes covered directly " +
+														lsep +  "by the GO terms explicitely selected for inclusion in the slim set";
 		
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
@@ -97,41 +107,46 @@ public class GOSlimPanel extends JPanel {
 			//String coverageStatisticText = String.v statBean.fractionCovered();
 			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
 			
-			this.inferredCoverageStatisticLabel = new JLabel("Inferred Coverage: " + numFormatter.format(statBean.fractionInferredCovered()));
+			this.inferredCoverageStatisticLabel = new JLabelMod("Inferred Coverage: " + numFormatter.format(statBean.fractionInferredCovered()));
 			inferredCoverageStatisticLabel.setToolTipText(inferredCoverageStatisticLabelToolTip);
 			this.add(inferredCoverageStatisticLabel);
 			
-			this.directCoverageStatisticLabel = new JLabel("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
+			this.directCoverageStatisticLabel = new JLabelMod("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
 			directCoverageStatisticLabel.setToolTipText(directCoverageStatisticLabelToolTip);
 			this.add(directCoverageStatisticLabel);
-//			this.addMouseListener(new MouseListener() {
-//
-//				public void mouseClicked(MouseEvent e) {
+			MouseListener changeFocusMouseListener = new MouseListener() {
+
+				public void mouseClicked(MouseEvent e) {
 //					controller.getNetworkViewFocus();
-//					
-//				}
-//
-//				public void mouseEntered(MouseEvent e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//
-//				public void mouseExited(MouseEvent e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//
-//				public void mousePressed(MouseEvent e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//
-//				public void mouseReleased(MouseEvent e) {
-//					// TODO Auto-generated method stub
-//					
-//				}
-//				
-//			});
+					Cytoscape.firePropertyChange(CytoscapeDesktop.NETWORK_VIEW_FOCUS,
+							 null, controller.getNetwork().getIdentifier());
+					
+				}
+
+				public void mouseEntered(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mouseExited(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mousePressed(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+
+				public void mouseReleased(MouseEvent e) {
+					// TODO Auto-generated method stub
+					
+				}
+				
+			};
+			this.addMouseListener(changeFocusMouseListener);
+			this.directCoverageStatisticLabel.addMouseListener(changeFocusMouseListener);
+			this.inferredCoverageStatisticLabel.addMouseListener(changeFocusMouseListener);
 		}
 		
 //		public GOSlimmerNamespaceSubpanel(String title,String coverageLabelTitle, GOSlimmerController controller) {
