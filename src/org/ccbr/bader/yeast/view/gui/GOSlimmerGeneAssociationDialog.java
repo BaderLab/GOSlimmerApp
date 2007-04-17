@@ -7,6 +7,8 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GraphicsConfiguration;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.HeadlessException;
 import java.awt.event.ActionEvent;
@@ -57,6 +59,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 	private String ontologyName;
 	private GOSlimmerSession session;
 	
+	private JDialog annotationChooserDialog;
 	
 	public GOSlimmerGeneAssociationDialog(Map<GONamespace, GOSlimmerController> namespaceToController,String ontologyName,GOSlimmerSession session) throws HeadlessException {
 		super();
@@ -72,12 +75,24 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		initComponents();
 	}
 	
+	private JDialog getAnnotationChooserDialog() {
+		if (annotationChooserDialog == null) {
+			annotationChooserDialog = new JDialog(Cytoscape.getDesktop(),true);
+			annotationChooserDialog.add(getAnnotationComboBox());
+			annotationChooserDialog.add(getAnnotationBrowseButton());
+			annotationChooserDialog.add(getApplyButton());
+		}
+		return annotationChooserDialog;
+	}
+	
 	private void initComponents()  {
-		this.setBorder(BorderFactory.createTitledBorder("Select Gene Association Data to use for Coverage Calculation"));
+		//this.setPreferredSize(new Dimension(10,40));
+		this.setBorder(BorderFactory.createTitledBorder("Select Gene Annotation to use for Coverage Calculation"));
 		
 		this.setLayout(new BorderLayout());
 //		this.setLayout(new GridLayout(0,1));
-//			this.setLayout(new FlowLayout());
+//			this.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
+		this.setLayout(new GridBagLayout());
 //		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
 		
 //		this.add(getAnnotationComboBox(),BorderLayout.WEST);
@@ -86,11 +101,31 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 //		this.add(getApplyButton(),BorderLayout.PAGE_END);
 //		this.add(getAnnotationComboBox());
 //		this.add(getAnnotationBrowseButton());
-		this.add(getSelectedAnnotationFileLabel(),BorderLayout.NORTH);
-		this.add(getSelectionPanel(),BorderLayout.CENTER);
-//		this.add(getAnnotationComboBox());
-//		this.add(getAnnotationBrowseButton());
-		this.add(getApplyButton(),BorderLayout.SOUTH);
+//		this.add(getSelectedAnnotationFileLabel(),BorderLayout.NORTH);
+//		this.add(getSelectionPanel(),BorderLayout.CENTER);
+//		this.add(getApplyButton(),BorderLayout.SOUTH);
+		GridBagConstraints c = new GridBagConstraints();
+//		c.weightx = 0.5;
+//		c.weighty = 0.5;
+		c.anchor = GridBagConstraints.FIRST_LINE_START;
+		c.gridx=0;
+		c.gridy=0;
+		
+		this.add(getSelectedAnnotationFileLabel(),c);
+		
+		c.gridx=0;
+		c.gridy=1;
+		this.add(getAnnotationComboBox(),c);
+		c.gridx=1;
+		c.gridy=1;
+		this.add(getAnnotationBrowseButton(),c);
+		
+		c.anchor = GridBagConstraints.CENTER;
+		c.gridx=0;
+		c.gridy=2;
+		c.gridwidth = GridBagConstraints.REMAINDER;
+		
+		this.add(getApplyButton(),c);
 	}
 	
 	private JPanel selectionPanel;
@@ -194,7 +229,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		else { //otherwise, use the combo box selection
 			comboBoxSelection = (String) (getAnnotationComboBox().getSelectedItem());
 		}
-		selectedAnnotationFileLabel.setText("Selected Annotation File: " + comboBoxSelection);
+		selectedAnnotationFileLabel.setText("Selected File: " + comboBoxSelection);
 	}
 	
 	private File userSelectedFile;
