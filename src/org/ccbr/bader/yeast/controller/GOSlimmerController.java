@@ -402,11 +402,11 @@ public class GOSlimmerController  {
 		this.useFiniteExpansionDepth = useFiniteExpansionDepth;
 	}
 
-	public void getNetworkViewFocus() {
-		//TODO replace with undeprecated alternatives
-		Cytoscape.setCurrentNetwork(this.network.getIdentifier());
-		Cytoscape.setCurrentNetworkView(this.networkView.getIdentifier());
-	}
+//	public void getNetworkViewFocus() {
+//		//TODO replace with undeprecated alternatives
+//		Cytoscape.setCurrentNetwork(this.network.getIdentifier());
+//		Cytoscape.setCurrentNetworkView(this.networkView.getIdentifier());
+//	}
 
 
 	
