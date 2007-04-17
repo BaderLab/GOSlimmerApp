@@ -34,19 +34,7 @@ public class GOSlimPanelAction implements ActionListener {
 		// TODO Auto-generated constructor stub
 	}
 
-	//A boolean is attached to the networkview with this property name to indicate whether or not is has already had a goslimmer attached to it
-	private String networkViewGoSlimClientDataPropertyName = "GoSlimmerAttached";
-	
-	//private GOSlimmerController controller;
-	
-//	{
-//		//define attributes
-//		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-//		
-//			nodeAtt.getMultiHashMapDefinition().defineAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName, MultiHashMapDefinition., keyTypes)
-//		}
-//	}
-	
+
 	private static final String lsep = System.getProperty("line.separator");
 	
 	public void actionPerformed(ActionEvent event) {
@@ -143,26 +131,4 @@ public class GOSlimPanelAction implements ActionListener {
 	}
 	private JTabbedPane goSlimmerSessionsTabbedPane;
 	
-
-	private GOSlimmerController molFunController = null;
-	private GOSlimmerController bioProController = null;
-	private GOSlimmerController celComController = null;
-	
-	
-	private final String bio_pro_name = "biological_process";
-	private final String mol_fun_name = "molecular_function";
-	private final String cel_com_name = "cellular_component";
-	
-	//The Subgraphs of the GO Network representing each of the three sub ontologies of the GO DAG
-	private CyNetwork molFunSubGraph = null;
-	private CyNetwork bioProSubGraph = null; 
-	private CyNetwork celComSubGraph = null; 
-	
-
-
-	private final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-
-
-	
-
 }
