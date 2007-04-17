@@ -18,10 +18,12 @@ import javax.swing.JPanel;
 
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerException;
 import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
+import org.ccbr.bader.yeast.view.gui.misc.JButtonMod;
 
 import cytoscape.CyNetwork;
 
@@ -44,15 +46,20 @@ public class FileExportPanel extends JPanel implements ActionListener {
 		this.add(getExportToFileButton());
 	}
 	
+	private static final String lsep = System.getProperty("line.separator");
+	
 	JButton exportToFileButton;
 	private static final String exportToFileButtonText = "Export Remapped Gene Association File";
-	private static final String exportToFileButtonToolTip = "A new version of the currently set gene annotation file will be " +
-			" created where the GO Terms for unselected entries will be remapped to ancestor terms which were selected." +
-			" Note that only terms which exist within this GO tree will be exported or remapped;  all others will be ommitted from the output.";
+	private static final String exportToFileButtonToolTip = 
+		     "A new version of the imported gene annotation file will be " +
+		lsep+" created where the GO Terms for unselected entries will be " +
+		lsep+"remapped to ancestor terms which were selected.  Note that " +
+		lsep+"only terms which exist within this GO tree will be exported" +
+		lsep+"or remapped;  all others will be ommitted from the output.";
 	
 	private JButton getExportToFileButton() {
 		if (exportToFileButton ==null) {
-			exportToFileButton = new JButton(exportToFileButtonText);
+			exportToFileButton = new JButtonMod(exportToFileButtonText);
 			exportToFileButton.addActionListener(this);
 			exportToFileButton.setToolTipText(exportToFileButtonToolTip);
 		}
@@ -70,7 +77,12 @@ public class FileExportPanel extends JPanel implements ActionListener {
 					File exportFile = chooser.getSelectedFile();
 					Map<String,String> goTermRemap = new HashMap<String, String>();
 					for(GOSlimmerController controller: controllers) {
-						goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+						try {
+							goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+						} catch (GOSlimmerException e) {
+							JOptionPane.showMessageDialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+							return;
+						}
 						
 					}
 					try {
