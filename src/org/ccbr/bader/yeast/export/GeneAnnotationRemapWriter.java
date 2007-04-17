@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Stack;
 
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerException;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 
 import cytoscape.CyNetwork;
@@ -24,7 +25,7 @@ public class GeneAnnotationRemapWriter {
 	
 	Map<String, String> goTermRemap;
 	
-	public GeneAnnotationRemapWriter(BufferedWriter writer, CyNetwork GODAG) {
+	public GeneAnnotationRemapWriter(BufferedWriter writer, CyNetwork GODAG) throws GOSlimmerException {
 		this.w = writer;
 		this.goTermRemap = GOSlimmerUtil.createGoTermRemap(GODAG);
 	}
