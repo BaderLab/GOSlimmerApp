@@ -40,7 +40,7 @@ public class GOSlimmerController  {
 	private CyNetwork network;
 	private CyNetworkView networkView;
 	private GOSlimmerCoverageStatBean statBean;
-	private JLabel coverageStatisticViewLabel;
+	private JLabel inferredCoverageStatisticViewLabel;
 	private GONamespace namespace;
 
 	public GOSlimmerController(GONamespace namespace,CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean) {
@@ -264,7 +264,8 @@ public class GOSlimmerController  {
 	DecimalFormat formatter = new DecimalFormat("00.00%");
 	private void updateViewStatistics() {
 		//TODO consider revising this condition, since it might hide the face that the coverageStatisticViewLabel hasn't been initialized
-		if (this.coverageStatisticViewLabel!=null) this.coverageStatisticViewLabel.setText(String.valueOf(formatter.format(statBean.fractionInferredCovered())));
+		if (this.inferredCoverageStatisticViewLabel!=null) this.inferredCoverageStatisticViewLabel.setText("Inferred Coverage: " + String.valueOf(formatter.format(statBean.fractionInferredCovered())));
+		if (this.directCoverageStatisticViewLabel!=null) this.directCoverageStatisticViewLabel.setText("Direct Coverage: " + formatter.format(statBean.fractionDirectlyCovered()));
 	}
 
 	public GOSlimmerCoverageStatBean getStatBean() {
@@ -291,12 +292,23 @@ public class GOSlimmerController  {
 		this.networkView = networkView;
 	}
 
-	public JLabel getCoverageStatisticViewLabel() {
-		return coverageStatisticViewLabel;
+	public JLabel getInferredCoverageStatisticViewLabel() {
+		return inferredCoverageStatisticViewLabel;
 	}
 
-	public void setCoverageStatisticViewLabel(JLabel coverageStatisticViewLabel) {
-		this.coverageStatisticViewLabel = coverageStatisticViewLabel;
+	public void setInferredCoverageStatisticViewLabel(JLabel coverageStatisticViewLabel) {
+		this.inferredCoverageStatisticViewLabel = coverageStatisticViewLabel;
+	}
+	
+	JLabel directCoverageStatisticViewLabel;
+	
+	public JLabel getDirectCoverageStatisticViewLabel() {
+		return directCoverageStatisticViewLabel;
+	}
+
+	public void setDirectCoverageStatisticViewLabel(
+			JLabel directCoverageStatisticViewLabel) {
+		this.directCoverageStatisticViewLabel = directCoverageStatisticViewLabel;
 	}
 	
 	public void removeCoverageAttributes() {
@@ -395,6 +407,8 @@ public class GOSlimmerController  {
 		Cytoscape.setCurrentNetwork(this.network.getIdentifier());
 		Cytoscape.setCurrentNetworkView(this.networkView.getIdentifier());
 	}
+
+
 	
 	
 }

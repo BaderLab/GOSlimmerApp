@@ -61,9 +61,10 @@ public class GOSlimPanel extends JPanel {
 		for(GONamespace namespace: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(namespace);
 			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
-			GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName(),namespace.getName() + " Coverage: ",controller);
+			GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName(),controller);
 			namespaceToSubpanel.put(namespace,namespaceSubPanel);
-			controller.setCoverageStatisticViewLabel(namespaceSubPanel.coverageStatisticLabel);
+			controller.setInferredCoverageStatisticViewLabel(namespaceSubPanel.inferredCoverageStatisticLabel);
+			controller.setDirectCoverageStatisticViewLabel(namespaceSubPanel.directCoverageStatisticLabel);
 			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
 		}
 		this.namespaceToController = namespaceToController;
@@ -78,59 +79,81 @@ public class GOSlimPanel extends JPanel {
 		
 		GOSlimmerCoverageStatBean statBean = null;
 		
-		JLabel coverageStatisticLabel;
+		JLabel inferredCoverageStatisticLabel;
+		JLabel directCoverageStatisticLabel;
+		
+		String inferredCoverageStatisticLabelToolTip = "The percentage of gene annotation file genes covered directly by the GO terms selected for inclusion in the slim set, as well as those genes annotated by descendant terms within this tree(whether expanded or collapsed)";
+		String directCoverageStatisticLabelToolTip = "The percentage of gene annotation file genes covered directly by the GO terms explicitely selected for inclusion in the slim set";
 		
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
 		public GOSlimmerNamespaceSubpanel(String name,final GOSlimmerController controller) {
-			this.add(new JLabel(name));
-			this.setLayout(new FlowLayout(FlowLayout.LEADING));
+			this.setBorder(BorderFactory.createTitledBorder(name));
+			
+			//this.add(new JLabel(name));
+//			this.setLayout(new FlowLayout(FlowLayout.LEADING));
+			this.setLayout(new GridLayout(0,1));
 			this.statBean = controller.getStatBean();
 			//String coverageStatisticText = String.v statBean.fractionCovered();
 			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
-			this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionInferredCovered()));
-			this.add(coverageStatisticLabel);
-			this.addMouseListener(new MouseListener() {
-
-				public void mouseClicked(MouseEvent e) {
-					controller.getNetworkViewFocus();
-					
-				}
-
-				public void mouseEntered(MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				public void mouseExited(MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				public void mousePressed(MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-
-				public void mouseReleased(MouseEvent e) {
-					// TODO Auto-generated method stub
-					
-				}
-				
-			});
+			
+			this.inferredCoverageStatisticLabel = new JLabel("Inferred Coverage: " + numFormatter.format(statBean.fractionInferredCovered()));
+			inferredCoverageStatisticLabel.setToolTipText(inferredCoverageStatisticLabelToolTip);
+			this.add(inferredCoverageStatisticLabel);
+			
+			this.directCoverageStatisticLabel = new JLabel("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
+			directCoverageStatisticLabel.setToolTipText(directCoverageStatisticLabelToolTip);
+			this.add(directCoverageStatisticLabel);
+//			this.addMouseListener(new MouseListener() {
+//
+//				public void mouseClicked(MouseEvent e) {
+//					controller.getNetworkViewFocus();
+//					
+//				}
+//
+//				public void mouseEntered(MouseEvent e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//
+//				public void mouseExited(MouseEvent e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//
+//				public void mousePressed(MouseEvent e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//
+//				public void mouseReleased(MouseEvent e) {
+//					// TODO Auto-generated method stub
+//					
+//				}
+//				
+//			});
 		}
 		
-		public GOSlimmerNamespaceSubpanel(String title,String coverageLabelTitle, GOSlimmerController controller) {
-			this(coverageLabelTitle,controller);
-			this.setBorder(BorderFactory.createTitledBorder(title));
+//		public GOSlimmerNamespaceSubpanel(String title,String coverageLabelTitle, GOSlimmerController controller) {
+//			this(coverageLabelTitle,controller);
+//			this.setBorder(BorderFactory.createTitledBorder(title));
+//		}
+
+		public JLabel getInferredCoverageStatisticLabel() {
+			return inferredCoverageStatisticLabel;
 		}
 
-		public JLabel getCoverageStatisticLabel() {
-			return coverageStatisticLabel;
+		public void setInferredCoverageStatisticLabel(JLabel coverageStatisticLabel) {
+			this.inferredCoverageStatisticLabel = coverageStatisticLabel;
 		}
 
-		public void setCoverageStatisticLabel(JLabel coverageStatisticLabel) {
-			this.coverageStatisticLabel = coverageStatisticLabel;
+		protected JLabel getDirectCoverageStatisticLabel() {
+			return directCoverageStatisticLabel;
+		}
+
+		protected void setDirectCoverageStatisticLabel(
+				JLabel directCoverageStatisticLabel) {
+			this.directCoverageStatisticLabel = directCoverageStatisticLabel;
 		}
 		
 
@@ -163,11 +186,11 @@ public class GOSlimPanel extends JPanel {
 	}
 	
 	private JLabel getCoverage(GONamespace ns) {
-		return namespaceToSubpanel.get(ns).getCoverageStatisticLabel();
+		return namespaceToSubpanel.get(ns).getInferredCoverageStatisticLabel();
 	}
 	
 	private void setCoverageLabel(GONamespace ns, JLabel coverage) {
-		namespaceToSubpanel.get(ns).setCoverageStatisticLabel(coverage);
+		namespaceToSubpanel.get(ns).setInferredCoverageStatisticLabel(coverage);
 	}
 	
 }

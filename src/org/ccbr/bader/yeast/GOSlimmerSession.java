@@ -119,7 +119,7 @@ public class GOSlimmerSession {
 			TaskManager.executeTask(new Task() {
 
 				public String getTitle() {
-					return "Creating View for Namespace Subgraph";
+					return "Creating Views for GO Subgraphs";
 				}
 
 				public void halt() {
@@ -271,6 +271,11 @@ public class GOSlimmerSession {
 		this.namespaceToController.put(GONamespace.BioPro, bioProController);
 		this.namespaceToController.put(GONamespace.CelCom, celComController);
 		this.namespaceToController.put(GONamespace.MolFun, molFunController);
+		
+		molFunController.setExpansionDepth(1);molFunController.setUseFiniteExpansionDepth(true);
+		bioProController.setExpansionDepth(1);bioProController.setUseFiniteExpansionDepth(true);
+		celComController.setExpansionDepth(1);celComController.setUseFiniteExpansionDepth(true);
+		
 //		molFunController = new GOSlimmerController(molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),molFunStatBean);
 //		bioProController = new GOSlimmerController(bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),bioProStatBean);
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean);
