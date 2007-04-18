@@ -23,6 +23,14 @@ public class GOSlimmerUtil {
 
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 	
+	/**This method calculates the number of genes which a given GO node covers.  It is calculated based on the nodes attributes, 
+	 * specifically those which record the lists of genes which the GO node annotates.  The boolean parameters allow the user 
+	 * to specify exactly what types of annotation are to be included in the calculation. 
+	 *  
+	 * @param goNode the GO DAG node for which the number of genes covered is to be calculated
+	 * @param includeCoverageInferredFromDescendants specified whether the calculation should include those genes covered by descendants, or if it should only be based on those genes covered directly by the GO node
+	 * @return the number of genes covered by the GO node
+	 */
 	public static int getNumGenesCoveredByGoNode(Node goNode,boolean includeCoverageInferredFromDescendants) {
 		//Note:  this could be implemented more concisely by calling the 'getGenesCoveredByGoNode' method and then returning the 
 		int numCovered;
@@ -38,6 +46,33 @@ public class GOSlimmerUtil {
 		return numCovered;
 	}
 	
+	/**This method calculates the number of genes which a given GO node covers.  It is calculated based on the nodes attributes, 
+	 * specifically those which record the lists of genes which the GO node annotates.  The boolean parameters allow the user 
+	 * to specify exactly what types of annotation are to be included in the calculation. 
+	 *  
+	 * @param goNode the GO DAG node for which the number of genes covered is to be calculated
+	 * @param includeCoverageInferredFromDescendants specified whether the calculation should include those genes covered by descendants, or if it should only be based on those genes covered directly by the GO node
+	 * @param userGenes specifies whether to calculate based on the user specified genes, as opposed to the overall gene annotation data
+	 * @return the number of genes covered by the GO node
+	 */
+	public static int getNumGenesCoveredByGoNode(Node goNode,boolean includeCoverageInferredFromDescendants,boolean userGenes) {
+		final String inferredGeneAttributeName = userGenes?GOSlimmer.inferredAnnotatedUserGenesAttributeName:GOSlimmer.inferredAnnotatedGenesAttributeName;
+		final String directGeneAttributeName = userGenes?GOSlimmer.directlyAnnotatedUserGenesAttributeName:GOSlimmer.directlyAnnotatedGenesAttributeName; 
+		
+		//Note:  this could be implemented more concisely by calling the 'getGenesCoveredByGoNode' method and then returning the 
+		int numCovered;
+		List<String> directlyCoveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), directGeneAttributeName);
+		
+		numCovered = directlyCoveredGenes!=null?directlyCoveredGenes.size():0;
+		
+		if (includeCoverageInferredFromDescendants) {
+			List<String> inferredCoveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), inferredGeneAttributeName);
+			numCovered += inferredCoveredGenes!=null?inferredCoveredGenes.size():0;
+		}
+		
+		return numCovered;
+	}
+	
 	public static List<String> getGenesCoveredByGoNode(Node goNode,boolean includeCoverageInferredFromDescendants) {
 		int numCovered;
 		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.directlyAnnotatedGenesAttributeName);
@@ -45,6 +80,22 @@ public class GOSlimmerUtil {
 		
 		if (includeCoverageInferredFromDescendants) {
 			List<String> inferredCoveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName);
+			if (inferredCoveredGenes!=null )coveredGenes.addAll(inferredCoveredGenes);
+		}
+		
+		return coveredGenes;
+	}
+	
+	public static List<String> getGenesCoveredByGoNode(Node goNode,boolean includeCoverageInferredFromDescendants,boolean userGenes) {
+		final String inferredGeneAttributeName = userGenes?GOSlimmer.inferredAnnotatedUserGenesAttributeName:GOSlimmer.inferredAnnotatedGenesAttributeName;
+		final String directGeneAttributeName = userGenes?GOSlimmer.directlyAnnotatedUserGenesAttributeName:GOSlimmer.directlyAnnotatedGenesAttributeName; 
+		
+		int numCovered;
+		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), directGeneAttributeName);
+		if (coveredGenes == null) coveredGenes = new ArrayList<String>();
+		
+		if (includeCoverageInferredFromDescendants) {
+			List<String> inferredCoveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), inferredGeneAttributeName);
 			if (inferredCoveredGenes!=null )coveredGenes.addAll(inferredCoveredGenes);
 		}
 		
@@ -105,7 +156,7 @@ public class GOSlimmerUtil {
 			Node child = network.getEdge(childEdgeI).getSource();
 			//get the child's directly covered genes
 			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), GOSlimmer.directlyAnnotatedGenesAttributeName);
-			inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
+			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
 			
 			//get the childs inferred covered genes
 			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network);
@@ -159,7 +210,7 @@ public class GOSlimmerUtil {
 			Node child = network.getEdge(childEdgeI).getSource();
 			//get the child's directly covered genes
 			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), directGeneAttributeName);
-			inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
+			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
 			
 			//get the childs inferred covered genes
 			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network,userGenes);
@@ -281,6 +332,8 @@ public class GOSlimmerUtil {
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedGenesAttributeName);
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.goNodeInSlimSetAttributeName);
+		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedUserGenesAttributeName);
+		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedUserGenesAttributeName);
 	}
 
 	public static boolean isOntology(String ontologyName) {
