@@ -84,7 +84,8 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 		}
 		
 		private void modifyNodeAppearance(NodeAppearance appr, Node node, CyNetwork network) {
-			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations);
+			
+			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations,GOSlimmerGUIViewSettings.sizeNodesBasedOnUserGeneAnnotation);
 			
 			double nodeDim = numDirectlyCoveredGenes>0?numDirectlyCoveredGenes*minNodeSize:minNodeSize;
 			nodeDim +=1; //to ensure we don't get any negative values when we calculate the logarithm
