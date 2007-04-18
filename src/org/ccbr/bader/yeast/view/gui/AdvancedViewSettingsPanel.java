@@ -33,11 +33,11 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	
 
 	
-	private final String lsep = System.getProperty("line.separator");
+	private static final String lsep = System.getProperty("line.separator");
 	
 	JCheckBox includeDescendentCoverageInNodeSizeCalculationCheckBox;
-	private final String includeDescendentCoverageInNodeSizeCalculationText = "Include child nodes when calculating node size";
-	private final String includeDescendentCoverageInNodeSizeCalculationToolTip = 
+	private static final String includeDescendentCoverageInNodeSizeCalculationText = "Include child nodes when calculating node size";
+	private static final String includeDescendentCoverageInNodeSizeCalculationToolTip = 
 				"If checked, then the size of the node will be proportional to the number of genes" 
 		+ lsep +"directly annotated by the node + the number of genes annotated by all of the nodes " 
 		+ lsep +"descendants in the graph. If unchecked, size is proportional to the directly " 
@@ -102,14 +102,33 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 		return expandNodeDepthTextField;
 	}
 	
+	private JCheckBox sizeNodesBasedOnNumUserGenesAnnotatedCheckbox;
+	private static final String sizeNodesBasedOnNumUserGenesAnnotatedCheckboxText = "Size Nodes according to User Gene Set";
+	private static final String sizeNodesBasedOnNumUserGenesAnnotatedCheckboxToolTip =
+			 "If checked, the size of the GO nodes will be determined based on the number" +
+		lsep+"of user genes which are annotated by that node(directly or by inferrence,  " +
+		lsep+"according to the setting of the " + includeDescendentCoverageInNodeSizeCalculationText + "'" + 
+		lsep+"CheckBox).";
+	
+	private JCheckBox getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox() {
+		if (sizeNodesBasedOnNumUserGenesAnnotatedCheckbox==null) {
+			sizeNodesBasedOnNumUserGenesAnnotatedCheckbox = new JCheckBoxMod(sizeNodesBasedOnNumUserGenesAnnotatedCheckboxText);
+			sizeNodesBasedOnNumUserGenesAnnotatedCheckbox.setToolTipText(sizeNodesBasedOnNumUserGenesAnnotatedCheckboxToolTip);
+			sizeNodesBasedOnNumUserGenesAnnotatedCheckbox.addActionListener(this);
+		}
+		return sizeNodesBasedOnNumUserGenesAnnotatedCheckbox;
+	}
+	
 	private void initComponents() {
 //		this.setPreferredSize(new Dimension(10,40));
 		this.setBorder(BorderFactory.createTitledBorder("Advanced View Settings"));
 		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
+		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
 		this.add(getLCheckBox());
 		this.add(getExpandNodeDepthCheckbox());
 		this.add(getExpandNodeTextField());
+		
 	}
 
 	
@@ -131,6 +150,9 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 				//only enable the text field for specifying the node expansion depth if the  feature is enabled.
 				expandNodeDepthTextField.setEnabled(useFiniteExpansionDepth);
 				for(GOSlimmerController controller: controllers) controller.setUseFiniteExpansionDepth(useFiniteExpansionDepth);
+			}
+			else if (src == sizeNodesBasedOnNumUserGenesAnnotatedCheckbox) {
+				GOSlimmerGUIViewSettings.sizeNodesBasedOnUserGeneAnnotation = sizeNodesBasedOnNumUserGenesAnnotatedCheckbox.isSelected();
 			}
 			CyNetworkView curNet = Cytoscape.getCurrentNetworkView();
 			if (curNet!=null) curNet.redrawGraph(false, true);
