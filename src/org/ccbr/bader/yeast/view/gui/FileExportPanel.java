@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -43,6 +44,7 @@ public class FileExportPanel extends JPanel implements ActionListener {
 	}
 	
 	private void initComponents() {
+		this.setBorder(BorderFactory.createTitledBorder("Export"));
 		this.add(getExportToFileButton());
 	}
 	
