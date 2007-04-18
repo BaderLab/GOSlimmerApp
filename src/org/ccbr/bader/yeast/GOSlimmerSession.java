@@ -57,6 +57,8 @@ public class GOSlimmerSession {
 	private GOSlimmerController bioProController = null;
 	private GOSlimmerController celComController = null;
 	
+	private boolean userGeneSetImported = false;
+	
 	private String ontologyName;
 	
 	private GeneAssociationReaderUtil garu;
@@ -296,6 +298,14 @@ public class GOSlimmerSession {
 
 	public void setOntologyName(String ontologyName) {
 		this.ontologyName = ontologyName;
+	}
+
+	public boolean isUserGeneSetImported() {
+		return userGeneSetImported;
+	}
+
+	public void setUserGeneSetImported(boolean userGeneSetImported) {
+		this.userGeneSetImported = userGeneSetImported;
 	}
 
 }
