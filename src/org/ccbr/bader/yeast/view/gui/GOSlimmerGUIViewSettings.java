@@ -14,5 +14,7 @@ public class GOSlimmerGUIViewSettings {
 	
 	public static boolean includeDescendantInferredCoveredGenesInNodeSizeCalculations = false;
 	
+	public static boolean sizeNodesBasedOnUserGeneAnnotation = false;
+	
 	
 }
