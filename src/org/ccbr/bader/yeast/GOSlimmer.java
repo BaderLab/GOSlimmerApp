@@ -16,6 +16,10 @@ public class GOSlimmer {
 	
 	public static final Map<CyNetwork,GOSlimmerCoverageStatBean> networkToCoverageStatMap = new HashMap<CyNetwork, GOSlimmerCoverageStatBean>();
 	
+	public static final String directlyAnnotatedUserGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_USER_GENES";
+	public static final String inferredAnnotatedUserGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_USER_GENES";
+	
+	
 //	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
 //	public static String ontologyName;
 //	
