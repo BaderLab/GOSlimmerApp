@@ -3,6 +3,7 @@ package org.ccbr.bader.yeast;
 import giny.model.Node;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -387,6 +388,16 @@ public class GOSlimmerUtil {
 	public static boolean areUserGeneAttributesDefined() {
 		return (nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.inferredAnnotatedUserGenesAttributeName)!=-1 && nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.directlyAnnotatedUserGenesAttributeName)!=-1);
 //		return false;
+	}
+
+	public static Collection<String> difference(Collection<String> a, Collection<String> b) {
+		Collection<String> diff = new HashSet<String>();
+		for(String as:a) {
+			if (!b.contains(as)) {
+				diff.add(as);
+			}
+		}
+		return diff;
 	}
 	
 	
