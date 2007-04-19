@@ -12,6 +12,10 @@ public class GOSlimmer {
 
 	public static final String directlyAnnotatedGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENES";
 	public static final String inferredAnnotatedGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENES";
+	
+	public static final String directlyAnnotatedGenesSynonymAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENE_SYNONYMS";
+	public static final String inferredAnnotatedGenesSynonymAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENE_SYNONYMS";
+	
 	public static final String goNodeInSlimSetAttributeName = "GOSLIM.INSET";
 	
 	public static final Map<CyNetwork,GOSlimmerCoverageStatBean> networkToCoverageStatMap = new HashMap<CyNetwork, GOSlimmerCoverageStatBean>();
