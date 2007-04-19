@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
+import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -430,11 +432,84 @@ public class GOSlimmerController  {
 
 	
 	
-//	public void getNetworkViewFocus() {
-//		//TODO replace with undeprecated alternatives
-//		Cytoscape.setCurrentNetwork(this.network.getIdentifier());
-//		Cytoscape.setCurrentNetworkView(this.networkView.getIdentifier());
-//	}
+	public void attachInferredAnnotatedUserGenesToTerms(Collection<String> geneIds) {
+		Iterator<Node> nodeI = this.network.nodesIterator();
+		//TODO consider revising this so that instead of traversing the tree, 
+		//I simply iterate through the nodes and determine the overlap  
+		while(nodeI.hasNext()) {
+			Node node = nodeI.next();
+			//see if the inferred coverred genes list attribute has already been calculated and set
+			List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedUserGenesAttributeName);
+			if (inferredCoveredGenesL ==null || inferredCoveredGenesL.size()==0) {
+				//inferred coverred genes list has not already been calculated, so calculate and set it
+				Set<String> inferredCoveredGenesS = GOSlimmerUtil.getGenesCoveredByChildren(node, this.network,true);
+				nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedUserGenesAttributeName, GOSlimmerUtil.setToList(inferredCoveredGenesS));
+			}
+		}
+		
+	}
+
+
+	
+	public void attachDirectlyAnnotatedUserGenesToTerms(Collection<String> geneIds) {
+		
+		Iterator<Node> nodeI = this.network.nodesIterator();
+		while(nodeI.hasNext()) {
+			List<String> matchingIds;
+			Node node = nodeI.next();
+			//grab the list of directly annotated genes, and performs matches;  attach if matched
+			List<String> directlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(node);
+			//TODO determine which of the following implementation is more efficient;  the iteration based one or the retailAll based one
+//			matchingIds = new ArrayList<String>();
+//			//iterate through the lists based on which one is shorter
+//			Collection<String> longer,shorter;
+//			if (directlyCoveredGenes.size()>geneIds.size())  {
+//				longer = directlyCoveredGenes;
+//				shorter = geneIds;
+//			}
+//			else {
+//				longer = geneIds;
+//				shorter = directlyCoveredGenes;
+//			}
+//			//if id is in both sets, add to the list of matches
+//			//TODO consider revising and  using a collection method for finding set overlap
+//			for(String geneId:shorter) {
+//				if (longer.contains(geneId)) {
+//					matchingIds.add(geneId);
+//				}
+//			}
+			matchingIds = new ArrayList(geneIds);
+			matchingIds.retainAll(directlyCoveredGenes);
+			
+			nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.directlyAnnotatedUserGenesAttributeName, matchingIds);
+		}
+
+		
+	}
+
+	/**
+	 * @param userGeneSet
+	 * @return the subset of the input set which were successfully matched to GO terms
+	 */
+	public Collection<String> applyUserGeneSet(Collection<String> userGeneSet) {
+		session.setUserGeneSet(userGeneSet);
+		attachDirectlyAnnotatedUserGenesToTerms(userGeneSet);
+		attachInferredAnnotatedUserGenesToTerms(userGeneSet);
+		//determine the number of genes which were successfully matched, and which ones failed to be matched
+		Collection<String> matchedIds = new HashSet<String>();
+		matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(GOSlimmerUtil.getRootNode(network), true,true));
+//		this.updateViewStatistics();
+
+//		difference(geneIds,matchedIds);
+//		getStatBean().setupUserGeneStatistics()
+		return matchedIds;
+	}
+
+	public void setupUserGeneStatistics(int newUserGeneCount) {
+		this.statBean.setupUserGeneStatistics(newUserGeneCount);
+		this.updateViewStatistics();
+		
+	}
 
 
 	
