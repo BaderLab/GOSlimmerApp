@@ -110,9 +110,25 @@ public class GOSlimmerUtil {
 		return coveredGenes;
 	}
 	
+	public static List<String> getDirectlyCoveredUserGenes(Node goNode) {
+		int numCovered;
+		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.directlyAnnotatedUserGenesAttributeName);
+		if (coveredGenes == null) coveredGenes = new ArrayList<String>();
+		
+		return coveredGenes;
+	}
+	
 	public static List<String> getInferredCoveredGenes(Node goNode) {
 		int numCovered;
 		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName);
+		if (coveredGenes == null) coveredGenes = new ArrayList<String>();
+		
+		return coveredGenes;
+	} 
+	
+	public static List<String> getInferredCoveredUserGenes(Node goNode) {
+		int numCovered;
+		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.inferredAnnotatedUserGenesAttributeName);
 		if (coveredGenes == null) coveredGenes = new ArrayList<String>();
 		
 		return coveredGenes;
@@ -336,6 +352,10 @@ public class GOSlimmerUtil {
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedUserGenesAttributeName);
 	}
 
+	public static void defineGOSlimmerAttributes() {
+		
+	}
+	
 	public static boolean isOntology(String ontologyName) {
 		final Ontology testOntology = Cytoscape.getOntologyServer().getOntologies().get(ontologyName);
 
@@ -347,6 +367,26 @@ public class GOSlimmerUtil {
 		} else {
 			return false;
 		}
+	}
+
+	public static void removeUserGeneAttributes(Node node) {
+		Cytoscape.getNodeAttributes().deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedUserGenesAttributeName);
+		Cytoscape.getNodeAttributes().deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedUserGenesAttributeName);
+	}
+	
+	
+	
+	public static void removeUserGeneAttributes(CyNetwork godag) {
+		Iterator<Node> nodesI = godag.nodesIterator();
+		while(nodesI.hasNext()) {
+			Node node = nodesI.next();
+			removeUserGeneAttributes(node);
+		}
+	}
+
+	public static boolean areUserGeneAttributesDefined() {
+		return (nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.inferredAnnotatedUserGenesAttributeName)!=-1 && nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.directlyAnnotatedUserGenesAttributeName)!=-1);
+//		return false;
 	}
 	
 	

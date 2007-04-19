@@ -121,20 +121,39 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	
 	private void initComponents() {
 //		this.setPreferredSize(new Dimension(10,40));
-		this.setBorder(BorderFactory.createTitledBorder("Advanced View Settings"));
+		this.setBorder(BorderFactory.createTitledBorder("Advanced Settings"));
 		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
 		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
 		this.add(getLCheckBox());
+		this.add(getDisplayUserGeneStatisticsCheckBox());
 		this.add(getExpandNodeDepthCheckbox());
 		this.add(getExpandNodeTextField());
 		
 	}
 
+	private JCheckBox displayUserGeneStatisticsCheckBox;
+	private static final String displayUserGeneStatisticsCheckBoxText = "Calculate Coverage of User Specified Genes";
+	private static final String displayUserGeneStatisticsCheckBoxToolTip = 
+		     "If checked, the coverage statistics displayed in each GO Namespace's"+
+		lsep+"panel will be based on the GO tree's coverage of the genes which the"+
+		lsep+"user imported using the 'Import Gene Set' button.  Unchecked, stats "+
+		lsep+"are calculated based on the GO tree's coverage of all the Genes in  "+
+		lsep+"the applied Gene Annotation File.";
 	
+	private JCheckBox getDisplayUserGeneStatisticsCheckBox() {
+		if (displayUserGeneStatisticsCheckBox == null) {
+			displayUserGeneStatisticsCheckBox = new JCheckBoxMod(displayUserGeneStatisticsCheckBoxText);
+			displayUserGeneStatisticsCheckBox.setToolTipText(displayUserGeneStatisticsCheckBoxToolTip);
+			displayUserGeneStatisticsCheckBox.addActionListener(this);
+		}
+		return displayUserGeneStatisticsCheckBox;
+	}
 	
-	
-	
+
+
+
+
 	public void actionPerformed(ActionEvent event) {
 		Object src = event.getSource();
 		if (src instanceof JCheckBox) {
@@ -153,6 +172,9 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 			}
 			else if (src == sizeNodesBasedOnNumUserGenesAnnotatedCheckbox) {
 				GOSlimmerGUIViewSettings.sizeNodesBasedOnUserGeneAnnotation = sizeNodesBasedOnNumUserGenesAnnotatedCheckbox.isSelected();
+			}
+			else if (src == displayUserGeneStatisticsCheckBox) {
+				for(GOSlimmerController controller: controllers) controller.setDisplayUserGeneCoverageStatistics(displayUserGeneStatisticsCheckBox.isSelected());
 			}
 			CyNetworkView curNet = Cytoscape.getCurrentNetworkView();
 			if (curNet!=null) curNet.redrawGraph(false, true);

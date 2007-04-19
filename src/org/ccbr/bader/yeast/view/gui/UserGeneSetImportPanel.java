@@ -151,6 +151,7 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 						Collection<String> geneIds = parseGeneIdFile(geneFile);
 						annotateDAGWithUserGeneSet(geneIds);
 						session.setUserGeneSetImported(true);
+						session.setUserGeneSet(geneIds);
 					} catch (FileNotFoundException e) {
 						JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Failed to import Gene Set;  Could not find specified file","Error",JOptionPane.ERROR_MESSAGE);
 						return;
@@ -220,6 +221,9 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		Collection<String> matchedIds = new HashSet<String>(); //this will collect all the user gene IDs which were successfully matched to GO Term(s) 
 		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
 			CyNetwork network = controller.getNetwork();
+			//remove the last set of user annotated genes, since they are no longer relevant
+			if (GOSlimmerUtil.areUserGeneAttributesDefined()) GOSlimmerUtil.removeUserGeneAttributes(network);
+			
 			//first pass, determine direct annotation
 			attachDirectlyAnnotatedUserGenesToTerms(network,geneIds);
 			//second pass, determined inferred annotation
@@ -241,6 +245,15 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		 */
 		unmatchedIds = difference(geneIds,matchedIds);
 		updateUnmatchedIdsLabel();
+		
+		//update user gene count in the session, so that coverage can be properly calculated by the statbeans
+		this.session.setUserGeneSetImported(true);
+		this.session.setUserGeneCount(matchedIds.size());
+		
+		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
+			//recalculate the user gene statistics based on this newly imported user gene ID file
+			controller.getStatBean().setupUserGeneStatistics(matchedIds.size());
+		}
 	}
 	
 	private void updateUnmatchedIdsLabel() {

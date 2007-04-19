@@ -25,6 +25,7 @@ import javax.swing.JMenuItem;
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GONamespace;
 import org.ccbr.bader.yeast.GOSlimmer;
+import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
@@ -42,12 +43,14 @@ public class GOSlimmerController  {
 	private GOSlimmerCoverageStatBean statBean;
 	private JLabel inferredCoverageStatisticViewLabel;
 	private GONamespace namespace;
-
-	public GOSlimmerController(GONamespace namespace,CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean) {
+	private GOSlimmerSession session;
+	
+	public GOSlimmerController(GONamespace namespace,CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean,GOSlimmerSession session) {
 		this.namespace = namespace;
 		this.network=network;
 		this.networkView = networkView;
 		this.statBean = statBean;
+		this.session = session;
 	}
 
 //	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
@@ -114,6 +117,7 @@ public class GOSlimmerController  {
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
 			
 		}
+		//TODO move this call to a special public method, and create private version of prunenode which doesn't call this, since it is wasteful
 		updateViewStatistics();
 	}
 	
@@ -263,9 +267,14 @@ public class GOSlimmerController  {
 	
 	DecimalFormat formatter = new DecimalFormat("00.00%");
 	private void updateViewStatistics() {
+		
+		//depending on whether displayUserGeneCoverageStatistics has been set or not, either show the full coverage information, or only for the user specified genes.
+		double inferredCoverage = displayUserGeneCoverageStatistics?statBean.fractionInferredCoveredUserGenes():statBean.fractionInferredCovered();
+		double directCoverage = displayUserGeneCoverageStatistics?statBean.fractionDirectlyCoveredUserGenes():statBean.fractionDirectlyCovered();
+		
 		//TODO consider revising this condition, since it might hide the face that the coverageStatisticViewLabel hasn't been initialized
-		if (this.inferredCoverageStatisticViewLabel!=null) this.inferredCoverageStatisticViewLabel.setText("Inferred Coverage: " + String.valueOf(formatter.format(statBean.fractionInferredCovered())));
-		if (this.directCoverageStatisticViewLabel!=null) this.directCoverageStatisticViewLabel.setText("Direct Coverage: " + formatter.format(statBean.fractionDirectlyCovered()));
+		if (this.inferredCoverageStatisticViewLabel!=null) this.inferredCoverageStatisticViewLabel.setText("Inferred Coverage: " + formatter.format(inferredCoverage));
+		if (this.directCoverageStatisticViewLabel!=null) this.directCoverageStatisticViewLabel.setText("Direct Coverage: " + formatter.format(directCoverage));
 	}
 
 	public GOSlimmerCoverageStatBean getStatBean() {
@@ -301,6 +310,7 @@ public class GOSlimmerController  {
 	}
 	
 	JLabel directCoverageStatisticViewLabel;
+	
 	
 	public JLabel getDirectCoverageStatisticViewLabel() {
 		return directCoverageStatisticViewLabel;
@@ -370,7 +380,7 @@ public class GOSlimmerController  {
 	 */
 	public void resetAndRecalculateStatisticsBean(int maxGeneSetSize) {
 		//initialize the new stats bean
-		this.statBean = new GOSlimmerCoverageStatBean(maxGeneSetSize);
+		this.statBean = new GOSlimmerCoverageStatBean(maxGeneSetSize,this.session);
 		//iterate through the network and add nodes which have their .. attribute set to true  to the slimset, updating statistics accordingly
 		//TODO possibly do this only for this graph's nodes, by iterating over the nodes of this network
 		Iterator<Node> nodeI = network.nodesIterator();
@@ -380,7 +390,11 @@ public class GOSlimmerController  {
 			Boolean isInSlimSet = nodeAtt.getBooleanAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
 			//add to the stats bean's statistics info
 			if (isInSlimSet!=null && isInSlimSet) this.statBean.addToSlimSet(node);
+			
+			//remove the user gene attributes from the node, since they are no longer relevant
+			if (GOSlimmerUtil.areUserGeneAttributesDefined()) GOSlimmerUtil.removeUserGeneAttributes(node);
 		}
+		
 		this.updateViewStatistics();
 	}
 
@@ -393,6 +407,18 @@ public class GOSlimmerController  {
 		
 	}
 
+	private boolean displayUserGeneCoverageStatistics = false;
+	
+	public boolean isDisplayUserGeneCoverageStatistics() {
+		return displayUserGeneCoverageStatistics;
+	}
+
+	public void setDisplayUserGeneCoverageStatistics(
+			boolean displayUserGeneCoverageStatistics) {
+		this.displayUserGeneCoverageStatistics = displayUserGeneCoverageStatistics;
+		updateViewStatistics();
+	}
+	
 	/**This sets the controllers behaviour when expanding node views, for whether it will expand nodes without limit, or only to a finite depth
 	 * The depth to which the node will be expanded is set based on the getExpansionDepth and setExpansionDepth methods.
 	 * 
@@ -402,6 +428,8 @@ public class GOSlimmerController  {
 		this.useFiniteExpansionDepth = useFiniteExpansionDepth;
 	}
 
+	
+	
 //	public void getNetworkViewFocus() {
 //		//TODO replace with undeprecated alternatives
 //		Cytoscape.setCurrentNetwork(this.network.getIdentifier());

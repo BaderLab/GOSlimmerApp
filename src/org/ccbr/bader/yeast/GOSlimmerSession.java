@@ -59,6 +59,8 @@ public class GOSlimmerSession {
 	
 	private boolean userGeneSetImported = false;
 	
+	private Collection<String> userSpecifiedGeneIdSet;
+	
 	private String ontologyName;
 	
 	private GeneAssociationReaderUtil garu;
@@ -267,9 +269,9 @@ public class GOSlimmerSession {
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
 		
 		
-		molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
-		celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1));
+		molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+		bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+		celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
 		this.namespaceToController.put(GONamespace.BioPro, bioProController);
 		this.namespaceToController.put(GONamespace.CelCom, celComController);
 		this.namespaceToController.put(GONamespace.MolFun, molFunController);
@@ -287,6 +289,8 @@ public class GOSlimmerSession {
 	}
 
 	private Map<GONamespace, GOSlimmerController> namespaceToController = new HashMap();
+	private int userGeneCount;
+	private Collection<String> userGeneSet;
 	
 	public Map<GONamespace, GOSlimmerController> getNamespaceToController() {
 		return namespaceToController;
@@ -308,4 +312,32 @@ public class GOSlimmerSession {
 		this.userGeneSetImported = userGeneSetImported;
 	}
 
+	public void setUserGeneCount(int userGeneCount) {
+		this.userGeneCount = userGeneCount;
+//		for(GOSlimmerController controller: namespaceToController.values()) {
+//			controller.getStatBean().resetUserGeneStatistics(userGeneCount);
+//		}
+	}
+	
+	public int getUserGeneCount() {
+		return this.userGeneCount;
+	}
+
+	public Collection<String> getUserSpecifiedGeneIdSet() {
+		return userSpecifiedGeneIdSet;
+	}
+
+	public void setUserSpecifiedGeneIdSet(Collection<String> userSpecifiedGeneIdSet) {
+		this.userSpecifiedGeneIdSet = userSpecifiedGeneIdSet;
+	}
+
+	public void setUserGeneSet(Collection<String> userGeneSet) {
+		this.userGeneSet = userGeneSet;
+		
+	}
+
+	public Collection<String> getUserGeneSet() {
+		return this.userGeneSet;
+	}
+	
 }
