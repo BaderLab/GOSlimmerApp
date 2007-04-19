@@ -289,8 +289,10 @@ public class GOSlimmerSession {
 	}
 
 	private Map<GONamespace, GOSlimmerController> namespaceToController = new HashMap();
-	private int userGeneCount;
+//	private int userGeneCount;
 	private Collection<String> userGeneSet;
+	private Collection<String> unmatchedUserGeneIds;
+	private GOSlimPanel goSlimPanel;
 	
 	public Map<GONamespace, GOSlimmerController> getNamespaceToController() {
 		return namespaceToController;
@@ -312,16 +314,16 @@ public class GOSlimmerSession {
 		this.userGeneSetImported = userGeneSetImported;
 	}
 
-	public void setUserGeneCount(int userGeneCount) {
-		this.userGeneCount = userGeneCount;
-//		for(GOSlimmerController controller: namespaceToController.values()) {
-//			controller.getStatBean().resetUserGeneStatistics(userGeneCount);
-//		}
-	}
+//	public void setUserGeneCount(int userGeneCount) {
+//		this.userGeneCount = userGeneCount;
+////		for(GOSlimmerController controller: namespaceToController.values()) {
+////			controller.getStatBean().resetUserGeneStatistics(userGeneCount);
+////		}
+//	}
 	
-	public int getUserGeneCount() {
-		return this.userGeneCount;
-	}
+//	public int getUserGeneCount() {
+//		return this.userGeneCount;
+//	}
 
 	public Collection<String> getUserSpecifiedGeneIdSet() {
 		return userSpecifiedGeneIdSet;
@@ -339,5 +341,23 @@ public class GOSlimmerSession {
 	public Collection<String> getUserGeneSet() {
 		return this.userGeneSet;
 	}
+
+	public Collection<String> getUnmatchedUserGeneIds() {
+		return unmatchedUserGeneIds;
+	}
+
+	public void setUnmatchedUserGeneIds(Collection<String> unmatchedUserGeneIds) {
+		this.unmatchedUserGeneIds = unmatchedUserGeneIds;
+	}
+
+	public void setGOSlimPanel(GOSlimPanel goSlimPanel) {
+		this.goSlimPanel = goSlimPanel;
+	}
+	
+	public GOSlimPanel getGOSlimPanel() {
+		return this.goSlimPanel;
+	}
+	
+	
 	
 }
