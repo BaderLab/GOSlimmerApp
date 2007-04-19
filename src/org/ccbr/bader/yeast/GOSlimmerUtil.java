@@ -151,38 +151,42 @@ public class GOSlimmerUtil {
 	 * which are not covered by its children).
 	 */
 	public static Set<String> getGenesCoveredByChildren(Node node, CyNetwork network) {
-		//base case 1:  node has already been annotated with inferred covered gene list, so just return that
-		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-		List<String> inferredCoveredGenes = nodeAtt.getListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName);
-		//NOTE:  cannot accept empty lists as belonging to case 1 because the getListAttribute method will return empty lists for attributes which have not be set at all (instead of the expected null)
-		if (inferredCoveredGenes != null && inferredCoveredGenes.size()>0) {
-			//convert to a set, then return
-			return listToSet(inferredCoveredGenes);
-		}
-		//base case 2: inferred covered genes needs to be calculated, but there are no children
-		//get the children nodes;  note that children direct edges towards parents, that's why we're getting incoming edges
-		int[] childEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
-		if (childEdges == null || childEdges.length==0) {
-			return new HashSet<String>();
-		}
-		//case 3:  inferred covered genes based on children needs to be calculated
-		Set<String> inferredCoveredGenesS = new HashSet<String>();
-		//iterate through the children of the node, for each one retrieving the directly and inferred covered genes and adding them to the inferredCoveredGenesS collection
-		for(int childEdgeI:childEdges) {
-			//get the child node; note that children direct edges to parents, so we use 'getSource()' instead of 'getTarget()'
-			Node child = network.getEdge(childEdgeI).getSource();
-			//get the child's directly covered genes
-			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), GOSlimmer.directlyAnnotatedGenesAttributeName);
-			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
-			
-			//get the childs inferred covered genes
-			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network);
-			//set the child node's inferred covered genes attribute
-			nodeAtt.setListAttribute(child.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName, setToList(childsInferredCoveredGenes));
-			inferredCoveredGenesS.addAll(childsInferredCoveredGenes);
-		}
-		return inferredCoveredGenesS;
+		
+		return getGenesCoveredByChildren(node, network, GOSlimmer.directlyAnnotatedGenesAttributeName, GOSlimmer.inferredAnnotatedGenesAttributeName);
+//		//base case 1:  node has already been annotated with inferred covered gene list, so just return that
+//		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//		List<String> inferredCoveredGenes = nodeAtt.getListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName);
+//		//NOTE:  cannot accept empty lists as belonging to case 1 because the getListAttribute method will return empty lists for attributes which have not be set at all (instead of the expected null)
+//		if (inferredCoveredGenes != null && inferredCoveredGenes.size()>0) {
+//			//convert to a set, then return
+//			return listToSet(inferredCoveredGenes);
+//		}
+//		//base case 2: inferred covered genes needs to be calculated, but there are no children
+//		//get the children nodes;  note that children direct edges towards parents, that's why we're getting incoming edges
+//		int[] childEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+//		if (childEdges == null || childEdges.length==0) {
+//			return new HashSet<String>();
+//		}
+//		//case 3:  inferred covered genes based on children needs to be calculated
+//		Set<String> inferredCoveredGenesS = new HashSet<String>();
+//		//iterate through the children of the node, for each one retrieving the directly and inferred covered genes and adding them to the inferredCoveredGenesS collection
+//		for(int childEdgeI:childEdges) {
+//			//get the child node; note that children direct edges to parents, so we use 'getSource()' instead of 'getTarget()'
+//			Node child = network.getEdge(childEdgeI).getSource();
+//			//get the child's directly covered genes
+//			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), GOSlimmer.directlyAnnotatedGenesAttributeName);
+//			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
+//			
+//			//get the childs inferred covered genes
+//			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network);
+//			//set the child node's inferred covered genes attribute
+//			nodeAtt.setListAttribute(child.getIdentifier(), GOSlimmer.inferredAnnotatedGenesAttributeName, setToList(childsInferredCoveredGenes));
+//			inferredCoveredGenesS.addAll(childsInferredCoveredGenes);
+//		}
+//		return inferredCoveredGenesS;
 	}
+	
+	
 	
 	/**This method will create a new attribute for the nodes of the DAG rooted at <code>node</code> which 
 	 * contains a list of the genes which that node's GO term annotates by inference based on what genes 
@@ -205,9 +209,65 @@ public class GOSlimmerUtil {
 		String inferredGeneAttributeName = userGenes?GOSlimmer.inferredAnnotatedUserGenesAttributeName:GOSlimmer.inferredAnnotatedGenesAttributeName;
 		String directGeneAttributeName = userGenes?GOSlimmer.directlyAnnotatedUserGenesAttributeName:GOSlimmer.directlyAnnotatedGenesAttributeName; 
 		
+		return getGenesCoveredByChildren(node, network, directGeneAttributeName, inferredGeneAttributeName);
+		
+//		//base case 1:  node has already been annotated with inferred covered gene list, so just return that
+//		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+//		List<String> inferredCoveredGenes = nodeAtt.getListAttribute(node.getIdentifier(), inferredGeneAttributeName);
+//		//NOTE:  cannot accept empty lists as belonging to case 1 because the getListAttribute method will return empty lists for attributes which have not be set at all (instead of the expected null)
+//		if (inferredCoveredGenes != null && inferredCoveredGenes.size()>0) {
+//			//convert to a set, then return
+//			return listToSet(inferredCoveredGenes);
+//		}
+//		//base case 2: inferred covered genes needs to be calculated, but there are no children
+//		//get the children nodes;  note that children direct edges towards parents, that's why we're getting incoming edges
+//		int[] childEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+//		if (childEdges == null || childEdges.length==0) {
+//			return new HashSet<String>();
+//		}
+//		//case 3:  inferred covered genes based on children needs to be calculated
+//		Set<String> inferredCoveredGenesS = new HashSet<String>();
+//		//iterate through the children of the node, for each one retrieving the directly and inferred covered genes and adding them to the inferredCoveredGenesS collection
+//		for(int childEdgeI:childEdges) {
+//			//get the child node; note that children direct edges to parents, so we use 'getSource()' instead of 'getTarget()'
+//			Node child = network.getEdge(childEdgeI).getSource();
+//			//get the child's directly covered genes
+//			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), directGeneAttributeName);
+//			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
+//			
+//			//get the childs inferred covered genes
+//			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network,userGenes);
+//			//set the child node's inferred covered genes attribute
+//			nodeAtt.setListAttribute(child.getIdentifier(), inferredGeneAttributeName, setToList(childsInferredCoveredGenes));
+//			inferredCoveredGenesS.addAll(childsInferredCoveredGenes);
+//		}
+//		return inferredCoveredGenesS;
+	}
+	
+	
+	/**This method will create a new attribute for the nodes of the DAG rooted at <code>node</code> which 
+	 * contains a list of the genes which that node's GO term annotates by inference based on what genes 
+	 * are annotated by that GO term's children.
+	 * 
+	 * It is implemented as a dynamic programming algorithm in that it will use the already calculated 
+	 * list of inferred genes if it is already present for a node, only calculating it if it is not.
+	 * 
+	 * It is a recursive implementation, though it will only descend if the values have not already been 
+	 * calculated.  Note that this will not scale to very deep graphs.
+	 * 
+	 * @param node root node of DAG which is to have parent attributions attached
+	 * @param network the network to traverse
+	 * @param userGenes whether to get the user genes, or just the whole set of annotated genes.
+	 * @param directCoverageAttributeName the name for the direct coverage attribute
+	 * @param inferredCoverageAttributeName the name for the inferred coverage attribute 
+	 * @return list of genes covered by <code>node</code>'s children (not including those covered by node itself 
+	 * which are not covered by its children).
+	 */
+	public static Set<String> getGenesCoveredByChildren(Node node, CyNetwork network,String directCoverageAttributeName, String inferredCoverageAttributeName) {
+		
 		//base case 1:  node has already been annotated with inferred covered gene list, so just return that
 		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-		List<String> inferredCoveredGenes = nodeAtt.getListAttribute(node.getIdentifier(), inferredGeneAttributeName);
+		List<String> inferredCoveredGenes = nodeAtt.getListAttribute(node.getIdentifier(), inferredCoverageAttributeName);
 		//NOTE:  cannot accept empty lists as belonging to case 1 because the getListAttribute method will return empty lists for attributes which have not be set at all (instead of the expected null)
 		if (inferredCoveredGenes != null && inferredCoveredGenes.size()>0) {
 			//convert to a set, then return
@@ -226,18 +286,17 @@ public class GOSlimmerUtil {
 			//get the child node; note that children direct edges to parents, so we use 'getSource()' instead of 'getTarget()'
 			Node child = network.getEdge(childEdgeI).getSource();
 			//get the child's directly covered genes
-			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), directGeneAttributeName);
+			List<String> childsDirectlyCoveredGenes = nodeAtt.getListAttribute(child.getIdentifier(), directCoverageAttributeName);
 			if (childsDirectlyCoveredGenes!=null) inferredCoveredGenesS.addAll(childsDirectlyCoveredGenes);
 			
 			//get the childs inferred covered genes
-			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network,userGenes);
+			Set<String> childsInferredCoveredGenes = getGenesCoveredByChildren(child,network,directCoverageAttributeName,inferredCoverageAttributeName);
 			//set the child node's inferred covered genes attribute
-			nodeAtt.setListAttribute(child.getIdentifier(), inferredGeneAttributeName, setToList(childsInferredCoveredGenes));
+			nodeAtt.setListAttribute(child.getIdentifier(), inferredCoverageAttributeName, setToList(childsInferredCoveredGenes));
 			inferredCoveredGenesS.addAll(childsInferredCoveredGenes);
 		}
 		return inferredCoveredGenesS;
 	}
-	
 	
 	public static Set<String> listToSet(List<String> list) {
 		Set<String> set = new HashSet<String>();
@@ -398,6 +457,12 @@ public class GOSlimmerUtil {
 			}
 		}
 		return diff;
+	}
+
+	public static List<String> getDirectlyCoveredGeneSynonyms(Node goNode) {
+		List<String> coveredGenes = nodeAtt.getListAttribute(goNode.getIdentifier(), GOSlimmer.directlyAnnotatedGenesSynonymAttributeName);
+		if (coveredGenes == null) coveredGenes = new ArrayList<String>();
+		return coveredGenes;
 	}
 	
 	
