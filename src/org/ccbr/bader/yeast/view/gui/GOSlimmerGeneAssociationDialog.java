@@ -334,14 +334,18 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 //		retrieve the mapping of GOIDs to GeneIDs from the parsed asssociation file;  this will be used to assign directly and indirectlly inferred attributes to the networks
 		Map<String,List<String>> goIdToGeneIdMap = garu.getGOIDToGeneIDMap();
+		Map<String,List<String>> goIdToGeneSynonymMap = garu.getGOIDToGeneSynonyms();
 		
 		for(GONamespace ns: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(ns);
 			Set<String> nsGeneIds = garu.getNamespaceGeneIds(ns);
 			//delete the coverage attributes;  TODO do this globally instead of locally
 			controller.removeCoverageAttributes();
+			//TODO consider merging the next two method calls to improve efficiency
 			//assign the new coverage attributes to the nodes of the network based on this goIdToGeneIdMap
-			controller.assignCoverageAttributesToNetworks(goIdToGeneIdMap);
+			controller.assignGeneIdCoverageAttributesToNetworks(goIdToGeneIdMap);
+			//assign the coverage attributes for the synonyms for the genes which were identified in the gene annotation file
+			controller.assignGeneSynonymCoverageAttributesToNetworks(goIdToGeneSynonymMap);
 			//reinitialize the statistics been with the new gene association data
 			controller.resetAndRecalculateStatisticsBean(nsGeneIds.size());
 			controller.getNetworkView().applyVizmapper(Cytoscape.getVisualMappingManager().getVisualStyle());
