@@ -150,6 +150,7 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 					try {
 						Collection<String> geneIds = parseGeneIdFile(geneFile);
 						annotateDAGWithUserGeneSet(geneIds);
+						//update user gene count in the session, so that coverage can be properly calculated by the statbeans
 						session.setUserGeneSetImported(true);
 						session.setUserGeneSet(geneIds);
 					} catch (FileNotFoundException e) {
@@ -219,44 +220,49 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		 */
 		
 		Collection<String> matchedIds = new HashSet<String>(); //this will collect all the user gene IDs which were successfully matched to GO Term(s) 
+//		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
+//			CyNetwork network = controller.getNetwork();
+//			//remove the last set of user annotated genes, since they are no longer relevant
+//			if (GOSlimmerUtil.areUserGeneAttributesDefined()) GOSlimmerUtil.removeUserGeneAttributes(network);
+//			
+//			//first pass, determine direct annotation
+//			controller.attachDirectlyAnnotatedUserGenesToTerms(geneIds);
+//			//second pass, determined inferred annotation
+//			controller.attachInferredAnnotatedUserGenesToTerms(geneIds);
+//			
+//			
+//
+//			
+//			
+//			//add all IDs which were successfully matched 
+//			matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(GOSlimmerUtil.getRootNode(network), true,true));
+//			
+//			//TODO insert test to determine which of the user specified IDs were not matched to any GO term
+//			/*
+//			 * pseudocode:
+//			 * 	get root node of graph
+//			 * 	get the directly and inferred gene sets for the root
+//			 *  any genes in the original set which are not in the 
+//			 */
+//		}
+		//TODO eliminate some of this gratuitous code duplication.
 		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
-			CyNetwork network = controller.getNetwork();
-			//remove the last set of user annotated genes, since they are no longer relevant
-			if (GOSlimmerUtil.areUserGeneAttributesDefined()) GOSlimmerUtil.removeUserGeneAttributes(network);
-			
-			//first pass, determine direct annotation
-			attachDirectlyAnnotatedUserGenesToTerms(network,geneIds);
-			//second pass, determined inferred annotation
-			attachInferredAnnotatedUserGenesToTerms(network,geneIds);
-			
-			//add all IDs which were successfully matched 
-			matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(GOSlimmerUtil.getRootNode(network), true,true));
-			
-			//TODO insert test to determine which of the user specified IDs were not matched to any GO term
-			/*
-			 * pseudocode:
-			 * 	get root node of graph
-			 * 	get the directly and inferred gene sets for the root
-			 *  any genes in the original set which are not in the 
-			 */
+			matchedIds.addAll(controller.applyUserGeneSet(geneIds));
 		}
 		/* now, determine the difference between the user gene set and those which were successfully matched, and notify the 
 		 * user somehow of which gene IDs failed to be matched  
 		 */
-		unmatchedIds = difference(geneIds,matchedIds);
-		updateUnmatchedIdsLabel();
-		
-		//update user gene count in the session, so that coverage can be properly calculated by the statbeans
-		this.session.setUserGeneSetImported(true);
-		this.session.setUserGeneCount(matchedIds.size());
+		unmatchedIds = GOSlimmerUtil.difference(geneIds,matchedIds);
+		updateUnmatchedIdsLabel(unmatchedIds);
 		
 		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
 			//recalculate the user gene statistics based on this newly imported user gene ID file
-			controller.getStatBean().setupUserGeneStatistics(matchedIds.size());
+			//TODO determine if we should be using the matched genes count, or the full number of genes which the user attempted to import
+			controller.setupUserGeneStatistics(matchedIds.size());
 		}
 	}
 	
-	private void updateUnmatchedIdsLabel() {
+	public void updateUnmatchedIdsLabel(final Collection<String> unmatchedIds) {
 		if (unmatchedIds==null || unmatchedIds.size() ==0) {
 			unmatchedIdsLabel.setText("All User Gene IDs successfully mapped to GO Terms.");
 			unmatchedIdsLabel.setToolTipText("");
@@ -335,71 +341,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	}
 	
 
-	private Collection<String> difference(Collection<String> a, Collection<String> b) {
-		Collection<String> diff = new HashSet<String>();
-		for(String as:a) {
-			if (!b.contains(as)) {
-				diff.add(as);
-			}
-		}
-		return diff;
-	}
 
-
-	private void attachInferredAnnotatedUserGenesToTerms(CyNetwork godag, Collection<String> geneIds) {
-		Iterator<Node> nodeI = godag.nodesIterator();
-		//TODO consider revising this so that instead of traversing the tree, 
-		//I simply iterate through the nodes and determine the overlap  
-		while(nodeI.hasNext()) {
-			Node node = nodeI.next();
-			//see if the inferred coverred genes list attribute has already been calculated and set
-			List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedUserGenesAttributeName);
-			if (inferredCoveredGenesL ==null || inferredCoveredGenesL.size()==0) {
-				//inferred coverred genes list has not already been calculated, so calculate and set it
-				Set<String> inferredCoveredGenesS = GOSlimmerUtil.getGenesCoveredByChildren(node, godag,true);
-				nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.inferredAnnotatedUserGenesAttributeName, GOSlimmerUtil.setToList(inferredCoveredGenesS));
-			}
-		}
-		
-	}
 
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-	
-	private void attachDirectlyAnnotatedUserGenesToTerms(CyNetwork godag, Collection<String> geneIds) {
-		
-		Iterator<Node> nodeI = godag.nodesIterator();
-		while(nodeI.hasNext()) {
-			List<String> matchingIds;
-			Node node = nodeI.next();
-			//grab the list of directly annotated genes, and performs matches;  attach if matched
-			List<String> directlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(node);
-			//TODO determine which of the following implementation is more efficient;  the iteration based one or the retailAll based one
-//			matchingIds = new ArrayList<String>();
-//			//iterate through the lists based on which one is shorter
-//			Collection<String> longer,shorter;
-//			if (directlyCoveredGenes.size()>geneIds.size())  {
-//				longer = directlyCoveredGenes;
-//				shorter = geneIds;
-//			}
-//			else {
-//				longer = geneIds;
-//				shorter = directlyCoveredGenes;
-//			}
-//			//if id is in both sets, add to the list of matches
-//			//TODO consider revising and  using a collection method for finding set overlap
-//			for(String geneId:shorter) {
-//				if (longer.contains(geneId)) {
-//					matchingIds.add(geneId);
-//				}
-//			}
-			matchingIds = new ArrayList(geneIds);
-			matchingIds.retainAll(directlyCoveredGenes);
-			
-			nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.directlyAnnotatedUserGenesAttributeName, matchingIds);
-		}
 
-		
-	}
 	
 	
 }
