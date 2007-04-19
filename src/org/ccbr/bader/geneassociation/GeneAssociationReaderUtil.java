@@ -145,6 +145,7 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 	
 	/* For the Gene Association file read, this will map each GOID to the list of GeneIDs which it annotates */
 	protected Map<String,List<String>> GOIDToGeneID = new HashMap<String,List<String>>();
+	protected Map<String,List<String>> GOIDToGeneSynonyms = new HashMap<String,List<String>>();
 	
 	private Set<String> geneIds = new HashSet<String>();
 	private Set<String> molecularFunctionGeneIds = new HashSet<String>();
@@ -393,10 +394,35 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		this.annotationEntries.add(entries);
 		
 		//add this (goid,gene) pair to the GOIDToGeneID map
-		String curGOID = entries[GOID];
-		List<String> annotatedGeneIDs = GOIDToGeneID.containsKey(curGOID)?GOIDToGeneID.get(curGOID):new ArrayList<String>();
-		annotatedGeneIDs.add(entries[DB_OBJ_ID]);
-		GOIDToGeneID.put(curGOID, annotatedGeneIDs);
+		{
+			String curGOID = entries[GOID];
+			List<String> annotatedGeneIDs = GOIDToGeneID.containsKey(curGOID)?GOIDToGeneID.get(curGOID):new ArrayList<String>();
+			annotatedGeneIDs.add(entries[DB_OBJ_ID]);
+			GOIDToGeneID.put(curGOID, annotatedGeneIDs);
+		}
+		
+		//add this (goid,gene_synonym_list) pair to the GOIDToGeneSynonyms map
+		{
+			String curGOID = entries[GOID];
+			List<String> annotatedGeneSyns = GOIDToGeneSynonyms.containsKey(curGOID)?GOIDToGeneSynonyms.get(curGOID):new ArrayList<String>();
+			String geneSyns = entries[SYNONYM];
+			if (!geneSyns.matches("\\s*")) {  //non-null synonym list
+				if (geneSyns.contains("|")) { //multiple synonyms presented
+					for(String geneSyn:geneSyns.split("\\|")) {  //parse the synonyms and add them each to the list in turn
+						if (!geneSyn.matches("\\s*")) {
+							annotatedGeneSyns.add(geneSyn.trim());
+						}
+					}
+				}
+				else { //only one synonym, so simply add it
+					annotatedGeneSyns.add(geneSyns);
+				}
+				GOIDToGeneSynonyms.put(curGOID, annotatedGeneSyns);
+			}
+			else {
+				//do nothing, since no synonyms are specified
+			}
+		}
 		
 		final String ontologyNamespace = entries[ONTOLOGY_NAMESPACE];
 		switch (ontologyNamespace.charAt(0)) {
@@ -592,6 +618,14 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 
 	public Collection<String[]> getAnnotationEntries() {
 		return annotationEntries;
+	}
+
+	public Map<String, List<String>> getGOIDToGeneSynonyms() {
+		return GOIDToGeneSynonyms;
+	}
+
+	public void setGOIDToGeneSynonyms(Map<String, List<String>> toGeneSynonyms) {
+		GOIDToGeneSynonyms = toGeneSynonyms;
 	}
 	
 	
