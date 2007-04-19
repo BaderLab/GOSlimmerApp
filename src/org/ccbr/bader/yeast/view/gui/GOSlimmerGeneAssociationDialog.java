@@ -20,7 +20,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -40,6 +42,7 @@ import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GONamespace;
 import org.ccbr.bader.yeast.GOSlimmer;
 import org.ccbr.bader.yeast.GOSlimmerSession;
+import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GOFormatException;
 
@@ -343,6 +346,27 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			controller.resetAndRecalculateStatisticsBean(nsGeneIds.size());
 			controller.getNetworkView().applyVizmapper(Cytoscape.getVisualMappingManager().getVisualStyle());
 			//TODO either unselect all nodes, or recalculate the statistics based on the new coverage attributes
+		}
+		
+		//if a user gene set has been imported, reapply  it
+		if (session.isUserGeneSetImported()) {
+			Collection<String> matchedIds = new HashSet<String>();
+			for(GOSlimmerController controller:namespaceToController.values()) {
+				matchedIds.addAll(controller.applyUserGeneSet(session.getUserGeneSet()));
+				
+			}
+			Collection<String> unmatchedIds = GOSlimmerUtil.difference(session.getUserGeneSet(), matchedIds);
+			session.setUnmatchedUserGeneIds(unmatchedIds);
+			UserGeneSetImportPanel usgip = session.getGOSlimPanel().getUserGeneSetImportPanel();
+			usgip.updateUnmatchedIdsLabel(unmatchedIds);
+			
+			//now that we have the gene total, reset the statbeans with the new gene total
+			for(GOSlimmerController controller:namespaceToController.values()) {
+				controller.setupUserGeneStatistics(matchedIds.size());
+				
+			}
+			
+			
 		}
 		
 		//record the gene association reader in the GOSlimmer static field, since it will be needed when exporting remapped versions of the file
