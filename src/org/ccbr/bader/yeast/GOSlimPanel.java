@@ -21,6 +21,10 @@ import javax.swing.JPanel;
 
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
+import org.ccbr.bader.yeast.view.gui.AdvancedViewSettingsPanel;
+import org.ccbr.bader.yeast.view.gui.FileExportPanel;
+import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
+import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
 import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 
 import cytoscape.Cytoscape;
@@ -58,8 +62,11 @@ public class GOSlimPanel extends JPanel {
 ////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
 //	}
 	
-	public GOSlimPanel(final Map<GONamespace,GOSlimmerController> namespaceToController) {
+	private GOSlimmerSession session;
+	
+	public GOSlimPanel(final Map<GONamespace,GOSlimmerController> namespaceToController,GOSlimmerSession session) {
 		super();
+		this.session = session;
 		super.setName("GOSlimmer");
 		this.setLayout(new GridLayout(0,1));
 		for(GONamespace namespace: namespaceToController.keySet()) {
@@ -72,8 +79,23 @@ public class GOSlimPanel extends JPanel {
 			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
 		}
 		this.namespaceToController = namespaceToController;
+		this.add(new AdvancedViewSettingsPanel(session.getNamespaceToController().values()));
+		this.add(getUserGeneSetImportPanel());
+		this.add(new FileExportPanel(session.getNamespaceToController().values(),session));
+		this.add(new GOSlimmerGeneAssociationDialog(session.getNamespaceToController(), session.getOntologyName(),session),0);
+		
+		session.setGOSlimPanel(this);
 	}
 
+	private UserGeneSetImportPanel userGeneSetImportPanel;
+	
+	public UserGeneSetImportPanel getUserGeneSetImportPanel() {
+		if (userGeneSetImportPanel == null) {
+			userGeneSetImportPanel = new UserGeneSetImportPanel(session);
+		}
+		return userGeneSetImportPanel;
+	}
+	
 	Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
 	Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
 	

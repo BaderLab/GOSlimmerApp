@@ -101,17 +101,8 @@ public class GOSlimPanelAction implements ActionListener {
 				}
 				
 				GOSlimmerSession newSession =  new GOSlimmerSession(currentNetwork);
-				GOSlimPanel newSessionPanel = new GOSlimPanel(newSession.getNamespaceToController());
-				
-				//add the advanced view settings panel to the goSlimPanel 
-				//TODO revise so that these are automatically created within GOSlimPanel
-				newSessionPanel.add(new AdvancedViewSettingsPanel(newSession.getNamespaceToController().values()));
-				newSessionPanel.add(new UserGeneSetImportPanel(newSession));
-				newSessionPanel.add(new FileExportPanel(newSession.getNamespaceToController().values(),newSession));
-//				newSessionPanel.add(new GOSlimmerGeneAssociationDialog(newSession.getNamespaceToController(),newSession.getOntologyName()),0);
-				newSessionPanel.add(new GOSlimmerGeneAssociationDialog(newSession.getNamespaceToController(), newSession.getOntologyName(),newSession),0);
-				
-//				new GOSlimmerGeneAssociationDialog(newSession.getNamespaceToController(), newSession.getOntologyName(),newSession);
+				GOSlimPanel newSessionPanel = new GOSlimPanel(newSession.getNamespaceToController(),newSession);
+
 				if (!alreadyOpened) {
 					goSlimmerSessionsTabbedPane = new JTabbedPane();
 					
