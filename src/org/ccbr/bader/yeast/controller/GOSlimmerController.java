@@ -372,6 +372,40 @@ public class GOSlimmerController  {
 		}
 		
 	}
+	
+	private void assignCoverageAttributesToNetworks(Map<String,List<String>> goIdToAttValMap,String directCoverageAttributeName,String inferredCoverageAttributeName) {
+		//scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
+		Iterator<Node> nodeI = network.nodesIterator();
+		while (nodeI.hasNext()) {
+			Node node = nodeI.next();
+			String nodeGoId = node.getIdentifier();
+			//get the genes which this go term annotates, according to the gene association file
+			List<String> nodeAnnotatedGeneIds = goIdToAttValMap.get(nodeGoId);
+			
+			//attach the gene id list as an attribute, if it exists 
+			if (nodeAnnotatedGeneIds!=null && nodeAnnotatedGeneIds.size()>0) {
+				nodeAtt.setListAttribute(nodeGoId, directCoverageAttributeName, nodeAnnotatedGeneIds);
+			}
+			
+		}
+		//now annotated each node with the genes it annotated indirectly, through inference, from the genes which it's children inference
+		nodeI = network.nodesIterator();
+		
+		while(nodeI.hasNext()) {
+			Node node = nodeI.next();
+			//see if the inferred coverred genes list attribute has already been calculated and set
+			List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), inferredCoverageAttributeName);
+			if (inferredCoveredGenesL ==null || inferredCoveredGenesL.size()==0) {
+				//inferred coverred genes list has not already been calculated, so calculate and set it
+				Set<String> inferredCoveredGenesS = GOSlimmerUtil.getGenesCoveredByChildren(node, network,directCoverageAttributeName,inferredCoverageAttributeName);
+				nodeAtt.setListAttribute(node.getIdentifier(), inferredCoverageAttributeName, GOSlimmerUtil.setToList(inferredCoveredGenesS));
+			}
+			
+		}
+		
+	}
+	
+	
 
 	/**This method resents the coverage statistics in the model layer, and recalculates them based on which nodes have been selected 
 	 * for inclusion in the slim set (based on the GOSlimmer.goNodeInSimlSetAttributeName CyAttribute of the node).
@@ -406,7 +440,6 @@ public class GOSlimmerController  {
 
 	public void setExpansionDepth(int newExpansionDepth) {
 		this.nodeExpansionDepth = newExpansionDepth;
-		
 	}
 
 	private boolean displayUserGeneCoverageStatistics = false;
@@ -457,8 +490,13 @@ public class GOSlimmerController  {
 		while(nodeI.hasNext()) {
 			List<String> matchingIds;
 			Node node = nodeI.next();
+			
+			//TODO make this more efficent by eliminating the addAll commands and the retainalls as well.
 			//grab the list of directly annotated genes, and performs matches;  attach if matched
-			List<String> directlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(node);
+			List<String> directlyCoveredGenesAndSynonyms = GOSlimmerUtil.getDirectlyCoveredGenes(node);
+			
+			//add the list of gene synonyms, so that we can compare against them as well
+			directlyCoveredGenesAndSynonyms.addAll(GOSlimmerUtil.getDirectlyCoveredGeneSynonyms(node));
 			//TODO determine which of the following implementation is more efficient;  the iteration based one or the retailAll based one
 //			matchingIds = new ArrayList<String>();
 //			//iterate through the lists based on which one is shorter
@@ -478,8 +516,8 @@ public class GOSlimmerController  {
 //					matchingIds.add(geneId);
 //				}
 //			}
-			matchingIds = new ArrayList(geneIds);
-			matchingIds.retainAll(directlyCoveredGenes);
+			matchingIds = new ArrayList<String>(geneIds); //make a copy of the collection, since we don't want to alter the original
+			matchingIds.retainAll(directlyCoveredGenesAndSynonyms);
 			
 			nodeAtt.setListAttribute(node.getIdentifier(), GOSlimmer.directlyAnnotatedUserGenesAttributeName, matchingIds);
 		}
@@ -508,6 +546,15 @@ public class GOSlimmerController  {
 	public void setupUserGeneStatistics(int newUserGeneCount) {
 		this.statBean.setupUserGeneStatistics(newUserGeneCount);
 		this.updateViewStatistics();
+		
+	}
+
+	public void assignGeneSynonymCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneSynonymMap) {
+		this.assignCoverageAttributesToNetworks(goIdToGeneSynonymMap, GOSlimmer.directlyAnnotatedGenesSynonymAttributeName, GOSlimmer.inferredAnnotatedGenesSynonymAttributeName);
+	}
+
+	public void assignGeneIdCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneIdMap) {
+		this.assignCoverageAttributesToNetworks(goIdToGeneIdMap, GOSlimmer.directlyAnnotatedGenesAttributeName, GOSlimmer.inferredAnnotatedGenesAttributeName);
 		
 	}
 
