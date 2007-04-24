@@ -408,6 +408,7 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 			String geneSyns = entries[SYNONYM];
 			if (!geneSyns.matches("\\s*")) {  //non-null synonym list
 				if (geneSyns.contains("|")) { //multiple synonyms presented
+					//TODO consider storing synonym blocks as blocks, so that we don't artificially inflate the coverage stats if a user enters in multiple synonyms for the same gene.
 					for(String geneSyn:geneSyns.split("\\|")) {  //parse the synonyms and add them each to the list in turn
 						if (!geneSyn.matches("\\s*")) {
 							annotatedGeneSyns.add(geneSyn.trim());
