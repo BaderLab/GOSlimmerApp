@@ -29,7 +29,7 @@
 	<classpathentry kind="lib" path="lib/freehep-graphics2d.jar"/>
 	<classpathentry kind="lib" path="lib/freehep-base.jar"/>
 	<classpathentry kind="lib" path="lib/fing.jar"/>
-	<classpathentry kind="lib" path="lib/ding.jar" sourcepath="/Users/mikematan/lib/ding/src"/>
+	<classpathentry kind="lib" path="lib/ding.jar" sourcepath="/Users/mikematan/lib/ding/2.4/src"/>
 	<classpathentry kind="lib" path="lib/cytoscape.jar" sourcepath="/Users/mikematan/lib/cytoscape/2.4/src"/>
 	<classpathentry kind="lib" path="lib/cytoscape-util-intr.jar"/>
 	<classpathentry kind="lib" path="lib/cytoscape-task.jar"/>
@@ -48,8 +48,10 @@
 	<classpathentry kind="lib" path="lib/colt.jar"/>
 	<classpathentry kind="lib" path="lib/biojava-1.4.jar"/>
 	<classpathentry kind="lib" path="lib/activation.jar"/>
-	<classpathentry kind="lib" path="plugins/TableImport.jar" sourcepath="/Users/mikematan/lib/cytoscape-tableimport/src"/>
+	<classpathentry kind="lib" path="plugins/TableImport.jar" sourcepath="/Users/mikematan/lib/cytoscape-tableimport/2.4/src"/>
 	<classpathentry kind="lib" path="plugins/PracticePlugin.jar" sourcepath="src"/>
 	<classpathentry kind="lib" path="plugins/linkout.jar" sourcepath="/Users/mikematan/lib/linkout/src"/>
+	<classpathentry kind="lib" path="plugins/yLayouts.jar"/>
+	<classpathentry kind="lib" path="plugins/AutomaticLayout.jar" sourcepath="/Users/mikematan/lib/automaticLayout/cyto2.4/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
