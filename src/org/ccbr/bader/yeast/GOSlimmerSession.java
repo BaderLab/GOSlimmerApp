@@ -162,25 +162,25 @@ public class GOSlimmerSession {
 
 		
 		//perform some initialization of the subgraph views, so that the user isn't confronted with a hugh and covoluted network
-		HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
+		//HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
 		//For starters, show only the first few levels of the heirarchy
 		for(GOSlimmerController controller:namespaceToController.values()) {
 			Node rootNode  = GOSlimmerUtil.getRootNode(controller.getNetwork());
 			//collapse the root node; TODO revise to do in a more efficient manner (e.g.
 			
-			controller.collapseNode(rootNode);
-			Collection<Node> expandedNodes = controller.expandNodeToDepthAndReturnDAGNodes(rootNode,2);
+			//controller.collapseNode(rootNode);
+			//Collection<Node> expandedNodes = controller.expandNodeToDepthAndReturnDAGNodes(rootNode,2);
 			
 //			controller.getNetworkView().fitContent();
 			
 			//select the dag nodes, and apply heirarchical layout upon them
 			//first we have to select the unhidden nodes, so that the heirarchical layout is only applied to them
-			controller.getNetwork().setSelectedNodeState(expandedNodes, true);
-			Cytoscape.setCurrentNetwork(controller.getNetwork().getIdentifier());
-			Cytoscape.setCurrentNetworkView(controller.getNetworkView().getIdentifier());
+			//controller.getNetwork().setSelectedNodeState(expandedNodes, true);
+			//Cytoscape.setCurrentNetwork(controller.getNetwork().getIdentifier());
+			//Cytoscape.setCurrentNetworkView(controller.getNetworkView().getIdentifier());
 			//apply the heirarchical layout onto the newly created view
 			//hll will execute the layout algorithm on the currently selected view, which should be our newly created one
-			hll.actionPerformed(null);
+			//hll.actionPerformed(null);
 			
 			//I only want the first level of expansion shown at first, though I want the 2nd level layout out properly for later expansion.
 			//TODO determine if this is acceptable given the performance penalty it entails.
