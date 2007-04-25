@@ -269,33 +269,11 @@ public class GOSlimmerController  {
 			
 			expandNodeToDepth(childNode,depth-1);
 			
-//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
-			
-//			double fontHeight = 5;
-//			
-//			
-//			double cw = childNodeV.getWidth();
-//			double ch = childNodeV.getHeight();
-//			
-//			double cy, cx;
-//			if (i==0) {
-//				cy = minYDist + y + (i%2*fontHeight);
-//				cx = x - (numChildren/2*10);
-//			}
-//			else {
-//				cy = minYDist + y + (i%2*fontHeight);
-//				cx = x - (numChildren/2*10);
-//			}
-//			
-//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
-//			childNodeV.setYPosition(y + (2*h) + (i%2*childNodeV.getHeight()));
-			
 			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
 			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
 			nodeWidthSum += childNodeV.getWidth();
 			childNodeViews.add(childNodeV);
-			//position node to be 			
-			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
+
 		}
 		double nodeSpacingX = 10.0;
 		double nodeSpacingY = 5.0;
@@ -304,7 +282,7 @@ public class GOSlimmerController  {
 		baseY = Math.max(baseY, y+50);
 		double startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size())/2;
 		
-		double fontHeight = 14.0;
+		double verticalStaggar = 34.0;
 		
 		//now iterate through the childnodeviews and position them heirarchically
 		double lastCx = 0.0;
@@ -321,7 +299,7 @@ public class GOSlimmerController  {
 			else {
 				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
 			}
-			cy = baseY + ((i%2!=0)?fontHeight:0);
+			cy = baseY + ((i%2!=0)?verticalStaggar:0);
 			childNodeV.setXPosition(cx);
 			childNodeV.setYPosition(cy);
 			lastCw = cw;
