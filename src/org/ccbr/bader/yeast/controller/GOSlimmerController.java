@@ -244,9 +244,21 @@ public class GOSlimmerController  {
 		double h = snodeView.getHeight();
 		double w = snodeView.getWidth();
 		
+		double minYDist = h/2;
+		
 		//retrieve the incoming edges, such that we can expand them
 		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
 		int numChildren = incomingEdges.length;
+		
+
+		//going to have to go with fixed spacing, since we don't know the size of the nodes ahead of time
+		//alternatively, we can perform another loop after we've assess all the children.
+		
+		double maxNodeHeight = 0;
+		double maxNodeWidth = 0;
+		double nodeWidthSum = 0;
+		List<NodeView> childNodeViews = new ArrayList<NodeView>(); 
+		
 		for (int i = 0; i<incomingEdges.length;i++) {
 			EdgeView ev = networkView.getEdgeView(incomingEdges[i]);
 			
@@ -254,13 +266,66 @@ public class GOSlimmerController  {
 			Node childNode = ev.getEdge().getSource();
 			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
 			
+			
 			expandNodeToDepth(childNode,depth-1);
 			
-			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
-			childNodeV.setYPosition(y + (2*h) + (i%2*childNodeV.getHeight()));  //last term is to stagger the nodes so their labels don't overlap
+//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
+			
+//			double fontHeight = 5;
+//			
+//			
+//			double cw = childNodeV.getWidth();
+//			double ch = childNodeV.getHeight();
+//			
+//			double cy, cx;
+//			if (i==0) {
+//				cy = minYDist + y + (i%2*fontHeight);
+//				cx = x - (numChildren/2*10);
+//			}
+//			else {
+//				cy = minYDist + y + (i%2*fontHeight);
+//				cx = x - (numChildren/2*10);
+//			}
+//			
+//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
+//			childNodeV.setYPosition(y + (2*h) + (i%2*childNodeV.getHeight()));
+			
+			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
+			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
+			nodeWidthSum += childNodeV.getWidth();
+			childNodeViews.add(childNodeV);
 			//position node to be 			
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
-			
+		}
+		double nodeSpacingX = 10.0;
+		double nodeSpacingY = 5.0;
+		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
+		double baseY = y + h/2 + maxNodeHeight/2 + nodeSpacingY;
+		baseY = Math.max(baseY, y+50);
+		double startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size())/2;
+		
+		double fontHeight = 14.0;
+		
+		//now iterate through the childnodeviews and position them heirarchically
+		double lastCx = 0.0;
+		double lastCw = 0.0;
+		boolean firstIter = true;
+		for(int i = 0;i<childNodeViews.size();i++) {
+			NodeView childNodeV = childNodeViews.get(i);
+			double cy,cx;
+			double cw = childNodeV.getWidth();
+			if (firstIter) {
+				cx = startX;
+				firstIter = false;
+			}
+			else {
+				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
+			}
+			cy = baseY + ((i%2!=0)?fontHeight:0);
+			childNodeV.setXPosition(cx);
+			childNodeV.setYPosition(cy);
+			lastCw = cw;
+			lastCx = cx;
 		}
 	}
 	
