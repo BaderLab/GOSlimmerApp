@@ -25,6 +25,7 @@ import org.ccbr.bader.yeast.view.gui.AdvancedViewSettingsPanel;
 import org.ccbr.bader.yeast.view.gui.FileExportPanel;
 import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
+import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 
 import cytoscape.Cytoscape;
@@ -101,7 +102,7 @@ public class GOSlimPanel extends JPanel {
 	
 	private static final DecimalFormat coverageTextformatter = new DecimalFormat("00.00%");
 	
-	private class GOSlimmerNamespaceSubpanel extends JPanel{
+	private class GOSlimmerNamespaceSubpanel extends JCollapsablePanel{
 		
 		GOSlimmerCoverageStatBean statBean = null;
 		
@@ -120,7 +121,8 @@ public class GOSlimPanel extends JPanel {
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
 		public GOSlimmerNamespaceSubpanel(String name,final GOSlimmerController controller) {
-			this.setBorder(BorderFactory.createTitledBorder(name));
+			super(name);
+//			this.setBorder(BorderFactory.createTitledBorder(name));
 			
 			//this.add(new JLabel(name));
 //			this.setLayout(new FlowLayout(FlowLayout.LEADING));
