@@ -16,16 +16,17 @@ import javax.swing.JTextField;
 
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.view.gui.misc.JCheckBoxMod;
+import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 
 import cytoscape.Cytoscape;
 import cytoscape.view.CyNetworkView;
 
-public class AdvancedViewSettingsPanel extends JPanel implements ActionListener {
+public class AdvancedViewSettingsPanel extends JCollapsablePanel implements ActionListener {
 
 	private Collection<GOSlimmerController> controllers;
 
 	public AdvancedViewSettingsPanel(Collection<GOSlimmerController> controllers) {
-		super();
+		super("Advanced View Settings");
 		this.controllers = controllers;
 	}
 	
@@ -121,7 +122,7 @@ public class AdvancedViewSettingsPanel extends JPanel implements ActionListener 
 	
 	private void initComponents() {
 //		this.setPreferredSize(new Dimension(10,40));
-		this.setBorder(BorderFactory.createTitledBorder("Advanced Settings"));
+//		this.setBorder(BorderFactory.createTitledBorder("Advanced Settings"));
 		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
 		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
