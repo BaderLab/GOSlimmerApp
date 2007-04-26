@@ -26,6 +26,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
@@ -88,6 +90,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		return annotationChooserDialog;
 	}
 	
+	private Map<String,String> speciesNameToGeneAssociationRecordName;
+	
 	private void initComponents()  {
 		//this.setPreferredSize(new Dimension(10,40));
 		this.setBorder(BorderFactory.createTitledBorder("Select Gene Annotation to use for Coverage Calculation"));
@@ -121,14 +125,14 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		this.add(getAnnotationComboBox(),c);
 		c.gridx=1;
 		c.gridy=1;
-		this.add(getAnnotationBrowseButton(),c);
+		this.add(getApplyButton(),c);
 		
 		c.anchor = GridBagConstraints.CENTER;
 		c.gridx=0;
 		c.gridy=2;
 		c.gridwidth = GridBagConstraints.REMAINDER;
+		this.add(getAnnotationBrowseButton(),c);
 		
-		this.add(getApplyButton(),c);
 	}
 	
 	private JPanel selectionPanel;
@@ -146,7 +150,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 	
 	JButton applyButton;
 	
-	private static final String applyButtonText = "Apply To Graphs";
+	private static final String applyButtonText = "Go";
 	
 	private JButton getApplyButton() {
 		if (applyButton !=null) return applyButton;
@@ -195,17 +199,46 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		}
 		List<DataSource> annotations = BookmarksUtil.getDataSourceList("annotation", bookmarks.getCategory());
 		
+		
+		
 		//intialize the annotation to url map, and populate the combo box with the annotation names
 		for(DataSource annot:  annotations) {
 			String annotName = annot.getName();
 			annotationURLMap.put(annotName, annot.getHref());
-			annotationComboBox.addItem(annotName);
+//			annotationComboBox.addItem(annotName);
 			//TODO see if we need to extract the source attributes
 		}
+		
+		//create the mapping from the short species name to the full annotation record names, such that we can 
+		//create the combobox with the short name instead of the long (and mostly redundant) full name
+		speciesNameToGeneAssociationRecordName = createSpeciesNameToGeneAssociationRecordNameMap(annotationURLMap.keySet());
+		
+		//now add the species names as combo box options
+		for (String speciesName: speciesNameToGeneAssociationRecordName.keySet()) {
+			annotationComboBox.addItem(speciesName);
+		}
+		
 		annotationComboBox.addActionListener(this);
 		return annotationComboBox;
 	}
 	
+	//This is the prefix which Gene Association Annotations records derived from cytoscape bookmarks are expected to start with
+	private static final String geneAssociationRecordNamePrefix = "Gene Association file for ";
+	
+	private Map<String, String> createSpeciesNameToGeneAssociationRecordNameMap(Collection<String> geneAssociationRecordNames) {
+		Map<String,String> m = new HashMap<String, String>();
+		for(String geneAssociationRecordName:geneAssociationRecordNames) {
+			if (geneAssociationRecordName.startsWith(geneAssociationRecordNamePrefix)) {
+				String speciesName = geneAssociationRecordName.substring(geneAssociationRecordNamePrefix.length(), geneAssociationRecordName.length());
+				m.put(speciesName, geneAssociationRecordName);
+			}
+			else { //unrecognized pattern, so simply place directly in the map as an identity mapping
+				m.put(geneAssociationRecordName, geneAssociationRecordName);
+			}
+		}
+		return m;
+	}
+
 	private JLabel getSelectedAnnotationFileLabel() {
 		if (selectedAnnotationFileLabel !=null) return selectedAnnotationFileLabel;
 		
@@ -385,7 +418,10 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			annotURL =  userSelectedFile.toURL();
 		}
 		else {
-			annotURL = new URL(annotationURLMap.get((String) annotationComboBox.getSelectedItem()));
+			String selectedSpeciesName = (String) annotationComboBox.getSelectedItem();
+			String selectedGeneAssociationRecord = speciesNameToGeneAssociationRecordName.get(selectedSpeciesName);
+			String annotURLS = annotationURLMap.get(selectedGeneAssociationRecord);
+			annotURL = new URL(annotURLS);
 		}
 		return annotURL;
 	}
