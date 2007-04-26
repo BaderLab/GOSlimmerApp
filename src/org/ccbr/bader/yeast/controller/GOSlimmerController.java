@@ -168,64 +168,41 @@ public class GOSlimmerController  {
 			
 			expandNodeUnlimited(childNode);
 			
-//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
-			
-//			double fontHeight = 5;
-//			
-//			
-//			double cw = childNodeV.getWidth();
-//			double ch = childNodeV.getHeight();
-//			
-//			double cy, cx;
-//			if (i==0) {
-//				cy = minYDist + y + (i%2*fontHeight);
-//				cx = x - (numChildren/2*10);
-//			}
-//			else {
-//				cy = minYDist + y + (i%2*fontHeight);
-//				cx = x - (numChildren/2*10);
-//			}
-//			
-//			childNodeV.setXPosition(x + (w*(2+i)) - (numChildren/2 * (w)));
-//			childNodeV.setYPosition(y + (2*h) + (i%2*childNodeV.getHeight()));
-			
 			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
 			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
 			nodeWidthSum += childNodeV.getWidth();
 			childNodeViews.add(childNodeV);
-			//position node to be 			
-			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
+
 		}
-		double nodeSpacingX = 5;
-		double nodeSpacingY = 25;
+		double nodeSpacingX = 10.0;
+		double nodeSpacingY = 5.0;
 		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
 		double baseY = y + h/2 + maxNodeHeight/2 + nodeSpacingY;
+		baseY = Math.max(baseY, y+50);
 		double startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size())/2;
 		
-		double fontHeight = 10;
+		double verticalStaggar = 34.0;
 		
 		//now iterate through the childnodeviews and position them heirarchically
-		double lastCy;
-		double lastCx = 0;
-		double lastCw = 0;
+		double lastCx = 0.0;
+		double lastCw = 0.0;
 		boolean firstIter = true;
 		for(int i = 0;i<childNodeViews.size();i++) {
 			NodeView childNodeV = childNodeViews.get(i);
 			double cy,cx;
 			double cw = childNodeV.getWidth();
 			if (firstIter) {
-				cy = baseY;
 				cx = startX;
 				firstIter = false;
 			}
 			else {
 				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
-				cy = baseY + (i%2*fontHeight);
 			}
+			cy = baseY + ((i%2!=0)?verticalStaggar:0);
+			cy = baseY + (i%5*verticalStaggar);
 			childNodeV.setXPosition(cx);
 			childNodeV.setYPosition(cy);
 			lastCw = cw;
-			lastCy = cy;
 			lastCx = cx;
 		}
 	}
@@ -300,6 +277,7 @@ public class GOSlimmerController  {
 				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
 			}
 			cy = baseY + ((i%2!=0)?verticalStaggar:0);
+			cy = baseY + (i%5*verticalStaggar);
 			childNodeV.setXPosition(cx);
 			childNodeV.setYPosition(cy);
 			lastCw = cw;
@@ -307,28 +285,28 @@ public class GOSlimmerController  {
 		}
 	}
 	
-	/**
-	 * @param snode the node to expand
-	 * @param depth the depth to which the DAG should be expanded
-	 */
-	public Collection<Node> expandNodeToDepthAndReturnDAGNodes(Node snode,int depth) {
-		List<Node> l= new ArrayList<Node>();
-		l.add(snode);
-		if (depth <=0) {
-			l.add(snode);
-			return l;
-		}
-		networkView.showGraphObject(networkView.getNodeView(snode));
-		
-		//retrieve the incoming edges, such that we can expand them
-		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		for (int incomingEdge:incomingEdges) {
-			EdgeView ev = networkView.getEdgeView(incomingEdge);
-			networkView.showGraphObject(ev);
-			l.addAll(expandNodeToDepthAndReturnDAGNodes(ev.getEdge().getSource(),depth -1));
-		}
-		return l;
-	}
+//	/**
+//	 * @param snode the node to expand
+//	 * @param depth the depth to which the DAG should be expanded
+//	 */
+//	public Collection<Node> expandNodeToDepthAndReturnDAGNodes(Node snode,int depth) {
+//		List<Node> l= new ArrayList<Node>();
+//		l.add(snode);
+//		if (depth <=0) {
+//			l.add(snode);
+//			return l;
+//		}
+//		networkView.showGraphObject(networkView.getNodeView(snode));
+//		
+//		//retrieve the incoming edges, such that we can expand them
+//		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
+//		for (int incomingEdge:incomingEdges) {
+//			EdgeView ev = networkView.getEdgeView(incomingEdge);
+//			networkView.showGraphObject(ev);
+//			l.addAll(expandNodeToDepthAndReturnDAGNodes(ev.getEdge().getSource(),depth -1));
+//		}
+//		return l;
+//	}
 	
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 	
