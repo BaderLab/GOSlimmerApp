@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -69,7 +70,8 @@ public class GOSlimPanel extends JPanel {
 		super();
 		this.session = session;
 		super.setName("GOSlimmer");
-		this.setLayout(new GridLayout(0,1));
+//		this.setLayout(new GridLayout(0,1));
+		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
 		for(GONamespace namespace: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(namespace);
 			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
