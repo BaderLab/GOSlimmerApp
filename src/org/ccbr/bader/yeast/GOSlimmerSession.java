@@ -186,6 +186,10 @@ public class GOSlimmerSession {
 			//TODO determine if this is acceptable given the performance penalty it entails.
 			controller.collapseNode(rootNode);
 			controller.expandNodeToDepth(rootNode, 1);
+			
+			//zoom view to fit all content, and then update it.  Code inspired from cytoscape.actions.ZoomSelectedAction 
+			controller.getNetworkView().fitContent();
+			controller.getNetworkView().updateView();
 		}
 		
 	}
