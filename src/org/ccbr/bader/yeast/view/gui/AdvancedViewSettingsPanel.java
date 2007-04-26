@@ -5,10 +5,13 @@ import java.awt.GridLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Collection;
 
 import javax.swing.BorderFactory;
 import javax.swing.JCheckBox;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -21,7 +24,7 @@ import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 import cytoscape.Cytoscape;
 import cytoscape.view.CyNetworkView;
 
-public class AdvancedViewSettingsPanel extends JCollapsablePanel implements ActionListener {
+public class AdvancedViewSettingsPanel extends JCollapsablePanel implements ActionListener, PropertyChangeListener {
 
 	private Collection<GOSlimmerController> controllers;
 
@@ -95,9 +98,11 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 	
 	private JTextField getExpandNodeTextField() {
 		if (expandNodeDepthTextField == null) {
-			expandNodeDepthTextField = new JTextField("1");
+			expandNodeDepthTextField = new JFormattedTextField("1");
 			expandNodeDepthTextField.setEnabled(expandNodeDepthCheckbox.isSelected());
 			expandNodeDepthTextField.addActionListener(this);
+			expandNodeDepthTextField.addPropertyChangeListener("value",this);
+			
 //			expandNodeDepthTextField.sets
 		}
 		return expandNodeDepthTextField;
@@ -182,18 +187,7 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 		}
 		else if (src instanceof JTextField) {
 			if (src == expandNodeDepthTextField) {
-				//retrieve the new expansion depth, and see if it is a valid integer entry:
-				int newExpansionDepth;
-				try {
-					newExpansionDepth = Integer.parseInt(expandNodeDepthTextField.getText());
-				}
-				catch (NumberFormatException e) {
-					JOptionPane.showMessageDialog(this, "Invalid value '" + expandNodeDepthTextField.getText() + "' for expansion depth;  expanded node depth must be a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
-					for(GOSlimmerController controller: controllers) expandNodeDepthTextField.setText(String.valueOf(controller.getExpansionDepth()));
-					return;
-				}
-				//this next line is only performed if the text was successfully parsed as an integer
-				for(GOSlimmerController controller: controllers) controller.setExpansionDepth(newExpansionDepth);
+				updateExpansionDepth();
 			}
 		}
 		
@@ -201,6 +195,30 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 	
 	{
 		initComponents();
+	}
+
+	public void propertyChange(PropertyChangeEvent event) {
+		Object src = event.getSource();
+		if (src instanceof JTextField) {
+			if (src == expandNodeDepthTextField) {
+				updateExpansionDepth();
+			}
+		}
+	}
+	
+	private void updateExpansionDepth() {
+		//retrieve the new expansion depth, and see if it is a valid integer entry:
+		int newExpansionDepth;
+		try {
+			newExpansionDepth = Integer.parseInt(expandNodeDepthTextField.getText());
+		}
+		catch (NumberFormatException e) {
+			JOptionPane.showMessageDialog(this, "Invalid value '" + expandNodeDepthTextField.getText() + "' for expansion depth;  expanded node depth must be a valid integer.", "Error", JOptionPane.ERROR_MESSAGE);
+			for(GOSlimmerController controller: controllers) expandNodeDepthTextField.setText(String.valueOf(controller.getExpansionDepth()));
+			return;
+		}
+		//this next line is only performed if the text was successfully parsed as an integer
+		for(GOSlimmerController controller: controllers) controller.setExpansionDepth(newExpansionDepth);
 	}
 	
 }
