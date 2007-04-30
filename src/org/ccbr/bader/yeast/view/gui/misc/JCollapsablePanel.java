@@ -457,7 +457,13 @@ public class JCollapsablePanel extends JPanel{
 //		return super.getPreferredSize();
 		Dimension ipd = getInternalPanel().getPreferredSize();
 		Dimension ctbd = getCollapsableTitleBorder().getMinimumSize(this);
-		Dimension psize = new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
+		Dimension psize= new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
+//		if (collapsed) {
+//			psize = new Dimension(ipd.width + ctbd.width,(ipd.height + ctbd.height)/4);
+//		}
+//		else  {
+//			psize = new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
+//		}
 //		Dimension psize = new Dimension(ipd.width,ipd.height + 50);
 		
 //		return  getInternalPanel().getPreferredSize();
