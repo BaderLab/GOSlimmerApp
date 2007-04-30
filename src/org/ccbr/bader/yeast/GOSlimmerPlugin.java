@@ -10,11 +10,9 @@ import cytoscape.plugin.CytoscapePlugin;
 
 
 /**
- * Created by IntelliJ IDEA.
  * User: mikematan
  * Date: Feb 12, 2007
  * Time: 6:03:32 PM
- * To change this template use File | Settings | File Templates.
  */
 public class GOSlimmerPlugin extends CytoscapePlugin 
 {
