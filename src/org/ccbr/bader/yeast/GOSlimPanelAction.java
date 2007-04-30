@@ -5,6 +5,7 @@ import java.awt.event.ActionListener;
 
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingConstants;
 
@@ -30,6 +31,8 @@ public class GOSlimPanelAction implements ActionListener {
 
 	protected String directlyAnnotatedGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENES";
 	protected String inferredAnnotatedGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENES";
+	
+
 	
 	public GOSlimPanelAction() {
 		// TODO Auto-generated constructor stub
@@ -102,16 +105,24 @@ public class GOSlimPanelAction implements ActionListener {
 				
 				GOSlimmerSession newSession =  new GOSlimmerSession(currentNetwork);
 				GOSlimPanel newSessionPanel = new GOSlimPanel(newSession.getNamespaceToController(),newSession);
+				{
+					//initially, these should be invisible
+					newSessionPanel.setNamespaceSubpanelsVisible(false);
+					newSessionPanel.setViewSettingsPanelVisible(false);
+					newSessionPanel.setFileExportPanelVisible(false);
+					newSessionPanel.setUserGeneSetImportPanelVisible(false);
+				}
 
 				if (!alreadyOpened) {
-					goSlimmerSessionsTabbedPane = new JTabbedPane();
+//					goSlimmerSessionsTabbedPane = new JTabbedPane();
+					goSlimmerSessionsTabbedPane = newSessionPanel;
 					
 					cytoPanel.add("GOSlimmer",goSlimmerSessionsTabbedPane);
 					alreadyOpened = true;
 				}
 				
 				//add the new session pane to the goslimmer cytopanel
-				goSlimmerSessionsTabbedPane.add(currentNetwork.getTitle(),newSessionPanel);
+//				goSlimmerSessionsTabbedPane.add(currentNetwork.getTitle(),newSessionPanel);
 				
 				//get the index of the panel and tell it to dock it
 				int index = cytoPanel.indexOfComponent(goSlimmerSessionsTabbedPane);
@@ -123,6 +134,8 @@ public class GOSlimPanelAction implements ActionListener {
 
 
 	}
-	private JTabbedPane goSlimmerSessionsTabbedPane;
+	private JPanel goSlimmerSessionsTabbedPane;
+
+
 	
 }

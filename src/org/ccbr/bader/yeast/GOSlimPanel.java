@@ -34,6 +34,10 @@ import cytoscape.view.CytoscapeDesktop;
 
 public class GOSlimPanel extends JPanel {
 
+	protected AdvancedViewSettingsPanel viewSettingsPanel;
+	
+	private FileExportPanel fileExportPanel;
+	
 	private GOSlimmerControlPanelToGraphInterface cptgi = null;
 	
 //	private JLabel celComCoverage;
@@ -72,22 +76,34 @@ public class GOSlimPanel extends JPanel {
 		super.setName("GOSlimmer");
 //		this.setLayout(new GridLayout(0,1));
 		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
+		this.add(new GOSlimmerGeneAssociationDialog(session.getNamespaceToController(), session.getOntologyName(),session));
+		this.add(getUserGeneSetImportPanel());
 		for(GONamespace namespace: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(namespace);
 			//GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName() + " Coverage: ",controller);
 			GOSlimmerNamespaceSubpanel namespaceSubPanel = new GOSlimmerNamespaceSubpanel(namespace.getName(),controller);
+			namespaceSubPanel.setCollapsed(false);
+			//namespaceSubPanel.setVisible(false);
 			namespaceToSubpanel.put(namespace,namespaceSubPanel);
 			controller.setInferredCoverageStatisticViewLabel(namespaceSubPanel.inferredCoverageStatisticLabel);
 			controller.setDirectCoverageStatisticViewLabel(namespaceSubPanel.directCoverageStatisticLabel);
 			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
 		}
 		this.namespaceToController = namespaceToController;
-		this.add(new AdvancedViewSettingsPanel(session.getNamespaceToController().values()));
-		this.add(getUserGeneSetImportPanel());
-		this.add(new FileExportPanel(session.getNamespaceToController().values(),session));
-		this.add(new GOSlimmerGeneAssociationDialog(session.getNamespaceToController(), session.getOntologyName(),session),0);
+		viewSettingsPanel = new AdvancedViewSettingsPanel(session.getNamespaceToController().values());
+		this.add(viewSettingsPanel);
 		
+		this.add(getFileExportPanel());
+		
+
 		session.setGOSlimPanel(this);
+	}
+	
+	private FileExportPanel getFileExportPanel() {
+		if (fileExportPanel ==null) {
+			fileExportPanel = new FileExportPanel(this.session.getNamespaceToController().values(),this.session);
+		}
+		return fileExportPanel;
 	}
 
 	private UserGeneSetImportPanel userGeneSetImportPanel;
@@ -232,6 +248,32 @@ public class GOSlimPanel extends JPanel {
 	
 	private void setCoverageLabel(GONamespace ns, JLabel coverage) {
 		namespaceToSubpanel.get(ns).setInferredCoverageStatisticLabel(coverage);
+	}
+	
+//	public AdvancedViewSettingsPanel getViewSettingsPanel() {
+//		return viewSettingsPanel;
+//	}
+//	
+//	public void setViewSettingsPanel(AdvancedViewSettingsPanel viewSettingsPanel) {
+//		this.viewSettingsPanel = viewSettingsPanel;
+//	}
+	
+	public void setNamespaceSubpanelsVisible(boolean visible) {
+		for(GOSlimmerNamespaceSubpanel nsp:namespaceToSubpanel.values()) {
+			nsp.setVisible(visible);
+		}
+	}
+	
+	public void setViewSettingsPanelVisible(boolean visible) {
+		viewSettingsPanel.setVisible(visible);
+	}
+	
+	public void setUserGeneSetImportPanelVisible(boolean visible) {
+		getUserGeneSetImportPanel().setVisible(visible);
+	}
+	
+	public  void setFileExportPanelVisible(boolean visible) {
+		fileExportPanel.setVisible(visible);
 	}
 	
 }

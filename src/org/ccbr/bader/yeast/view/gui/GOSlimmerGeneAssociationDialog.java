@@ -42,6 +42,7 @@ import javax.xml.bind.JAXBException;
 
 import org.ccbr.bader.geneassociation.GeneAssociationReaderUtil;
 import org.ccbr.bader.yeast.GONamespace;
+import org.ccbr.bader.yeast.GOSlimPanel;
 import org.ccbr.bader.yeast.GOSlimmer;
 import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
@@ -98,19 +99,9 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		
 		this.setLayout(new BorderLayout());
 //		this.setLayout(new GridLayout(0,1));
-//			this.setLayout(new FlowLayout(FlowLayout.LEFT,0,0));
 		this.setLayout(new GridBagLayout());
-//		this.setLayout(new BoxLayout(this,BoxLayout.Y_AXIS));
-		
-//		this.add(getAnnotationComboBox(),BorderLayout.WEST);
-//		this.add(getAnnotationBrowseButton(),BorderLayout.EAST);
-//		this.add(getSelectedAnnotationFileLabel(), BorderLayout.NORTH);
-//		this.add(getApplyButton(),BorderLayout.PAGE_END);
-//		this.add(getAnnotationComboBox());
-//		this.add(getAnnotationBrowseButton());
-//		this.add(getSelectedAnnotationFileLabel(),BorderLayout.NORTH);
-//		this.add(getSelectionPanel(),BorderLayout.CENTER);
-//		this.add(getApplyButton(),BorderLayout.SOUTH);
+
+
 		GridBagConstraints c = new GridBagConstraints();
 //		c.weightx = 0.5;
 //		c.weighty = 0.5;
@@ -308,6 +299,15 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 					public void run() {
 						try {
 							applySelectedAnnotationToGOGraphs();
+							//if this was done successful, then it is time to expand the control panel to include the 
+							//other dialogs
+							{
+								GOSlimPanel panel = session.getGOSlimPanel();
+								panel.setViewSettingsPanelVisible(true);
+								panel.setNamespaceSubpanelsVisible(true);
+								panel.setFileExportPanelVisible(true);
+								panel.setUserGeneSetImportPanelVisible(true);
+							}
 						} catch (FileNotFoundException e) {
 							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
 						} catch (MalformedURLException e) {
