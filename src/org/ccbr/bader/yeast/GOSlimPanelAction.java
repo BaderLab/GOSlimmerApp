@@ -1,5 +1,9 @@
  package org.ccbr.bader.yeast;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
+import java.awt.FlowLayout;
+import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -116,6 +120,16 @@ public class GOSlimPanelAction implements ActionListener {
 				if (!alreadyOpened) {
 //					goSlimmerSessionsTabbedPane = new JTabbedPane();
 					goSlimmerSessionsTabbedPane = newSessionPanel;
+					
+					JPanel layoutPanel = new JPanel();
+//					layoutPanel.setLayout(new CardLayout());
+					
+					goSlimmerSessionsTabbedPane = layoutPanel;
+					goSlimmerSessionsTabbedPane.add(newSessionPanel);
+					goSlimmerSessionsTabbedPane.add(new JPanel());
+//					goSlimmerSessionsTabbedPane.add(newSessionPanel,BorderLayout.PAGE_START);
+//					goSlimmerSessionsTabbedPane.add(new JPanel(),BorderLayout.PAGE_END);
+					
 					
 					cytoPanel.add("GOSlimmer",goSlimmerSessionsTabbedPane);
 					alreadyOpened = true;
