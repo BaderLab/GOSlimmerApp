@@ -451,28 +451,32 @@ public class JCollapsablePanel extends JPanel{
 		internalPanel.setBorder(border);
 	}
 
-	@Override
-	public Dimension getPreferredSize() {
-		// TODO Auto-generated method stub
-//		return super.getPreferredSize();
-		Dimension ipd = getInternalPanel().getPreferredSize();
-		Dimension ctbd = getCollapsableTitleBorder().getMinimumSize(this);
-		Dimension psize= new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
+//	@Override
+//	public Dimension getPreferredSize() {
+//		// TODO Auto-generated method stub
+////		return super.getPreferredSize();
+//		Dimension ipd = getInternalPanel().getPreferredSize();
+//		Dimension ctbd = getCollapsableTitleBorder().getMinimumSize(this);
+//		//getCollapsableTitleBorder().getComponentRect(rect, borderInsets)
+//		Dimension psize= new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
 //		if (collapsed) {
-//			psize = new Dimension(ipd.width + ctbd.width,(ipd.height + ctbd.height)/4);
+//			psize = new Dimension(ipd.width + ctbd.width,(ipd.height + ctbd.height)/3);
 //		}
 //		else  {
 //			psize = new Dimension(ipd.width + ctbd.width,ipd.height + ctbd.height);
 //		}
-//		Dimension psize = new Dimension(ipd.width,ipd.height + 50);
-		
-//		return  getInternalPanel().getPreferredSize();
-		return psize;
-	}
+////		Dimension psize = new Dimension(ipd.width,ipd.height + 50);
+//		
+////		return  getInternalPanel().getPreferredSize();
+////		return getCollapsableTitleBorder().getMinimumSize(this);
+//		
+////		return psize;
+//		return super.getPreferredSize();
+//	}
 
-	private TitledBorder getCollapsableTitleBorder() {
+	private CollapsableTitledBorder getCollapsableTitleBorder() {
 		if (border == null) {
-			border =  new CollapsableTitledBorder(collapsedBorderLine, titleComponent);
+			border =  new CollapsableTitledBorder(collapsedBorderLine, titleComponent); 
 		}
 		return border;
 	}
