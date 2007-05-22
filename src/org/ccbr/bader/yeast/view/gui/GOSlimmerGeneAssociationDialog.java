@@ -1,6 +1,7 @@
 package org.ccbr.bader.yeast.view.gui;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.ComponentOrientation;
 import java.awt.Dialog;
 import java.awt.Dimension;
@@ -48,6 +49,7 @@ import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GOFormatException;
+import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
@@ -85,17 +87,29 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		if (annotationChooserDialog == null) {
 			annotationChooserDialog = new JDialog(Cytoscape.getDesktop(),true);
 			annotationChooserDialog.add(getAnnotationComboBox());
-			annotationChooserDialog.add(getAnnotationBrowseButton());
+//			annotationChooserDialog.add(getAnnotationBrowseButton());
 			annotationChooserDialog.add(getApplyButton());
+			getAdvancedOptionsSubPanel().setCollapsed(true);
+			annotationChooserDialog.add(getAdvancedOptionsSubPanel());
 		}
 		return annotationChooserDialog;
 	}
 	
+	private JCollapsablePanel advancedOptionsSubPanel;
+	
+	private JCollapsablePanel getAdvancedOptionsSubPanel() {
+		if (advancedOptionsSubPanel==null) {
+			advancedOptionsSubPanel = new JCollapsablePanel("Advanced Options");
+			advancedOptionsSubPanel.add(getAnnotationBrowseButton());
+		}
+		return advancedOptionsSubPanel;
+	}
+
 	private Map<String,String> speciesNameToGeneAssociationRecordName;
 	
 	private void initComponents()  {
 		//this.setPreferredSize(new Dimension(10,40));
-		this.setBorder(BorderFactory.createTitledBorder("Select Gene Annotation to use for Coverage Calculation"));
+		this.setBorder(BorderFactory.createTitledBorder("Select Gene Annotation"));
 		
 		this.setLayout(new BorderLayout());
 //		this.setLayout(new GridLayout(0,1));
@@ -121,8 +135,10 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		c.anchor = GridBagConstraints.CENTER;
 		c.gridx=0;
 		c.gridy=2;
+		c.fill = GridBagConstraints.HORIZONTAL;
 		c.gridwidth = GridBagConstraints.REMAINDER;
-		this.add(getAnnotationBrowseButton(),c);
+		getAdvancedOptionsSubPanel().setCollapsed(true);
+		this.add(getAdvancedOptionsSubPanel(),c);
 		
 	}
 	
@@ -197,6 +213,15 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			String annotName = annot.getName();
 			annotationURLMap.put(annotName, annot.getHref());
 //			annotationComboBox.addItem(annotName);
+			//
+			//now add the species names as combo box options
+			if (annotName.startsWith(geneAssociationRecordNamePrefix)) {
+				String speciesName = annotName.substring(geneAssociationRecordNamePrefix.length(), annotName.length());
+				annotationComboBox.addItem(speciesName);
+			}
+			else { //unrecognized pattern, so simply place directly in the map as an identity mapping
+				annotationComboBox.addItem(annotName);
+			}
 			//TODO see if we need to extract the source attributes
 		}
 		
@@ -205,9 +230,9 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		speciesNameToGeneAssociationRecordName = createSpeciesNameToGeneAssociationRecordNameMap(annotationURLMap.keySet());
 		
 		//now add the species names as combo box options
-		for (String speciesName: speciesNameToGeneAssociationRecordName.keySet()) {
-			annotationComboBox.addItem(speciesName);
-		}
+//		for (String speciesName: speciesNameToGeneAssociationRecordName.keySet()) {
+//			annotationComboBox.addItem(speciesName);
+//		}
 		
 		annotationComboBox.addActionListener(this);
 		return annotationComboBox;
@@ -262,7 +287,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 	private File userSelectedFile;
 	private boolean useUserSpecifiedFile = false;
 	
-	private static final String browseButtonText = "Browse";
+	private static final String browseButtonText = "Browse for annotation file ...";
 	
 	public void actionPerformed(ActionEvent event) {
 		//TODO consider reimplementing this to use object reference equivalence checks instead of text value checks, since we might want to have multiple 'browse' buttons
