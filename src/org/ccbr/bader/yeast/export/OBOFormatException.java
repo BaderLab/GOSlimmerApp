@@ -1,6 +1,8 @@
 package org.ccbr.bader.yeast.export;
 
-public class OBOFormatException extends Exception {
+import org.ccbr.bader.yeast.GOSlimmerException;
+
+public class OBOFormatException extends GOSlimmerException {
 
 	public OBOFormatException() {
 		// TODO Auto-generated constructor stub

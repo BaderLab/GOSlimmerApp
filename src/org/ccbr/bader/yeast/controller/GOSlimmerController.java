@@ -629,6 +629,11 @@ public class GOSlimmerController  {
 		
 	}
 
+	public GONamespace getNamespace() {
+		return namespace;
+	}
+
+
 
 	
 	

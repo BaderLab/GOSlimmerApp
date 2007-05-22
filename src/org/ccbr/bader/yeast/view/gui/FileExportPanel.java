@@ -24,6 +24,7 @@ import org.ccbr.bader.yeast.GOSlimmerSession;
 import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
+import org.ccbr.bader.yeast.export.RootNodeNotSelectedException;
 import org.ccbr.bader.yeast.view.gui.misc.JButtonMod;
 
 import cytoscape.CyNetwork;
@@ -80,7 +81,22 @@ public class FileExportPanel extends JPanel implements ActionListener {
 					Map<String,String> goTermRemap = new HashMap<String, String>();
 					for(GOSlimmerController controller: controllers) {
 						try {
-							goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+							try {
+								goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+							} catch (RootNodeNotSelectedException e) {
+								//TODO	
+								int rv = JOptionPane.showConfirmDialog(this, "Root node of GO namespace " + controller.getNamespace().getName() + " must be included in slim set for export.  Include root node and continue?", "Warning:  root term not selected", JOptionPane.YES_NO_OPTION);//, arg1)Dialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+								if (rv == JOptionPane.YES_OPTION) {
+									//add the root node to the slimset and try the remapping again
+									controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
+									goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+								}
+								else {
+									JOptionPane.showMessageDialog(this, "File export has been aborted");
+									break;
+								}
+							}
+							
 						} catch (GOSlimmerException e) {
 							JOptionPane.showMessageDialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 							return;

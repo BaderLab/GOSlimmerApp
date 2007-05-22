@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.ccbr.bader.yeast.export.GOFormatException;
+import org.ccbr.bader.yeast.export.RootNodeNotSelectedException;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -348,13 +349,15 @@ public class GOSlimmerUtil {
 			goTermRemap.put(rootNode.getIdentifier(), rootNode.getIdentifier());
 		}
 		else {
-			throw new GOSlimmerException("Cannot remap because root node is not selected; some annotations would be lost.");
+			throw new RootNodeNotSelectedException("Cannot remap because root node is not selected; some annotations would be lost.");
 		}
 		int[] childEdges = godag.getAdjacentEdgeIndicesArray(rootNode.getRootGraphIndex(), false, true, false);
 		remapGoTerms(childEdges, lastSelectedTermId, godag, goTermRemap);
 		//TODO insert sanity check to ensure stack only contains the root node term, as it should
 		return goTermRemap;
 	}
+	
+	
 	
 	private static  void remapGoTerms(int[] childEdges,Stack<String> lastSelectedTermId,CyNetwork godag,Map remap) {
 		if (childEdges == null) return;
