@@ -45,6 +45,7 @@ import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;
+import cytoscape.data.attr.MultiHashMapDefinition;
 import cytoscape.task.Task;
 import cytoscape.task.TaskMonitor;
 import cytoscape.task.util.TaskManager;
@@ -115,8 +116,12 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 			Iterator<Node> nodesI = controller.getNetwork().nodesIterator();
 			while(nodesI.hasNext()) {
 				Node node = nodesI.next();
-				nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedUserGenesAttributeName);
-				nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedUserGenesAttributeName);
+				if ((nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.directlyAnnotatedUserGenesAttributeName))!=-1) {
+					nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.directlyAnnotatedUserGenesAttributeName);
+				}
+				if ((nodeAtt.getMultiHashMapDefinition().getAttributeValueType(GOSlimmer.inferredAnnotatedUserGenesAttributeName))!=-1) {
+					nodeAtt.deleteAttribute(node.getIdentifier(),GOSlimmer.inferredAnnotatedUserGenesAttributeName);
+				}
 			}
 		}
 	}
@@ -206,7 +211,9 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		line = line.trim();
 		//TODO insert checks to ensure format is acceptable
 		if (line.matches(".*\\s.*")) {
-			throw new RuntimeException("Parse error while processing gene ID file:  cannot have whitespaces within a Gene ID.  Invalid line was: " + line);
+			String errorMessage = "Parse error while processing gene ID file:  cannot have whitespaces within a Gene ID.  Invalid line was: " + line;
+			JOptionPane.showMessageDialog(null, errorMessage,"Error parsing user gene file",JOptionPane.ERROR_MESSAGE);
+			throw new RuntimeException(errorMessage);
 		}
 		return line; //trimmed
 	}
