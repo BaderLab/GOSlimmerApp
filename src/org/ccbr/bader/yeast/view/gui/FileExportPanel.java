@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -78,18 +79,18 @@ public class FileExportPanel extends JPanel implements ActionListener {
 				int retval = chooser.showSaveDialog(this);
 				if (retval == JFileChooser.APPROVE_OPTION) {
 					File exportFile = chooser.getSelectedFile();
-					Map<String,String> goTermRemap = new HashMap<String, String>();
+					Map<String,Set<String>> goTermRemap = new HashMap<String, Set<String>>();
 					for(GOSlimmerController controller: controllers) {
 						try {
 							try {
-								goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+								goTermRemap.putAll(GOSlimmerUtil.createGoTermMultipleRemap(controller.getNetwork()));
 							} catch (RootNodeNotSelectedException e) {
 								//TODO	
 								int rv = JOptionPane.showConfirmDialog(this, "Root node of GO namespace " + controller.getNamespace().getName() + " must be included in slim set for export.  Include root node and continue?", "Warning:  root term not selected", JOptionPane.YES_NO_OPTION);//, arg1)Dialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 								if (rv == JOptionPane.YES_OPTION) {
 									//add the root node to the slimset and try the remapping again
 									controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
-									goTermRemap.putAll(GOSlimmerUtil.createGoTermRemap(controller.getNetwork()));
+									goTermRemap.putAll(GOSlimmerUtil.createGoTermMultipleRemap(controller.getNetwork()));
 								}
 								else {
 									JOptionPane.showMessageDialog(this, "File export has been aborted");
@@ -120,7 +121,7 @@ public class FileExportPanel extends JPanel implements ActionListener {
 		
 	}
 
-	private void createRemappedGeneAnnotationFile(GeneAssociationReaderUtil originalFileReader, File remapFile,Map<String,String> goTermRemap) throws IOException {
+	private void createRemappedGeneAnnotationFile(GeneAssociationReaderUtil originalFileReader, File remapFile,Map<String,Set<String>> goTermRemap) throws IOException {
 		BufferedWriter w = new BufferedWriter(new FileWriter(remapFile));
 		GeneAnnotationRemapWriter gaw = new GeneAnnotationRemapWriter(w,goTermRemap);
 		//create header

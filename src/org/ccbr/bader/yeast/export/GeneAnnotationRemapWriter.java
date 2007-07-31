@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.Stack;
 
 import org.ccbr.bader.yeast.GOSlimmer;
@@ -23,16 +24,16 @@ public class GeneAnnotationRemapWriter {
 	
 	BufferedWriter w = null;
 	
-	Map<String, String> goTermRemap;
+	Map<String, Set<String>> goTermRemap;
 	
 	public GeneAnnotationRemapWriter(BufferedWriter writer, CyNetwork GODAG) throws GOSlimmerException {
 		this.w = writer;
-		this.goTermRemap = GOSlimmerUtil.createGoTermRemap(GODAG);
+		this.goTermRemap = GOSlimmerUtil.createGoTermMultipleRemap(GODAG);
 	}
 	
 	
 	
-	public GeneAnnotationRemapWriter(BufferedWriter writer, Map<String, String> goTermRemap) {
+	public GeneAnnotationRemapWriter(BufferedWriter writer, Map<String, Set<String>> goTermRemap) {
 		this.w = writer;
 		this.goTermRemap = goTermRemap;
 	}
@@ -47,21 +48,23 @@ public class GeneAnnotationRemapWriter {
 	
 	public void writeRemappedEntry(String[] annotationEntry) throws IOException {
 		String originalGoTerm = annotationEntry[GOID];
-		String remappedGoTerm = goTermRemap.get(originalGoTerm);
-		if (remappedGoTerm == null) {
+		Set<String> remappedGoTerms = goTermRemap.get(originalGoTerm);
+		if (remappedGoTerms == null) {
 			throw new RuntimeException("GO Term '" + originalGoTerm + "' does not have a term remapping mapping");
 		}
-		for(int i = 0;i<annotationEntry.length;i++) {
-			if (i!=GOID) {
-				w.write(annotationEntry[i]);
-			} 
-			else {
-				//TODO we'll also need to remap some of the other columns which describe the GO term (or do we?)
-				w.write(remappedGoTerm);
+		for(String remappedGoTerm:remappedGoTerms) {
+			for(int i = 0;i<annotationEntry.length;i++) {
+				if (i!=GOID) {
+					w.write(annotationEntry[i]);
+				} 
+				else {
+					//TODO we'll also need to remap some of the other columns which describe the GO term (or do we?)
+					w.write(remappedGoTerm);
+				}
+				w.write("\t");
 			}
-			w.write("\t");
+			w.write(lsep);
 		}
-		w.write(lsep);
 	}
 
 
