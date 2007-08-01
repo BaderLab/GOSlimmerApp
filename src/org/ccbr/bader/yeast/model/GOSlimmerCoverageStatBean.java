@@ -244,6 +244,10 @@ public class GOSlimmerCoverageStatBean {
 		updateFractionCovered();
 		
 	}
+
+	public Set<Node> getSlimGoNodes() {
+		return slimGoNodes;
+	}
 	
 	//TODO perhaps implement listener interface so that gui can be updated upon change, though this might be better handled by a view or controller component.
 	
