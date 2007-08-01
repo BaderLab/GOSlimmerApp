@@ -421,6 +421,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			session.setUnmatchedUserGeneIds(unmatchedIds);
 			UserGeneSetImportPanel usgip = session.getGOSlimPanel().getUserGeneSetImportPanel();
 			usgip.updateUnmatchedIdsLabel(unmatchedIds);
+			usgip.updateMatchedIdsLabel(matchedIds);
 			
 			//now that we have the gene total, reset the statbeans with the new gene total
 			for(GOSlimmerController controller:namespaceToController.values()) {

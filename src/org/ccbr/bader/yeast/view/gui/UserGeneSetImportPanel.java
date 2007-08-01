@@ -68,7 +68,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Import User Gene Set"));
 		this.add(getImportGeneSetButton());
-		this.add(getUnmatchedIdsLabel());
+		//initiallize these two, but do not add them until they have info to display, as otherwise they will take up empty space
+		getUnmatchedIdsLabel();
+		getMatchedIdsLabel();
+
 	}
 	
 	private JButton importGeneSetButton;
@@ -261,6 +264,9 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		 */
 		unmatchedIds = GOSlimmerUtil.difference(geneIds,matchedIds);
 		updateUnmatchedIdsLabel(unmatchedIds);
+		updateMatchedIdsLabel(matchedIds);
+		this.add(getMatchedIdsLabel());
+		this.add(getUnmatchedIdsLabel());
 		
 		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
 			//recalculate the user gene statistics based on this newly imported user gene ID file
@@ -269,14 +275,81 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		}
 	}
 	
+	JLabel matchedIdsLabel;
+	
+	public void updateMatchedIdsLabel(final Collection<String> matchedIds) {
+		if (matchedIds==null || matchedIds.size() ==0) {
+			getMatchedIdsLabel().setText("No User Gene IDs could be mapped to GO Terms.");
+			matchedIdsLabel.setToolTipText("");
+
+		}
+		else {
+			getMatchedIdsLabel().setText(matchedIds.size() + " Gene IDs were mapped to GO Terms");
+			matchedIdsLabel.setToolTipText("Click for more info");
+			//remove the old mouse listeners
+			for (MouseListener ml: matchedIdsLabel.getMouseListeners()) matchedIdsLabel.removeMouseListener(ml);
+			matchedIdsLabel.addMouseListener(new MouseListener() {
+
+				public void mouseClicked(MouseEvent arg0) {
+					if (matchedIds==null || matchedIds.size()==0) return;
+					JFrame frame = new JFrame("These User Specified Gene IDs were matched to Gene IDs in the Gene Annnotation File");
+					JScrollPane spane;
+					JTable table = new JTable();
+					TableModel model = new DefaultTableModel(matchedIds.size(),1){
+						@Override
+						public boolean isCellEditable(int arg0, int arg1) {
+							return false;
+						}
+					};
+					Iterator<String> unmatchedIdI = matchedIds.iterator();
+					int i = 0;
+					while(unmatchedIdI.hasNext()) {
+						model.setValueAt(unmatchedIdI.next(), i, 0);
+						i++;
+					}
+					table.setShowGrid(true);
+					
+					table.setModel(model);
+					table.getColumnModel().getColumn(0).setHeaderValue("Matched Gene IDs");
+					spane = new JScrollPane(table);
+					
+					JViewport port = new JViewport();
+					port.setName("Matched Gene IDs");
+					spane.setColumnHeader(port);
+					frame.getContentPane().add(spane);
+					frame.pack();
+					frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+					frame.setVisible(true);
+				}
+
+				public void mouseEntered(MouseEvent arg0) {
+					
+				}
+
+				public void mouseExited(MouseEvent arg0) {
+					
+				}
+
+				public void mousePressed(MouseEvent arg0) {
+					
+				}
+
+				public void mouseReleased(MouseEvent arg0) {
+					
+				}
+				
+			});
+		}
+	}
+	
 	public void updateUnmatchedIdsLabel(final Collection<String> unmatchedIds) {
 		if (unmatchedIds==null || unmatchedIds.size() ==0) {
-			unmatchedIdsLabel.setText("All User Gene IDs successfully mapped to GO Terms.");
+			getUnmatchedIdsLabel().setText("All User Gene IDs successfully mapped to GO Terms.");
 			unmatchedIdsLabel.setToolTipText("");
 
 		}
 		else {
-			unmatchedIdsLabel.setText(unmatchedIds.size() + " Gene IDs could not be mapped to GO Terms");
+			getUnmatchedIdsLabel().setText(unmatchedIds.size() + " Gene IDs could not be mapped to GO Terms");
 			unmatchedIdsLabel.setToolTipText("Click for more info");
 			//remove the old mouse listeners
 			for (MouseListener ml: unmatchedIdsLabel.getMouseListeners()) unmatchedIdsLabel.removeMouseListener(ml);
@@ -338,13 +411,22 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	
 	private JLabel unmatchedIdsLabel;
 	private JLabel getUnmatchedIdsLabel() {
-		final Collection<String> unmatchedIds = this.unmatchedIds;
+//		final Collection<String> unmatchedIds = this.unmatchedIds;
 		if (unmatchedIdsLabel==null) {
 			unmatchedIdsLabel = new JLabelMod("");
 
 //			updateUnmatchedIdsLabel();
 		}
 		return unmatchedIdsLabel;
+	}
+	
+	private JLabel getMatchedIdsLabel() {
+		if (matchedIdsLabel==null) {
+			matchedIdsLabel = new JLabelMod("");
+
+//			updateUnmatchedIdsLabel();
+		}
+		return matchedIdsLabel;
 	}
 	
 
