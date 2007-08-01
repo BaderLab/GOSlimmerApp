@@ -269,6 +269,13 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 		}
 	}
 
+	
+	/**
+	 * This will record the header comment section of the gene association file
+	 */
+	StringBuffer headerComment = new StringBuffer();
+	
+	private static final String lsep = System.getProperty("line.separator");
 	/**
 	 *  DOCUMENT ME!
 	 *
@@ -285,7 +292,12 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 			global++;
 			parts = line.split(GA_DELIMITER);
 
-			if (parts.length == EXPECTED_COL_COUNT) {
+			//if this is a comment line (ie starts with '!'), record it
+			if (line.charAt(0)=='!') {
+				headerComment.append(line);
+				headerComment.append(lsep);
+			}
+			else if (parts.length == EXPECTED_COL_COUNT) {
 				parseGA(parts);
 			}
 		}
@@ -627,6 +639,14 @@ public class GeneAssociationReaderUtil implements TextTableReader {
 
 	public void setGOIDToGeneSynonyms(Map<String, List<String>> toGeneSynonyms) {
 		GOIDToGeneSynonyms = toGeneSynonyms;
+	}
+
+	public StringBuffer getHeaderComment() {
+		return headerComment;
+	}
+
+	public void setHeaderComment(StringBuffer headerComment) {
+		this.headerComment = headerComment;
 	}
 	
 	
