@@ -50,6 +50,7 @@ import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GOFormatException;
 import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
+import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
@@ -259,11 +260,12 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		if (selectedAnnotationFileLabel !=null) return selectedAnnotationFileLabel;
 		
 		//initialize the JLabel
-		selectedAnnotationFileLabel = new JLabel();
+		selectedAnnotationFileLabel = new JLabelMod();
 		int height = selectedAnnotationFileLabel.getHeight();
 //		selectedAnnotationFileLabel.setSize(height*6,height);
 		
-		updateSelectedAnnotationFileLabelText();
+//		updateSelectedAnnotationFileLabelText();
+		selectedAnnotationFileLabel.setText("Gene Association File Applied: none");
 		return selectedAnnotationFileLabel;
 	}
 	
@@ -281,7 +283,11 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		else { //otherwise, use the combo box selection
 			comboBoxSelection = (String) (getAnnotationComboBox().getSelectedItem());
 		}
-		selectedAnnotationFileLabel.setText("Selected File: " + comboBoxSelection);
+		selectedAnnotationFileLabel.setText("Gene Association File Applied: " + comboBoxSelection);
+		//create the tooltip for the imported file, if it has been imported, to the comment section of the gene association file
+		if (session!=null && session.getGaru()!=null && session.getGaru().getHeaderComment()!=null) {
+			selectedAnnotationFileLabel.setToolTipText(session.getGaru().getHeaderComment().toString());
+		}
 	}
 	
 	private File userSelectedFile;
@@ -301,7 +307,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 					userSelectedFile = annotFileChooser.getSelectedFile();
 					useUserSpecifiedFile = true;
 					//TODO modify view label which displays identity of selected gene association file
-					updateSelectedAnnotationFileLabelText();
+					
 				}
 				
 			}
@@ -333,6 +339,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 								panel.setFileExportPanelVisible(true);
 								panel.setUserGeneSetImportPanelVisible(true);
 							}
+							updateSelectedAnnotationFileLabelText();
 						} catch (FileNotFoundException e) {
 							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);
 						} catch (MalformedURLException e) {
@@ -358,7 +365,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		else if (event.getSource() instanceof JComboBox) { //annotation combo box has been changed
 			if (event.getSource() == annotationComboBox) { 
 				useUserSpecifiedFile = false;  //use the combo box selection as the selected annotation
-				updateSelectedAnnotationFileLabelText(); //update the view with the new selection
+//				updateSelectedAnnotationFileLabelText(); //update the view with the new selection
 			}
 		}
 		else {
@@ -393,6 +400,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 //		retrieve the mapping of GOIDs to GeneIDs from the parsed asssociation file;  this will be used to assign directly and indirectlly inferred attributes to the networks
 		Map<String,List<String>> goIdToGeneIdMap = garu.getGOIDToGeneIDMap();
 		Map<String,List<String>> goIdToGeneSynonymMap = garu.getGOIDToGeneSynonyms();
+
 		
 		for(GONamespace ns: namespaceToController.keySet()) {
 			GOSlimmerController controller = namespaceToController.get(ns);
@@ -435,6 +443,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		//record the gene association reader in the GOSlimmer static field, since it will be needed when exporting remapped versions of the file
 		//TODO store the gene association reader in a more model centric place
 		session.setGaru(garu);
+
+
 	}
 	
 	private URL getSelectedAnnotationURL() throws MalformedURLException {
