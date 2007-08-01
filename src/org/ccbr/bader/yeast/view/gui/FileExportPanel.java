@@ -1,5 +1,6 @@
 package org.ccbr.bader.yeast.view.gui;
 
+import java.awt.BorderLayout;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -47,38 +48,58 @@ public class FileExportPanel extends JPanel implements ActionListener {
 	
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Export"));
-		this.add(getExportToFileButton());
+		this.setLayout(new BorderLayout());
+		this.add(getExportAnnotationFileButton(), BorderLayout.NORTH);
+		this.add(getExportSlimSetFileButton(), BorderLayout.SOUTH);
 	}
 	
 	private static final String lsep = System.getProperty("line.separator");
 	
-	JButton exportToFileButton;
-	private static final String exportToFileButtonText = "Export Remapped Gene Association File";
-	private static final String exportToFileButtonToolTip = 
+	JButton exportAnnotationFileButton;
+	private static final String exportAnnotationFileButtonText = "Export Remapped Gene Association File";
+	private static final String exportAnnotationFileButtonToolTip = 
 		     "A new version of the imported gene annotation file will be " +
 		lsep+" created where the GO Terms for unselected entries will be " +
 		lsep+"remapped to ancestor terms which were selected.  Note that " +
 		lsep+"only terms which exist within this GO tree will be exported" +
 		lsep+"or remapped;  all others will be ommitted from the output.";
 	
-	private JButton getExportToFileButton() {
-		if (exportToFileButton ==null) {
-			exportToFileButton = new JButtonMod(exportToFileButtonText);
-			exportToFileButton.addActionListener(this);
-			exportToFileButton.setToolTipText(exportToFileButtonToolTip);
+	private JButton getExportAnnotationFileButton() {
+		if (exportAnnotationFileButton ==null) {
+			exportAnnotationFileButton = new JButtonMod(exportAnnotationFileButtonText);
+			exportAnnotationFileButton.addActionListener(this);
+			exportAnnotationFileButton.setToolTipText(exportAnnotationFileButtonToolTip);
 		}
-		return exportToFileButton;
+		return exportAnnotationFileButton;
 	}
+	
+	JButton exportSlimSetFileButton;
+	private static final String exportSlimSetFileButtonText = "Export Slim Set Term List File";
+	private static final String exportSlimSetFileButtonToolTip = 
+		     "Create a file containing a newline delimited list of your  " +
+		lsep+"selected GO Slim Set terms.";
+	
+	private JButton getExportSlimSetFileButton() {
+		if (exportSlimSetFileButton ==null) {
+			exportSlimSetFileButton = new JButtonMod(exportSlimSetFileButtonText);
+			exportSlimSetFileButton.addActionListener(this);
+			exportSlimSetFileButton.setToolTipText(exportSlimSetFileButtonToolTip);
+		}
+		return exportSlimSetFileButton;
+	}
+	
+	
 
 	public void actionPerformed(ActionEvent event) {
 		Object src = event.getSource();
 		if (src instanceof JButton) {
-			if (src == exportToFileButton) {
-				JFileChooser chooser = new JFileChooser();
-				chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-				int retval = chooser.showSaveDialog(this);
-				if (retval == JFileChooser.APPROVE_OPTION) {
-					File exportFile = chooser.getSelectedFile();
+			//all export options require choosing a file, so do so before determining which export operation to perform
+			JFileChooser chooser = new JFileChooser();
+			chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+			int retval = chooser.showSaveDialog(this);
+			if (retval == JFileChooser.APPROVE_OPTION) {
+				File exportFile = chooser.getSelectedFile();
+				if (src == exportAnnotationFileButton) {
 					Map<String,Set<String>> goTermRemap = new HashMap<String, Set<String>>();
 					for(GOSlimmerController controller: controllers) {
 						try {
@@ -113,9 +134,30 @@ public class FileExportPanel extends JPanel implements ActionListener {
 						createRemappedGeneAnnotationFile(session.getGaru(), exportFile, goTermRemap);
 					} catch (IOException e) {
 						JOptionPane.showMessageDialog(this,"Failed to create remapped Gene Annotation File due to IO Error: "+ e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+						return;
+					}
+					
+					
+				}
+				else if (src == exportSlimSetFileButton) {
+					if (exportFile.exists()) {
+						if (!exportFile.delete()) {
+							JOptionPane.showMessageDialog(this, "Failed to overwrite selected export file '" + exportFile.getName() + "'.");
+						}
+					}
+					boolean writeSuccess = true;
+					for(GOSlimmerController controller: controllers) {
+						try {
+							writeSuccess &= controller.appendSlimSetList(exportFile);
+						} catch (IOException e) {
+							JOptionPane.showMessageDialog(this, "Failed to create file listing selected Slim Set terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+							return;
+						}
+					}
+					if (!writeSuccess) {
+						JOptionPane.showMessageDialog(this, "Failed to create file listing selected Slim Set terms ","Error",JOptionPane.ERROR_MESSAGE);
 					}
 				}
-				
 			}
 		}
 		

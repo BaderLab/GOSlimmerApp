@@ -10,6 +10,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -631,6 +632,21 @@ public class GOSlimmerController  {
 
 	public GONamespace getNamespace() {
 		return namespace;
+	}
+
+	/**Appends the IDs of the selected slim nodes for this node to the given file as a newline delimited list 
+	 * @param exportFile the file to append the node names to
+	 * @return true if the operation was successful, false otherwise
+	 * @throws IOException if there were problems writing to the file
+	 */
+	public boolean appendSlimSetList(File exportFile) throws IOException {
+		PrintWriter out = new PrintWriter(new FileWriter(exportFile,true));
+		//TODO get slim set from stat bean
+		for(Node slimNode:this.statBean.getSlimGoNodes()) {
+			out.println(slimNode.getIdentifier());
+		}
+		out.close();
+		return true;
 	}
 
 
