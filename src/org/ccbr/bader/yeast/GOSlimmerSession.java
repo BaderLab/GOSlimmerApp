@@ -26,8 +26,6 @@ import org.ccbr.bader.yeast.view.gui.FileExportPanel;
 import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.NodeContextMenuActionListener;
 
-import csplugins.layout.algorithms.hierarchicalLayout.HierarchicalLayoutListener;
-
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
 import cytoscape.bookmarks.Bookmarks;
