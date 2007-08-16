@@ -263,8 +263,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		 * user somehow of which gene IDs failed to be matched  
 		 */
 		unmatchedIds = GOSlimmerUtil.difference(geneIds,matchedIds);
+		updateTotalUserIdsLabel(geneIds);
 		updateUnmatchedIdsLabel(unmatchedIds);
 		updateMatchedIdsLabel(matchedIds);
+		this.add(getTotalIdsLabel());
 		this.add(getMatchedIdsLabel());
 		this.add(getUnmatchedIdsLabel());
 		
@@ -275,9 +277,106 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		}
 	}
 	
-	JLabel matchedIdsLabel;
+	/**Returns a mouselistener which pops up a JFrame inset JTable which lists the ids passed in the <code>ids</code> collection.  The JTable uses the <code>idType</code> parameter to 
+	 * label the JTable's single column, and the <code>popupTitle</code> is used as the name of the JFrame popup
+	 * @param idType the type of the ids, used to label the JTable column in the popup frame
+	 * @param popupTitle the name to be used for the popup frame
+	 * @param ids the ids which will be listed in the popup JFrame's JTable
+	 * @return a mouselistener which pops up the frame on mouseclick events
+	 */
+	MouseListener getIdListPopupMouseListener(final String idType, final String popupTitle, final Collection<String> ids) {
+		return new MouseListener() {
+
+			public void mouseClicked(MouseEvent arg0) {
+				if (ids==null || ids.size()==0) return;
+				JFrame frame = new JFrame(popupTitle);
+				JScrollPane spane;
+				JTable table = new JTable();
+				TableModel model = new DefaultTableModel(ids.size(),1){
+					@Override
+					public boolean isCellEditable(int arg0, int arg1) {
+						return false;
+					}
+				};
+				Iterator<String> unmatchedIdI = ids.iterator();
+				int i = 0;
+				while(unmatchedIdI.hasNext()) {
+					model.setValueAt(unmatchedIdI.next(), i, 0);
+					i++;
+				}
+				table.setShowGrid(true);
+				
+				table.setModel(model);
+				table.getColumnModel().getColumn(0).setHeaderValue(idType);
+				spane = new JScrollPane(table);
+				
+				JViewport port = new JViewport();
+				port.setName(idType);
+				spane.setColumnHeader(port);
+				frame.getContentPane().add(spane);
+				frame.pack();
+				frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+				frame.setVisible(true);
+			}
+
+			public void mouseEntered(MouseEvent arg0) {
+				
+			}
+
+			public void mouseExited(MouseEvent arg0) {
+				
+			}
+
+			public void mousePressed(MouseEvent arg0) {
+				
+			}
+
+			public void mouseReleased(MouseEvent arg0) {
+				
+			}
+			
+		};
+	}
 	
+	/**
+	 * Notes the total number of Gene IDs which the user attempted to import
+	 */
+	JLabel totalIdsLabel;
+	
+	private JLabel getTotalIdsLabel() {
+		if (totalIdsLabel == null ) {
+			totalIdsLabel = new JLabel();
+		}
+		return totalIdsLabel;
+	}
+	
+	/**Updates the JLabel detailing the genes which the user attempted to import based on the collection of gene IDs passed as a parameter
+	 * @param totalIds String Collection of gene IDs which the user attempted to import
+	 */
+	public void updateTotalUserIdsLabel(final Collection<String> totalIds) {
+		//remove the old mouse listeners
+		for (MouseListener ml: getTotalIdsLabel().getMouseListeners()) getTotalIdsLabel().removeMouseListener(ml);
+		if (totalIds == null || totalIds.size()==0) {
+			getTotalIdsLabel().setText("0 User genes;");
+		}
+		else {
+			getTotalIdsLabel().setText(totalIds.size() + " User Genes");
+			getTotalIdsLabel().setToolTipText("Click for more info");
+			getTotalIdsLabel().addMouseListener(getIdListPopupMouseListener("User Gene IDs", "These are the User Specified Gene IDs which the user attempted to import", totalIds));
+		}
+	}
+	
+	
+
+	
+	JLabel matchedIdsLabel;
+	/**Updates the JLabel detailing the genes which the user successfully imported based on the collection of gene IDs passed as a parameter
+	 * @param matchedIds the String Collection of gene IDs which were successfully imported and matched to GO terms
+	 */
 	public void updateMatchedIdsLabel(final Collection<String> matchedIds) {
+//		remove the old mouse listeners
+		for (MouseListener ml: getMatchedIdsLabel().getMouseListeners()) getMatchedIdsLabel().removeMouseListener(ml);
+		
 		if (matchedIds==null || matchedIds.size() ==0) {
 			getMatchedIdsLabel().setText("No User Gene IDs could be mapped to GO Terms.");
 			matchedIdsLabel.setToolTipText("");
@@ -286,124 +385,24 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		else {
 			getMatchedIdsLabel().setText(matchedIds.size() + " Gene IDs were mapped to GO Terms");
 			matchedIdsLabel.setToolTipText("Click for more info");
-			//remove the old mouse listeners
-			for (MouseListener ml: matchedIdsLabel.getMouseListeners()) matchedIdsLabel.removeMouseListener(ml);
-			matchedIdsLabel.addMouseListener(new MouseListener() {
-
-				public void mouseClicked(MouseEvent arg0) {
-					if (matchedIds==null || matchedIds.size()==0) return;
-					JFrame frame = new JFrame("These User Specified Gene IDs were matched to Gene IDs in the Gene Annnotation File");
-					JScrollPane spane;
-					JTable table = new JTable();
-					TableModel model = new DefaultTableModel(matchedIds.size(),1){
-						@Override
-						public boolean isCellEditable(int arg0, int arg1) {
-							return false;
-						}
-					};
-					Iterator<String> unmatchedIdI = matchedIds.iterator();
-					int i = 0;
-					while(unmatchedIdI.hasNext()) {
-						model.setValueAt(unmatchedIdI.next(), i, 0);
-						i++;
-					}
-					table.setShowGrid(true);
-					
-					table.setModel(model);
-					table.getColumnModel().getColumn(0).setHeaderValue("Matched Gene IDs");
-					spane = new JScrollPane(table);
-					
-					JViewport port = new JViewport();
-					port.setName("Matched Gene IDs");
-					spane.setColumnHeader(port);
-					frame.getContentPane().add(spane);
-					frame.pack();
-					frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-					frame.setVisible(true);
-				}
-
-				public void mouseEntered(MouseEvent arg0) {
-					
-				}
-
-				public void mouseExited(MouseEvent arg0) {
-					
-				}
-
-				public void mousePressed(MouseEvent arg0) {
-					
-				}
-
-				public void mouseReleased(MouseEvent arg0) {
-					
-				}
-				
-			});
+			matchedIdsLabel.addMouseListener(getIdListPopupMouseListener("Matched Gene IDs", "These User Specified Gene IDs were matched to Gene IDs in the Gene Annnotation File", matchedIds));
 		}
 	}
 	
+	/**Updates the JLabel detailing the genes which the user unsuccessfully imported based on the collection of gene IDs passed as a parameter
+	 * @param unmatchedIds the String Collection of gene IDs which were imported but could not be matched to GO terms
+	 */
 	public void updateUnmatchedIdsLabel(final Collection<String> unmatchedIds) {
+//		remove the old mouse listeners
+		for (MouseListener ml: getUnmatchedIdsLabel().getMouseListeners()) getUnmatchedIdsLabel().removeMouseListener(ml);
 		if (unmatchedIds==null || unmatchedIds.size() ==0) {
 			getUnmatchedIdsLabel().setText("All User Gene IDs successfully mapped to GO Terms.");
 			unmatchedIdsLabel.setToolTipText("");
-
 		}
 		else {
 			getUnmatchedIdsLabel().setText(unmatchedIds.size() + " Gene IDs could not be mapped to GO Terms");
 			unmatchedIdsLabel.setToolTipText("Click for more info");
-			//remove the old mouse listeners
-			for (MouseListener ml: unmatchedIdsLabel.getMouseListeners()) unmatchedIdsLabel.removeMouseListener(ml);
-			unmatchedIdsLabel.addMouseListener(new MouseListener() {
-
-				public void mouseClicked(MouseEvent arg0) {
-					if (unmatchedIds==null || unmatchedIds.size()==0) return;
-					JFrame frame = new JFrame("These User Specified Gene IDs could not be matched to Gene IDs in the Gene Annnotation File");
-					JScrollPane spane;
-					JTable table = new JTable();
-					TableModel model = new DefaultTableModel(unmatchedIds.size(),1){
-						@Override
-						public boolean isCellEditable(int arg0, int arg1) {
-							return false;
-						}
-					};
-					Iterator<String> unmatchedIdI = unmatchedIds.iterator();
-					int i = 0;
-					while(unmatchedIdI.hasNext()) {
-						model.setValueAt(unmatchedIdI.next(), i, 0);
-						i++;
-					}
-					table.setShowGrid(true);
-					
-					table.setModel(model);
-					table.getColumnModel().getColumn(0).setHeaderValue("Unmatched Gene IDs");
-					spane = new JScrollPane(table);
-					
-					JViewport port = new JViewport();
-					port.setName("Unmatched Gene IDs");
-					spane.setColumnHeader(port);
-					frame.getContentPane().add(spane);
-					frame.pack();
-					frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-					frame.setVisible(true);
-				}
-
-				public void mouseEntered(MouseEvent arg0) {
-					
-				}
-
-				public void mouseExited(MouseEvent arg0) {
-					
-				}
-
-				public void mousePressed(MouseEvent arg0) {
-					
-				}
-
-				public void mouseReleased(MouseEvent arg0) {
-					
-				}
-				
-			});
+			unmatchedIdsLabel.addMouseListener(getIdListPopupMouseListener("Unmatched Gene IDs", "These User Specified Gene IDs could not be matched to Gene IDs in the Gene Annnotation File", unmatchedIds));
 		}
 	}
 
@@ -414,8 +413,6 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 //		final Collection<String> unmatchedIds = this.unmatchedIds;
 		if (unmatchedIdsLabel==null) {
 			unmatchedIdsLabel = new JLabelMod("");
-
-//			updateUnmatchedIdsLabel();
 		}
 		return unmatchedIdsLabel;
 	}
@@ -428,9 +425,6 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		}
 		return matchedIdsLabel;
 	}
-	
-
-
 
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 
