@@ -1,4 +1,37 @@
- package org.ccbr.bader.yeast;
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: Actionlistener which starts and ends GOSlimmer sessions according to plugins submenu actions by the user
+ */
+package org.ccbr.bader.yeast;
 
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
@@ -27,17 +60,18 @@ import cytoscape.view.cytopanels.CytoPanel;
 import cytoscape.view.cytopanels.CytoPanelState;
 import cytoscape.visual.VisualMappingManager;
 
+/**Actionlistener which starts and ends GOSlimmer sessions according to plugins submenu actions by the user
+ * 
+ * @author mikematan
+ *
+ */
 public class GOSlimPanelAction implements ActionListener {
 
 	/*Notes whether or not the GOSlimPanel has been opened yet or now */
 	boolean alreadyOpened = false;
 //	GOSlimPanel goSlimPanel =null;
 
-	protected String directlyAnnotatedGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENES";
-	protected String inferredAnnotatedGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENES";
-	
-
-	
+		
 	public GOSlimPanelAction() {
 		// TODO Auto-generated constructor stub
 	}
@@ -45,6 +79,9 @@ public class GOSlimPanelAction implements ActionListener {
 
 	private static final String lsep = System.getProperty("line.separator");
 	
+	/** Either starts a new GOSlimmer session or ends an existing session.
+	 * @see java.awt.event.ActionListener#actionPerformed(java.awt.event.ActionEvent)
+	 */
 	public void actionPerformed(ActionEvent event) {
 //		display GOSlimmer Main Panel in left cytopanel
 		CytoscapeDesktop desktop = Cytoscape.getDesktop();
@@ -62,7 +99,7 @@ public class GOSlimPanelAction implements ActionListener {
 			else if (src.getText().equals("Start GOSlimmer")) {
 				
 				//Unfortuntately, because cyattributes are defined globally for all nodes with the same id, we can't at this time 
-				//use goslimmer on two dags at the same time
+				//use goslimmer on two DAGs at the same time
 				
 				if (alreadyOpened) {
 					JOptionPane.showMessageDialog(desktop, "GOSlimmer cannot be used to edit more than one GO Tree at a time."

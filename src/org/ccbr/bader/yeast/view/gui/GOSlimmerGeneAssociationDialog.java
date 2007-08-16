@@ -1,3 +1,36 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: GUI Widget for importing Gene Association annotation   
+ */
 package org.ccbr.bader.yeast.view.gui;
 
 import java.awt.BorderLayout;
@@ -77,6 +110,9 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		this.session = session;
 	}
 
+	/**
+	 * Maps annotation file names to the URLs where the annotation files can be downloaded
+	 */
 	private Map<String,String> annotationURLMap = new HashMap<String, String>();
 	
 	{
@@ -242,6 +278,12 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 	//This is the prefix which Gene Association Annotations records derived from cytoscape bookmarks are expected to start with
 	private static final String geneAssociationRecordNamePrefix = "Gene Association file for ";
 	
+	/**Maps species names to the names of the gene association file records which they correspond to.
+	 * Species name is extracted from the record name through a simple search and replace of the redundant text.
+	 * If the file name does not match the expected pattern, the original file name is used as the species name (creating a self-mapping entry in the result Map).
+	 * @param geneAssociationRecordNames the gene association file records' names
+	 * @return a map from species names to the GO annotation record name for that species
+	 */
 	private Map<String, String> createSpeciesNameToGeneAssociationRecordNameMap(Collection<String> geneAssociationRecordNames) {
 		Map<String,String> m = new HashMap<String, String>();
 		for(String geneAssociationRecordName:geneAssociationRecordNames) {
@@ -373,7 +415,7 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		}
 	}
 
-	/**This method will apply the currently selected gene association annotation file's data 
+	/**This method applies the currently selected gene association annotation file's data 
 	 * to the 3 GO graphs, by manipulating the controller of each respective namespaces GO graph, 
 	 * as stored in namespaceToController.
 	 * @throws FileNotFoundException 
@@ -448,6 +490,10 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 
 	}
 	
+	/**Retrieves the URL of the annotation file currently selected in the GUI widget
+	 * @return the URL of the currently selected annotation file
+	 * @throws MalformedURLException
+	 */
 	private URL getSelectedAnnotationURL() throws MalformedURLException {
 		//construct the annotation url, whether it is remote or local
 		URL annotURL = null;

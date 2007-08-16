@@ -1,3 +1,37 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: The main interface panel for GOSlimmer
+ */
+
 package org.ccbr.bader.yeast;
 
 import java.awt.BorderLayout;
@@ -34,42 +68,28 @@ import cytoscape.view.CytoscapeDesktop;
 
 public class GOSlimPanel extends JPanel {
 
+	/**
+	 * Panel displaying advanced options which allows the user to modify the behaviour of GOSlimmer
+	 */
 	protected AdvancedViewSettingsPanel viewSettingsPanel;
 	
+	/**
+	 * File Export Options panel 
+	 */
 	private FileExportPanel fileExportPanel;
 	
 	private GOSlimmerControlPanelToGraphInterface cptgi = null;
 	
-//	private JLabel celComCoverage;
-//	private JLabel bioProCoverage;
-//	private JLabel molFunCoverage;
-//	
-//	GOSlimmerNamespaceSubpanel molFunSubPanel = null;
-//	GOSlimmerNamespaceSubpanel bioProSubPanel = null;
-//	GOSlimmerNamespaceSubpanel celComSubPanel = null;
-//	
-//	public GOSlimPanel(GOSlimmerController molFunController, GOSlimmerController bioProController, GOSlimmerController celComController) {
-//		super();
-//		super.setName("GOSlimmer");
-////		this.setLayout(new FlowLayout(FlowLayout.LEADING,1,1));
-//		this.setLayout(new GridLayout(8,1));
-//		
-//		molFunSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel(GONamespace.MolFun.getName() + " Coverage",molFunController);
-//		bioProSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController);
-//		celComSubPanel = new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController);
-//		this.add(molFunSubPanel);
-//		this.add(bioProSubPanel);
-//		this.add(celComSubPanel);
-//		
-//
-//		
-////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("MolFun",molFunController));
-////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("BioPro",bioProController));
-////		this.add(new GOSlimPanel.GOSlimmerNamespaceSubpanel("CelCom",celComController));
-//	}
-	
+
+	/**
+	 * The GOSlimmer session object which this panel is associated with
+	 */
 	private GOSlimmerSession session;
 	
+	/**Constructs a GOSlimPanel to manipulate the networks and controllers associated with the given mapping of namespace to controllers and the session 
+	 * @param namespaceToController map of namespaces to the controllers for the corresponding GOSlimmer subgraph
+	 * @param session the GOSlimmer session to which this panel belongs
+	 */
 	public GOSlimPanel(final Map<GONamespace,GOSlimmerController> namespaceToController,GOSlimmerSession session) {
 		super();
 		this.session = session;
@@ -105,8 +125,14 @@ public class GOSlimPanel extends JPanel {
 		return fileExportPanel;
 	}
 
+	/**
+	 * The gui widget for importing user gene sets
+	 */
 	private UserGeneSetImportPanel userGeneSetImportPanel;
 	
+	/** retrieves the user gene set import panel gui widget, initializing it if it is null
+	 * @return
+	 */
 	public UserGeneSetImportPanel getUserGeneSetImportPanel() {
 		if (userGeneSetImportPanel == null) {
 			userGeneSetImportPanel = new UserGeneSetImportPanel(session);
@@ -115,16 +141,35 @@ public class GOSlimPanel extends JPanel {
 		return userGeneSetImportPanel;
 	}
 	
-	Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
-	Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
+	/**
+	 * Maps namespaces to their associated subpanel of this panel
+	 */
+	private Map<GONamespace,GOSlimmerNamespaceSubpanel> namespaceToSubpanel = new HashMap<GONamespace, GOSlimmerNamespaceSubpanel>();
+	/**
+	 * Maps namespaces to their associated controller
+	 */
+	private Map<GONamespace,GOSlimmerController> namespaceToController = new HashMap<GONamespace, GOSlimmerController>();
 	
-	private static final DecimalFormat coverageTextformatter = new DecimalFormat("00.00%");
 	
+	/**Each namespace subgraph has a corresponding instance of this class, which contains relevant stats about that GOSlimmer subgraph, primarily coverages statistics
+	 * 
+	 * @author mikematan
+	 *
+	 */
 	private class GOSlimmerNamespaceSubpanel extends JCollapsablePanel{
 		
+		/**
+		 * The statbean which serves as the model for this view
+		 */
 		GOSlimmerCoverageStatBean statBean = null;
 		
+		/**
+		 * displays inferred coverage stats
+		 */
 		JLabel inferredCoverageStatisticLabel;
+		/**
+		 * displays direct coverage stats
+		 */
 		JLabel directCoverageStatisticLabel;
 		
 		private final String lsep = System.getProperty("line.separator");
@@ -135,9 +180,15 @@ public class GOSlimPanel extends JPanel {
 														lsep + "tree(whether expanded or collapsed)";
 		String directCoverageStatisticLabelToolTip =            "The percentage of gene annotation file genes covered directly " +
 														lsep +  "by the GO terms explicitely selected for inclusion in the slim set";
-		
+		/**
+		 * The numerical format used for displaying the gene coverage statistics 
+		 */
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
 		
+		/**Contructs a namespace subpanel with the given name for the given controller's associated network model
+		 * @param name the title to display for this subpanel
+		 * @param controller the controller (and component network) which this subpanel will display information for
+		 */
 		public GOSlimmerNamespaceSubpanel(String name,final GOSlimmerController controller) {
 			super(name);
 //			this.setBorder(BorderFactory.createTitledBorder(name));
@@ -156,10 +207,11 @@ public class GOSlimPanel extends JPanel {
 			this.directCoverageStatisticLabel = new JLabelMod("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
 			directCoverageStatisticLabel.setToolTipText(directCoverageStatisticLabelToolTip);
 			this.add(directCoverageStatisticLabel);
+			//add a mouselistener so that clicking on the subpanel will bring the associated network view into focus
 			MouseListener changeFocusMouseListener = new MouseListener() {
 
 				public void mouseClicked(MouseEvent e) {
-//					controller.getNetworkViewFocus();
+					
 					Cytoscape.firePropertyChange(CytoscapeDesktop.NETWORK_VIEW_FOCUS,
 							 null, controller.getNetwork().getIdentifier());
 					

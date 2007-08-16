@@ -1,5 +1,35 @@
 /**
- * 
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: GUI Widget component of the GOSlimmer panel for importing user gene sets   
  */
 package org.ccbr.bader.yeast.view.gui;
 
@@ -50,7 +80,8 @@ import cytoscape.task.Task;
 import cytoscape.task.TaskMonitor;
 import cytoscape.task.util.TaskManager;
 
-/**
+
+/**GUI Widget component of the GOSlimmer panel for importing user gene sets.
  * @author mikematan
  *
  */
@@ -113,6 +144,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		}
 	}
 
+	/**Removes the data associated with a previously imported user gene set from the GOSlimmer session's data model.  Basically 
+	 * a clean up operation which is used before importing a new user gene set.
+	 * 
+	 */
 	private void removePreviousGeneSet() {
 		//for each namespace network, iterate through the nodes and remove the annotated user gene list attributes
 		for (GOSlimmerController controller: session.getNamespaceToController().values()) {
@@ -132,6 +167,11 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 
 	private File lastImportDir;
 	
+	/**
+	 * Imports the user specified gene set into the GOSlimmer sessions data model, which involves mapping the user genes 
+	 * to the genes in the gene association annotation file which has been imported and recording the lists of covered user 
+	 * genes as attributes of the GO nodes in the GOSlimmer sub-graphs.
+	 */
 	private void importGeneSet() {
 		//set the start directory of the JFileChooser to the last import directory, if it has been determined
 		JFileChooser chooser = lastImportDir==null?new JFileChooser():new JFileChooser(lastImportDir);
@@ -144,6 +184,7 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		if (retval==JFileChooser.APPROVE_OPTION) {
 			final File geneFile = chooser.getSelectedFile();
 			lastImportDir = geneFile.getParentFile();
+			//execute task in background for importing the user gene set.
 			TaskManager.executeTask(new Task() {
 
 				public String getTitle() {
@@ -197,6 +238,12 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		
 	}
 	
+	/**Parse the gene ID list file imported by the user
+	 * @param geneFile the file specified by the user which contains the user gene set
+	 * @return a collection of gene IDs parsed from the file
+	 * @throws FileNotFoundException
+	 * @throws IOException
+	 */
 	private Collection<String> parseGeneIdFile(File geneFile) throws FileNotFoundException,IOException {
 		BufferedReader in = new BufferedReader(new FileReader(geneFile));
 		Collection<String> geneIds = new HashSet<String>();
@@ -209,6 +256,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	}
 
 
+	/**Parses a line of the user gene ID list file.  Line is expected to contain a single Gene ID, without any whitespace within it.  Trailing whitespace is allowed.
+	 * @param line
+	 * @return
+	 */
 	private String parseGeneIdLine(String line) {
 		if (line == null || line.matches("\\s*")) return null;
 		line = line.trim();
@@ -222,6 +273,10 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	}
 
 
+	/**Annotates the GOSlimmer subgraphs (DAGs) with the user gene set information.  This sets list attributes of the nodes within the 
+	 * subgraphs which detail user gene IDs covered by that GO term, whether directly or indirectly.
+	 * @param geneIds the IDs of the genes which the DAG is to be annotated with
+	 */
 	private void annotateDAGWithUserGeneSet(Collection<String> geneIds) {
 		/*
 		 * two passes: 

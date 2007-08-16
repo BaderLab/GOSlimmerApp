@@ -1,3 +1,36 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Keiichiro Ono, Michael Matan
+ * * Authors: Keiichiro Ono, Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: Reader for a Gene Association file which caches a copy of the imported data
+ */
 package org.ccbr.bader.geneassociation;
 
 /*
@@ -103,13 +136,7 @@ import edu.ucsd.bioeng.coreplugin.tableImport.reader.TextTableReader;
  * <p>This is a modified version of a TableImport core plugin class, 
  * <code>#edu.ucsd.bioeng.coreplugin.tableImport.reader.GeneAssociationReader</code>.
  * It has been extended to allow the user include methods for accessing the gene association 
- * data in a more direct form through new methods.  It could not be extended through the 
- * standard Java inheritance method, as the fields where that data is stored are declared as private.
- * In future versions, it would be ideal if we could convince the ucsd developers to make the fields 
- * 'protected' instead of 'private', such that we could use the standard inheritance method rather than 
- * copying code.  Even better would be if a standard API for accessing the functionality of the ontology and 
- * annotation importer module could be added to the TableImport core plugin, such that we could simply make 
- * calls to that code.
+ * data in a more direct form through new methods.  
  * </p>
  * 
  *

@@ -1,3 +1,37 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: Defines the visual style for GOSlimmer
+ */
+
 package org.ccbr.bader.yeast;
 
 import java.awt.Color;
@@ -17,6 +51,13 @@ import cytoscape.visual.NodeAppearanceCalculator;
 import cytoscape.visual.ShapeNodeRealizer;
 import cytoscape.visual.VisualStyle;
 
+/**Defines the visual style used in GOSlimmer's GO Namespace subgraphs.  In particular, it defines the distinct colours for 
+ * nodes in the slim set and out of the slim set, and sizes nodes according to how many annotation file or user gene set genes 
+ * are annotated by the associated GO term.
+ * 
+ * @author mikematan
+ *
+ */
 public class GOSlimmerVisualStyle extends VisualStyle {
 
 	public GOSlimmerVisualStyle(String name) {
@@ -44,6 +85,11 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 		// TODO Auto-generated constructor stub
 	}
 
+	/**Calculates the node appearance 
+	 * 
+	 * @author mikematan
+	 *
+	 */
 	public class GoSlimmerNodeAppearanceCalculator extends NodeAppearanceCalculator {
 
 		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
@@ -63,8 +109,14 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 		
 		private static final int minNodeSize = 2;
 		
-		Color selectedNodeColor = Color.CYAN;
-		Color unselectedNodeColor = new Color(255,150,150);
+		/**
+		 * The colour which will be applied to nodes which are selected for inclusion in the slim set
+		 */
+		private final Color selectedNodeColor = Color.CYAN;
+		/**
+		 * The colour which will be applied to nodes which are not selected for inclusion in the slim set
+		 */
+		private final Color unselectedNodeColor = new Color(255,150,150);
 		
 		@Override
 		public void calculateNodeAppearance(NodeAppearance appr, Node node, CyNetwork network) {
@@ -83,6 +135,12 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 			return isSelected;
 		}
 		
+		/**Resizes nodes according to how many genes from either the user gene set or the full annotation file gene set (depending on user's advanced view 
+		 * settings) are annotated by the GO term represented by the node.
+		 * @param appr the node appearance object associated with the node
+		 * @param node the node who's appearance is to be altered
+		 * @param network the network which the node belongs to
+		 */
 		private void modifyNodeAppearance(NodeAppearance appr, Node node, CyNetwork network) {
 			
 			final int numDirectlyCoveredGenes = GOSlimmerUtil.getNumGenesCoveredByGoNode(node, GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations,GOSlimmerGUIViewSettings.sizeNodesBasedOnUserGeneAnnotation);

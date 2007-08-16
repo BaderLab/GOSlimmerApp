@@ -1,3 +1,36 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: GUI Widget for exporting remapped annotation files   
+ */
 package org.ccbr.bader.yeast.view.gui;
 
 import java.awt.BorderLayout;
@@ -31,6 +64,11 @@ import org.ccbr.bader.yeast.view.gui.misc.JButtonMod;
 
 import cytoscape.CyNetwork;
 
+/**GUI Widget for exporting remapped annotation files.  
+ * 
+ * @author mikematan
+ *
+ */
 public class FileExportPanel extends JPanel implements ActionListener {
 
 	private Collection<GOSlimmerController> controllers;
@@ -163,6 +201,13 @@ public class FileExportPanel extends JPanel implements ActionListener {
 		
 	}
 
+	/**Create a modified version of the imported gene annotation file where unselected GO terms are replaced with selected ancestor terms to which they have 
+	 * been remapped.
+	 * @param originalFileReader the reader used to read the original annotation file, which still contains that file's data
+	 * @param remapFile the file to write the remapped annotation data to
+	 * @param goTermRemap the map from unselected GO terms to the selected GO terms which they are to be remapped to
+	 * @throws IOException
+	 */
 	private void createRemappedGeneAnnotationFile(GeneAssociationReaderUtil originalFileReader, File remapFile,Map<String,Set<String>> goTermRemap) throws IOException {
 		BufferedWriter w = new BufferedWriter(new FileWriter(remapFile));
 		GeneAnnotationRemapWriter gaw = new GeneAnnotationRemapWriter(w,goTermRemap);

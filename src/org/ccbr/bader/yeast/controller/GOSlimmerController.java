@@ -1,3 +1,37 @@
+/**
+ * * Copyright (c) 2007 Bader Lab, Donnelly Centre for Cellular and Biomolecular 
+ * * Research, University of Toronto
+ * *
+ * * Code written by: Michael Matan
+ * * Authors: Michael Matan, Gary D. Bader
+ * *
+ * * This library is free software; you can redistribute it and/or modify it
+ * * under the terms of the GNU Lesser General Public License as published
+ * * by the Free Software Foundation; either version 2.1 of the License, or
+ * * any later version.
+ * *
+ * * This library is distributed in the hope that it will be useful, but
+ * * WITHOUT ANY WARRANTY, WITHOUT EVEN THE IMPLIED WARRANTY OF
+ * * MERCHANTABILITY OR FITNESS FOR A PARTICULAR PURPOSE.  The software and
+ * * documentation provided hereunder is on an "as is" basis, and
+ * * University of Toronto
+ * * has no obligations to provide maintenance, support,
+ * * updates, enhancements or modifications.  In no event shall the
+ * * University of Toronto
+ * * be liable to any party for direct, indirect, special,
+ * * incidental or consequential damages, including lost profits, arising
+ * * out of the use of this software and its documentation, even if
+ * * University of Toronto
+ * * has been advised of the possibility of such damage.  See
+ * * the GNU Lesser General Public License for more details.
+ * *
+ * * You should have received a copy of the GNU Lesser General Public License
+ * * along with this library; if not, write to the Free Software Foundation,
+ * * Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA.
+ * *
+ * * Description: Controller for manipulation of a GOSlimmer GO Namespace subgraph network and associated model objects
+ */
+
 package org.ccbr.bader.yeast.controller;
 
 import giny.model.Node;
@@ -39,15 +73,44 @@ import cytoscape.data.CyAttributes;
 import cytoscape.data.attr.MultiHashMapDefinition;
 import cytoscape.view.CyNetworkView;
 
+/**Controller for manipulation of a GOSlimmer GO Namespace subgraph network and associated model objects.
+ * Each instance is associated with a single GO namespace subgraph and provides an interface for manipulating that 
+ * subgraph.
+ * 
+ * @author mikematan
+ *
+ */
 public class GOSlimmerController  {
 
+	/**
+	 * The network model of the GO Namespace subgraph which this controller controls
+	 */
 	private CyNetwork network;
+	/**
+	 * The network view associated with the controlled network
+	 */
 	private CyNetworkView networkView;
+	/**
+	 * The statistics model bean which manages information on the coverage statistics for the controlled network
+	 */
 	private GOSlimmerCoverageStatBean statBean;
 	private JLabel inferredCoverageStatisticViewLabel;
+	/**
+	 * The GO Namespace of the controlled network subgraph
+	 */
 	private GONamespace namespace;
+	/**
+	 * The session which this controller is a part of
+	 */
 	private GOSlimmerSession session;
 	
+	/**Creates a new controller for the specified network, as part of the specified session
+	 * @param namespace the GO namespace of the managed network
+	 * @param network the network model of the GO namespace subgraph which is being controlled
+	 * @param networkView the network view associated with the network
+	 * @param statBean the statistics data model bean associated with the network
+	 * @param session the GOSlimmer session to which this controller belongs
+	 */
 	public GOSlimmerController(GONamespace namespace,CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean,GOSlimmerSession session) {
 		this.namespace = namespace;
 		this.network=network;
@@ -76,6 +139,10 @@ public class GOSlimmerController  {
 	//two kinds of parents:  those which are part of the dag to be collapsed, and those which aren't
 	//nodes with parents of the latter type should not be collapsed - they are not part of the dag to be collapsed
 	//collateral damage mode
+	/**View manipulation method which collapses the descendants of a GO node into that node.  That is, the descendants will 
+	 * no longer be visible in the network view. 
+	 * @param snode the network node for whom the descendants are to be collapsed
+	 */
 	public void collapseNode(Node snode) {
 		networkView.getNodeView(snode);
 		
@@ -98,7 +165,9 @@ public class GOSlimmerController  {
 		}
 		updateViewStatistics();
 	}
-	
+	/**View manipulation method which removes a node and all of its the descendant nodes from the view
+	 * @param snode the network node to be removed from the view, along with its descendants
+	 */
 	public void pruneNode(Node snode) {
 		removeNodeFromSlimSet(snode);
 		//hide this node for starters
@@ -126,6 +195,11 @@ public class GOSlimmerController  {
 	
 
 	
+	/**View manipulation method which expands a nodes descendants so that they are visible in the network view
+	 * The depth to which descendants will be made visible depends on what settings the user has selected.
+	 * The node views of the descendants are arranged in a heirarchical manner below their parents.
+	 * @param snode the network node who's descendants are to be made visible.
+	 */
 	public void expandNode(Node snode) {
 		if (useFiniteExpansionDepth) {
 			expandNodeToDepth(snode, nodeExpansionDepth);
@@ -135,6 +209,9 @@ public class GOSlimmerController  {
 		}
 	}
 	
+	/**Refined version of expandNode() which expands all descendants of the given node
+	 * @param snode the network node who's descendants are to be made visible.
+	 */
 	public void expandNodeUnlimited(Node snode) {
 		NodeView snodeView = networkView.getNodeView(snode);
 		networkView.showGraphObject(snodeView);
@@ -208,7 +285,7 @@ public class GOSlimmerController  {
 		}
 	}
 	
-	/**
+	/**Refined version of expandNode() which expands all descendants to a specified depth
 	 * @param snode the node to expand
 	 * @param depth the depth to which the DAG should be expanded
 	 */
@@ -311,6 +388,9 @@ public class GOSlimmerController  {
 	
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
 	
+	/**Adds a specified node to the GO slim set, updating statistics accordingly
+	 * @param node node to be added to slim set
+	 */
 	public void addNodeToSlimSet(Node node) {
 		//set the 'selected for slim set' attribute to true
 		nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName, true);
@@ -330,6 +410,9 @@ public class GOSlimmerController  {
 		updateViewStatistics();
 	}
 	
+	/**Removes a specified node to the GO slim set, updating statistics accordingly
+	 * @param node node to be removed to slim set
+	 */
 	public void removeNodeFromSlimSet(Node node) {
 		//set the 'selected for slim set' attribute to false
 		nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName, false);
@@ -340,6 +423,10 @@ public class GOSlimmerController  {
 	
 	
 	DecimalFormat formatter = new DecimalFormat("00.00%");
+	/**
+	 * Updates the view of the coverage statistics to agree with the datamodel.  This is intended to be called whenever the 
+	 * statistics are updated.
+	 */
 	private void updateViewStatistics() {
 		
 		//depending on whether displayUserGeneCoverageStatistics has been set or not, either show the full coverage information, or only for the user specified genes.
@@ -395,6 +482,10 @@ public class GOSlimmerController  {
 		this.directCoverageStatisticViewLabel = directCoverageStatisticViewLabel;
 	}
 	
+	/**
+	 * Removes the coverage attributes from the nodes within this network, if they are defined.  Useful when one wants 
+	 * to regenerate the statistics, for example when a new annotation file is loaded
+	 */
 	public void removeCoverageAttributes() {
 		//TODO possibly do this only for this graph's nodes, by iterating over the nodes of this network
 		Iterator<Node> nodeI = network.nodesIterator();
@@ -413,6 +504,9 @@ public class GOSlimmerController  {
 //		nodeAtt.deleteAttribute(GOSlimmer.inferredAnnotatedGenesAttributeName);
 	}
 
+	/**Updates the coverage data on the network based on a new set of gene annotation data, updating statistics accordingly 
+	 * @param goIdToGeneIdMap the map which defines which genes are covered by which go term, to be used for setting coverage attributes
+	 */
 	public void assignCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneIdMap) {
 		//scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
 		Iterator<Node> nodeI = network.nodesIterator();
@@ -444,6 +538,7 @@ public class GOSlimmerController  {
 		}
 		
 	}
+	
 	
 	private void assignCoverageAttributesToNetworks(Map<String,List<String>> goIdToAttValMap,String directCoverageAttributeName,String inferredCoverageAttributeName) {
 		//scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
@@ -479,7 +574,7 @@ public class GOSlimmerController  {
 	
 	
 
-	/**This method resents the coverage statistics in the model layer, and recalculates them based on which nodes have been selected 
+	/**This method resets the coverage statistics in the model layer, and recalculates them based on which nodes have been selected 
 	 * for inclusion in the slim set (based on the GOSlimmer.goNodeInSimlSetAttributeName CyAttribute of the node).
 	 * It then updates the view layer to reflect the new statistics information.
 	 * 
@@ -537,6 +632,9 @@ public class GOSlimmerController  {
 
 	
 	
+	/**Attaches information about the given user gene set to the go terms within the controlled network.  
+	 * @param geneIds
+	 */
 	public void attachInferredAnnotatedUserGenesToTerms(Collection<String> geneIds) {
 		Iterator<Node> nodeI = this.network.nodesIterator();
 		//TODO consider revising this so that instead of traversing the tree, 
@@ -555,7 +653,9 @@ public class GOSlimmerController  {
 	}
 
 
-	
+	/**Attaches information about the given user gene set to the go terms within the controlled network.  
+	 * @param geneIds
+	 */
 	public void attachDirectlyAnnotatedUserGenesToTerms(Collection<String> geneIds) {
 		
 		Iterator<Node> nodeI = this.network.nodesIterator();
@@ -597,7 +697,7 @@ public class GOSlimmerController  {
 		
 	}
 
-	/**
+	/**Applies the given user gene set to the network
 	 * @param userGeneSet
 	 * @return the subset of the input set which were successfully matched to GO terms
 	 */
