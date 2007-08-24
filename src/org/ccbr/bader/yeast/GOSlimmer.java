@@ -47,28 +47,28 @@ public class GOSlimmer {
 	/**
 	 * The name of the cytoscape attribute for the list of gene ids which are directly annotated by a go term node
 	 */
-	public static final String directlyAnnotatedGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENES";
+	public static final String directlyAnnotatedGenesAttributeName = "GOSlimmer.DIRECTLY_ANNOTATED_GENES";
 	/**
 	 * The name of the cytoscape attribute for the list of gene ids which are annotated by a go term node by inference from those 
 	 * directly annotated by its descendant terms
 	 */
-	public static final String inferredAnnotatedGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENES";
+	public static final String inferredAnnotatedGenesAttributeName = "GOSlimmer.INFERRED_ANNOTATED_GENES";
 	
 	/**
 	 * The name of the cytoscape attribute for the list of gene synonyms which are directly annotated by a go term node
 	 */
-	public static final String directlyAnnotatedGenesSynonymAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_GENE_SYNONYMS";
+	public static final String directlyAnnotatedGenesSynonymAttributeName = "GOSlimmer.DIRECTLY_ANNOTATED_GENE_SYNONYMS";
 	/**
 	 * The name of the cytoscape attribute for the list of gene synonyms which are annotated by a go term node by inference from those 
 	 * directly annotated by its descendant terms
 	 */
-	public static final String inferredAnnotatedGenesSynonymAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_GENE_SYNONYMS";
+	public static final String inferredAnnotatedGenesSynonymAttributeName = "GOSlimmer.INFERRED_ANNOTATED_GENE_SYNONYMS";
 	
 	/**
 	 * The name of the boolean cytoscape attribute which indicates whether or not a given node is included in the user defined 
 	 * slim set
 	 */
-	public static final String goNodeInSlimSetAttributeName = "GOSLIM.INSET";
+	public static final String goNodeInSlimSetAttributeName = "GOSlimmer.INSET";
 	
 	/**
 	 * Maps the GO term networks managed by GOSlimmer to the coverage stat beans which maintain information on which genes 
@@ -79,13 +79,13 @@ public class GOSlimmer {
 	/**
 	 * The name of the cytoscape attribute for the list of user gene ids which are directly annotated by a go term node
 	 */
-	public static final String directlyAnnotatedUserGenesAttributeName = "GENE_ASSOC.DIRECTLY_ANNOTATED_USER_GENES";
+	public static final String directlyAnnotatedUserGenesAttributeName = "GOSlimmer.DIRECTLY_ANNOTATED_USER_GENES";
 	
 	/**
 	 * The name of the cytoscape attribute for the list of user gene ids which are annotated by a go term node by inference from those 
 	 * directly annotated by its descendant terms
 	 */
-	public static final String inferredAnnotatedUserGenesAttributeName = "GENE_ASSOC.INFERRED_ANNOTATED_USER_GENES";
+	public static final String inferredAnnotatedUserGenesAttributeName = "GOSlimmer.INFERRED_ANNOTATED_USER_GENES";
 	
 	
 //	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
