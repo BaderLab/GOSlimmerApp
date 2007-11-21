@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import java.awt.Color;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.xml.bind.JAXBException;
@@ -249,19 +250,23 @@ public class GOSlimmerSession {
 			String nodeOntologyNamespace = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.namespace");
 			if (bio_pro_name.equalsIgnoreCase(nodeOntologyNamespace)) {
 				bioProNodes.add(node);
-				bioProEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
+				//bioProEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
 			}
 			else if (mol_fun_name.equalsIgnoreCase(nodeOntologyNamespace)) {
 				molFunNodes.add(node);
-				molFunEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
+				//molFunEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
 			}
 			else if (cel_com_name.equalsIgnoreCase(nodeOntologyNamespace)) {
 				celComNodes.add(node);
-				celComEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
+				//celComEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
 			}
 		}
-		
-		String networkTitle = network.getTitle();
+
+        bioProEdges.addAll(network.getConnectingEdges(new ArrayList(bioProNodes)));
+        molFunEdges.addAll(network.getConnectingEdges(new ArrayList(molFunNodes)));
+        celComEdges.addAll(network.getConnectingEdges(new ArrayList(celComNodes)));
+
+        String networkTitle = network.getTitle();
 		CyNetwork molFunNetwork = Cytoscape.createNetwork(molFunNodes, molFunEdges, networkTitle + "_molecular_function", network, true);
 		CyNetwork bioProNetwork = Cytoscape.createNetwork(bioProNodes, bioProEdges, networkTitle + "_biological_process", network, true);
 		CyNetwork celComNetwork = Cytoscape.createNetwork(celComNodes, celComEdges, networkTitle + "_cellular_component", network, true);
@@ -289,13 +294,31 @@ public class GOSlimmerSession {
 				NodeContextMenuActionListener listener = new NodeContextMenuActionListener(node.getNode(),controller);
 				
 				//for each button, initialize it with the proper name, add the above actionlistener and add to the context menu
-				for(String menuItemName:new String[]{"Collapse","Prune","Expand","Select","Deselect"}) {
+				for(String menuItemName:new String[]{"Collapse","Prune","Expand","Deselect"}) {
 					JMenuItem menuItem = new JMenuItem(menuItemName);
 					//menuItem.addActionListener(slimmerController);
 					menuItem.addActionListener(listener);
 					menu.add(menuItem);
 				}
-			}
+
+                /* Add Select button to context menu */
+                /* If no genes are associated with this term, make menu item red and append '(No Associated Genes)' */
+                String itemName = "Select";
+                Color itemColor;
+
+                int numAssociatedTermsStr = nodeAtt.getIntegerAttribute(node.getNode().getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+                if (numAssociatedTermsStr == 0) {
+                    itemName = itemName + " (No Associated Genes)";
+                    itemColor = new Color(255,0,0);
+                }
+                else {
+                    itemColor = new Color(0,0,0);
+                }
+                JMenuItem menuItem = new JMenuItem(itemName);
+                menuItem.setForeground(itemColor);
+                menuItem.addActionListener(listener);
+                menu.add(menuItem);
+            }
 			
 		};
 	}

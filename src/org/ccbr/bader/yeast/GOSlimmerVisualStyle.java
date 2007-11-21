@@ -51,7 +51,7 @@ import cytoscape.visual.NodeAppearanceCalculator;
 import cytoscape.visual.ShapeNodeRealizer;
 import cytoscape.visual.VisualStyle;
 
-/**Defines the visual style used in GOSlimmer's GO Namespace subgraphs.  In particular, it defines the distinct colours for 
+/**Defines the visual style used in GOSlimmer's GO Namespace subgraphs.  In particular, it defines the distinct colours for
  * nodes in the slim set and out of the slim set, and sizes nodes according to how many annotation file or user gene set genes 
  * are annotated by the associated GO term.
  * 
@@ -149,14 +149,14 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 			nodeDim +=1; //to ensure we don't get any negative values when we calculate the logarithm
 			if (nodeDim >1) nodeDim = Math.log(nodeDim);
 			nodeDim *= 10;
-			
+
 			appr.setLabel(node.getIdentifier());
 			appr.setHeight(nodeDim);
 			appr.setWidth(nodeDim);
 			appr.setShape(ShapeNodeRealizer.ELLIPSE);
 			
 			
-			if (isSelectedForSlimSet(node)) { 
+			if (isSelectedForSlimSet(node)) {
 				appr.setFillColor(selectedNodeColor);
 			}
 			else {
@@ -176,7 +176,69 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 				appr.setLabel(node.getIdentifier());
 			}
 
-		}
+            if (GOSlimmerGUIViewSettings.showGODefinitionAsToolTip) {
+                String defn = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.def");
+                //System.out.println(node.getIdentifier() + ":" + defn);
+
+                if (defn!= null) {
+
+                    int curLength = 0;
+                    int index = 0;
+                    boolean prevWhiteSpace = true;
+                    String newDefn = "";
+                    String curWord = "";
+                    int maxSize = GOSlimmerGUIViewSettings.showGODefinitionAsToolTipSize;
+
+
+                    while (index < defn.length()) {
+                        char c = defn.charAt(index);
+                        index = index + 1;
+
+                        boolean curWhiteSpace = Character.isWhitespace(c);
+
+                        if (!curWhiteSpace) {
+                            curWord = curWord + c;
+                        } else if (!prevWhiteSpace) {
+                            int tempLength = curWord.length();
+                            if ((curLength + tempLength) > maxSize) {
+                                newDefn = newDefn + "\n" + curWord + c;
+                                curLength = tempLength + 1;
+                            } else if ((curLength + tempLength) == maxSize) {
+                                newDefn = newDefn + curWord + "\n";
+                                curLength = 0;
+                            } else {
+                                newDefn = newDefn + curWord + c;
+                                curLength = curLength + tempLength + 1;
+                            }
+                            prevWhiteSpace = true;
+                            curWord = "";
+
+                        }
+                        prevWhiteSpace = curWhiteSpace;
+
+                    }
+                    // handle what's in last word
+                    int tempLength = curWord.length();
+                    if ((curLength + tempLength) > maxSize) {
+                        newDefn = newDefn + "\n" + curWord;
+                    }
+                    else {
+                        newDefn = newDefn + curWord;
+                    }
+                                
+                    appr.setToolTip(newDefn);
+                }
+                else {
+                    appr.setToolTip("");
+                }
+              
+            }
+            else {
+                appr.setToolTip("");
+
+            }
+
+        }
 		
 	}
 

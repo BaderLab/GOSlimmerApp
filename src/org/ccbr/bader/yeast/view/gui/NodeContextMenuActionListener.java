@@ -99,7 +99,7 @@ public class NodeContextMenuActionListener implements ActionListener {
 //				vmm.getVisualStyle();
 //				vmm.applyNodeAppearances();
 			}
-			else if (jbSource.getText().equals(selectButtonText)) {
+            else if (jbSource.getText().startsWith(selectButtonText)) { // either 'Select' or 'Select (No Associated Genes)'
 				controller.addNodeToSlimSet(node);
 			}
 			else if (jbSource.getText().equals(deselectButtonText)) {

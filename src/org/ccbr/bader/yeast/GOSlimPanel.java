@@ -38,6 +38,8 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.LayoutManager;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
@@ -62,6 +64,7 @@ import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
 import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
+import org.ccbr.bader.yeast.view.gui.SelectedGOTermsPanel;
 
 import cytoscape.Cytoscape;
 import cytoscape.view.CytoscapeDesktop;
@@ -106,7 +109,9 @@ public class GOSlimPanel extends JPanel {
 			namespaceToSubpanel.put(namespace,namespaceSubPanel);
 			controller.setInferredCoverageStatisticViewLabel(namespaceSubPanel.inferredCoverageStatisticLabel);
 			controller.setDirectCoverageStatisticViewLabel(namespaceSubPanel.directCoverageStatisticLabel);
-			this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
+            controller.setSelectedGOTermsPanel(namespaceSubPanel.selectedGOTermsPanel);
+
+            this.add(namespaceSubPanel); //TODO revise this so that the panels are added in a fixed order
 		}
 		this.namespaceToController = namespaceToController;
 		viewSettingsPanel = new AdvancedViewSettingsPanel(session.getNamespaceToController().values());
@@ -171,8 +176,10 @@ public class GOSlimPanel extends JPanel {
 		 * displays direct coverage stats
 		 */
 		JLabel directCoverageStatisticLabel;
-		
-		private final String lsep = System.getProperty("line.separator");
+
+        SelectedGOTermsPanel selectedGOTermsPanel;
+
+        private final String lsep = System.getProperty("line.separator");
 		
 		String inferredCoverageStatisticLabelToolTip =         "The percentage of gene annotation file genes covered directly " +
 														lsep + "by the GO terms selected for inclusion in the slim set, as " +
@@ -180,7 +187,10 @@ public class GOSlimPanel extends JPanel {
 														lsep + "tree(whether expanded or collapsed)";
 		String directCoverageStatisticLabelToolTip =            "The percentage of gene annotation file genes covered directly " +
 														lsep +  "by the GO terms explicitely selected for inclusion in the slim set";
-		/**
+
+        String selectedGOTermsPanelToolTip = "The list of selected GO terms for this tree";
+
+        /**
 		 * The numerical format used for displaying the gene coverage statistics 
 		 */
 		private NumberFormat numFormatter = new DecimalFormat("00.00%");
@@ -195,19 +205,46 @@ public class GOSlimPanel extends JPanel {
 			
 			//this.add(new JLabel(name));
 //			this.setLayout(new FlowLayout(FlowLayout.LEADING));
-			this.setLayout(new GridLayout(0,1));
-			this.statBean = controller.getStatBean();
+			//this.setLayout(new GridLayout(0,1));
+
+            this.setLayout(new GridBagLayout());
+
+            GridBagConstraints c = new GridBagConstraints();
+            c.weightx = 1;
+            c.weighty = 1;
+
+            c.anchor = GridBagConstraints.FIRST_LINE_START;
+		    c.gridx=0;
+		    c.gridy=0;
+            c.fill = GridBagConstraints.HORIZONTAL;
+
+            this.statBean = controller.getStatBean();
 			//String coverageStatisticText = String.v statBean.fractionCovered();
 			//this.coverageStatisticLabel = new JLabel(numFormatter.format(statBean.fractionCovered())){
 			
 			this.inferredCoverageStatisticLabel = new JLabelMod("Inferred Coverage: " + numFormatter.format(statBean.fractionInferredCovered()));
 			inferredCoverageStatisticLabel.setToolTipText(inferredCoverageStatisticLabelToolTip);
-			this.add(inferredCoverageStatisticLabel);
-			
-			this.directCoverageStatisticLabel = new JLabelMod("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
+            this.add(inferredCoverageStatisticLabel, c);
+
+            c.gridx=0;
+            c.gridy=1;
+            c.fill = GridBagConstraints.HORIZONTAL;
+            
+            this.directCoverageStatisticLabel = new JLabelMod("Direct Coverage: " + numFormatter.format(statBean.fractionDirectlyCovered()));
 			directCoverageStatisticLabel.setToolTipText(directCoverageStatisticLabelToolTip);
-			this.add(directCoverageStatisticLabel);
-			//add a mouselistener so that clicking on the subpanel will bring the associated network view into focus
+			this.add(directCoverageStatisticLabel, c);
+
+    		c.gridx=0;
+		    c.gridy=2;
+		    c.fill = GridBagConstraints.HORIZONTAL;
+		    c.gridwidth = GridBagConstraints.REMAINDER;
+
+            this.selectedGOTermsPanel = new SelectedGOTermsPanel(controller);
+            selectedGOTermsPanel.setToolTipText(selectedGOTermsPanelToolTip);
+            selectedGOTermsPanel.setCollapsed(true);
+            this.add(selectedGOTermsPanel,c);
+
+            //add a mouselistener so that clicking on the subpanel will bring the associated network view into focus
 			MouseListener changeFocusMouseListener = new MouseListener() {
 
 				public void mouseClicked(MouseEvent e) {

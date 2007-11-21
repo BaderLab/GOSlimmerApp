@@ -113,8 +113,26 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 		}
 		return labelNodesWithOntologyName;
 	}
-	
-	private JCheckBox expandNodeDepthCheckbox;
+
+
+    /* Added by Laetitia Morrison */
+    JCheckBox showGODefinitionAsToolTip;
+	private final String showGODefinitionAsToolTipLabel = "Show GO definition as node tool tip";
+	private final String showGODefinitionAsToolTipToolTip = "If checked, nodes will have their GO term definition " +
+													  lsep + "appear as a tool tip.  Otherwise, no tool tip will appear.";
+
+	private JCheckBox getDefnCheckBox() {
+		if (showGODefinitionAsToolTip==null) {
+			showGODefinitionAsToolTip = new JCheckBoxMod(showGODefinitionAsToolTipLabel);
+			showGODefinitionAsToolTip.setSelected(GOSlimmerGUIViewSettings.showGODefinitionAsToolTip);
+			showGODefinitionAsToolTip.setToolTipText(showGODefinitionAsToolTipToolTip);
+			showGODefinitionAsToolTip.addActionListener(this);
+		}
+		return showGODefinitionAsToolTip;
+	}
+    /* End of added code */
+
+    private JCheckBox expandNodeDepthCheckbox;
 	private JTextField expandNodeDepthTextField;
 	
 	private final String expandNodeDepthTooltip = 
@@ -175,7 +193,8 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 		this.add(getIncludeDeCheckBox());
 		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
 		this.add(getLCheckBox());
-		this.add(getDisplayUserGeneStatisticsCheckBox());
+        this.add(getDefnCheckBox());
+        this.add(getDisplayUserGeneStatisticsCheckBox());
 		this.add(getExpandNodeDepthCheckbox());
 		this.add(getExpandNodeTextField());
 		
@@ -213,7 +232,10 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 			else if (src == labelNodesWithOntologyName) {
 				GOSlimmerGUIViewSettings.labelNodesWithOntologyName = labelNodesWithOntologyName.isSelected();
 			}
-			else if (src == expandNodeDepthCheckbox) {
+            else if (src == showGODefinitionAsToolTip) {
+                GOSlimmerGUIViewSettings.showGODefinitionAsToolTip = showGODefinitionAsToolTip.isSelected();
+            }
+            else if (src == expandNodeDepthCheckbox) {
 				boolean useFiniteExpansionDepth = expandNodeDepthCheckbox.isSelected();
 				//only enable the text field for specifying the node expansion depth if the  feature is enabled.
 				expandNodeDepthTextField.setEnabled(useFiniteExpansionDepth);

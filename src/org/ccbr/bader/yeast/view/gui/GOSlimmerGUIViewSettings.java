@@ -62,6 +62,16 @@ public class GOSlimmerGUIViewSettings {
 	 * association GO annotation file, or if it is to be based on coverage of user specified genes only.
 	 */
 	public static boolean sizeNodesBasedOnUserGeneAnnotation = false;
-	
-	
+
+    /**
+     * Setting which determines whether GO term definition should be shown as a node tool tip.
+     */
+    public static boolean showGODefinitionAsToolTip = false;
+
+    /**
+     * Setting which determines the width (characters) of the GO definition tool tip
+     */
+    public static int showGODefinitionAsToolTipSize = 50;
+
+
 }

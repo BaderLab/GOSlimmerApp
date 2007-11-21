@@ -92,9 +92,10 @@ public class GOSlimmerCoverageStatBean {
 	 * The IDs of user genes which are covered by the slim set terms directly
 	 */
 	Set<String> directlyCoveredUserGeneIds = new HashSet<String>();
-	
-	
-	/**
+
+    Set<String> slimGoNodeNames = new HashSet<String>();    // List of names/ids of selected nodes
+
+    /**
 	 * The fraction of annotation file genes covered by the term directly and by inference from it's descendant terms' respective coverages
 	 */
 	private double fractionInferredCovered;
@@ -132,7 +133,11 @@ public class GOSlimmerCoverageStatBean {
 		/* Update the GO Slim set */
 		slimGoNodes.add(goNode);
 //		System.out.println(fractionInferredCovered);
-	}
+
+        /*Update the GO Slim names set */
+        String goTermName = nodeAtt.getStringAttribute(goid,"ontology.name");
+        slimGoNodeNames.add(goTermName + " (" + goid + ")");
+    }
 	
 	/**Adds the annotation file genes covered by this go term node to the covered annotation file gene sets 
 	 * @param goNode
@@ -169,14 +174,20 @@ public class GOSlimmerCoverageStatBean {
 	 * @param goNode the node being removed to the slim set
 	 */
 	public void removeFromSlimSet(Node goNode) {
-		removeNodesGenes(goNode);
+        String goid = goNode.getIdentifier();
+
+        removeNodesGenes(goNode);
 		if (isUserGeneStatisticsSetup) removeNodesUserGenes(goNode);
 		
 		/* Update the fraction covered statistics */
 		updateFractionCovered();
 		
-		slimGoNodes.remove(goNode);	
-	}
+		slimGoNodes.remove(goNode);
+
+        /*Update the GO Slim names set */
+        String goTermName = nodeAtt.getStringAttribute(goid,"ontology.name");
+        slimGoNodeNames.remove(goTermName + " (" + goid + ")");
+    }
 	
 	/**Removes node's associated user genes from the set of covered user genes, if they are not covered by a still selected node
 	 * @param goNode the go node who's user genes are to be removed, if not still covered
@@ -334,7 +345,12 @@ public class GOSlimmerCoverageStatBean {
 	public Set<Node> getSlimGoNodes() {
 		return slimGoNodes;
 	}
-	
-	//TODO perhaps implement listener interface so that gui can be updated upon change, though this might be better handled by a view or controller component.
+
+    public String[] getListSelectedGONodes() {
+        String[] returnArray = new String[slimGoNodeNames.size()];
+        return slimGoNodeNames.toArray(returnArray);
+    }
+
+    //TODO perhaps implement listener interface so that gui can be updated upon change, though this might be better handled by a view or controller component.
 	
 }

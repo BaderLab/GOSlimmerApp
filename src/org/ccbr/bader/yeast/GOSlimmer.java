@@ -86,8 +86,17 @@ public class GOSlimmer {
 	 * directly annotated by its descendant terms
 	 */
 	public static final String inferredAnnotatedUserGenesAttributeName = "GOSlimmer.INFERRED_ANNOTATED_USER_GENES";
-	
-	
+
+    /**
+     * The name of the cytoscape attribute for the number of gene ids which are directly annotated by a go term node
+     */
+    public static final String directlyAnnotatedGeneNumberAttributeName = "GOSlimmer.NUMBER_DIRECTLY_ANNOTATED_GENES";
+    /**
+     * The name of the cytoscape attribute for the number of gene ids which are annotated by a go term node by inference from those
+     * directly annotated by its descendant terms
+     */
+    public static final String inferredAnnotatedGeneNumberAttributeName = "GOSlimmer.NUMBER_INFERRED_ANNOTATED_GENES";
+
 //	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
 //	public static String ontologyName;
 //	

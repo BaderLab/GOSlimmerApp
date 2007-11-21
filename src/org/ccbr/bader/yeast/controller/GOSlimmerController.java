@@ -66,6 +66,7 @@ import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
+import org.ccbr.bader.yeast.view.gui.SelectedGOTermsPanel;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -95,7 +96,9 @@ public class GOSlimmerController  {
 	 */
 	private GOSlimmerCoverageStatBean statBean;
 	private JLabel inferredCoverageStatisticViewLabel;
-	/**
+    private SelectedGOTermsPanel selectedGOTermsPanel;      // Collapsable panel for list of currently selected terms
+
+    /**
 	 * The GO Namespace of the controlled network subgraph
 	 */
 	private GONamespace namespace;
@@ -436,7 +439,11 @@ public class GOSlimmerController  {
 		//TODO consider revising this condition, since it might hide the face that the coverageStatisticViewLabel hasn't been initialized
 		if (this.inferredCoverageStatisticViewLabel!=null) this.inferredCoverageStatisticViewLabel.setText("Inferred Coverage: " + formatter.format(inferredCoverage));
 		if (this.directCoverageStatisticViewLabel!=null) this.directCoverageStatisticViewLabel.setText("Direct Coverage: " + formatter.format(directCoverage));
-	}
+        if (this.selectedGOTermsPanel!=null) {
+            String[] listGOTerms = statBean.getListSelectedGONodes();
+            this.selectedGOTermsPanel.setList(listGOTerms);
+        }
+    }
 
 	public GOSlimmerCoverageStatBean getStatBean() {
 		return statBean;
@@ -481,8 +488,17 @@ public class GOSlimmerController  {
 			JLabel directCoverageStatisticViewLabel) {
 		this.directCoverageStatisticViewLabel = directCoverageStatisticViewLabel;
 	}
-	
-	/**
+
+    public SelectedGOTermsPanel getSelectedGOTermsPanel() {
+        return selectedGOTermsPanel;
+    }
+
+    public void setSelectedGOTermsPanel(SelectedGOTermsPanel selectedGOTermsPanel) {
+        this.selectedGOTermsPanel = selectedGOTermsPanel;
+    }
+
+    
+    /**
 	 * Removes the coverage attributes from the nodes within this network, if they are defined.  Useful when one wants 
 	 * to regenerate the statistics, for example when a new annotation file is loaded
 	 */
@@ -571,8 +587,63 @@ public class GOSlimmerController  {
 		}
 		
 	}
-	
-	
+
+    // New method that also assigns as an attribute the number of annotated genes covered by this node
+    private void assignCoverageAttributesToNetworks(Map<String, List<String>> goIdToAttValMap, String directCoverageAttributeName, String inferredCoverageAttributeName, String directNumberAttributeName, String inferredNumberAttributeName) {
+        //scratch that, instead iterate through the nodes of the GO DAG graph, and attach annotated gene list attributes accordingly
+        Iterator<Node> nodeI = network.nodesIterator();
+        while (nodeI.hasNext()) {
+            Node node = nodeI.next();
+            String nodeGoId = node.getIdentifier();
+            //get the genes which this go term annotates, according to the gene association file
+            List<String> nodeAnnotatedGeneIds = goIdToAttValMap.get(nodeGoId);
+
+            //if gene id list exists, attach list and list size as attributes
+            if (nodeAnnotatedGeneIds != null && nodeAnnotatedGeneIds.size() > 0) {
+                nodeAtt.setListAttribute(nodeGoId, directCoverageAttributeName, nodeAnnotatedGeneIds);
+                // if directNumberAttributeName is not null, attach list size as attribute.  Otherwise, do nothing.
+                if (!(directNumberAttributeName == null || directNumberAttributeName.equals(""))) {
+                    nodeAtt.setAttribute(nodeGoId, directNumberAttributeName, nodeAnnotatedGeneIds.size());
+                }
+
+            }
+            // if gene list doesn't exist or has size 0 and directNumberAttributeName is not null, attach 0 as list size
+            else if (!(directNumberAttributeName == null || directNumberAttributeName.equals(""))) {
+                nodeAtt.setAttribute(nodeGoId, directNumberAttributeName, 0);
+            }
+
+        }
+        //now annotated each node with the genes it annotated indirectly, through inference, from the genes which it's children inference
+        nodeI = network.nodesIterator();
+
+        while (nodeI.hasNext()) {
+            Node node = nodeI.next();
+            String nodeGoId = node.getIdentifier();
+            //see if the inferred coverred genes list attribute has already been calculated and set
+            List<String> inferredCoveredGenesL = nodeAtt.getListAttribute(node.getIdentifier(), inferredCoverageAttributeName);
+
+            //if inferred covered genes list has not already been calculated, calculate and set it
+            if (inferredCoveredGenesL == null || inferredCoveredGenesL.size() == 0) {
+                Set<String> inferredCoveredGenesS = GOSlimmerUtil.getGenesCoveredByChildren(node, network, directCoverageAttributeName, inferredCoverageAttributeName);
+                nodeAtt.setListAttribute(nodeGoId, inferredCoverageAttributeName, GOSlimmerUtil.setToList(inferredCoveredGenesS));
+
+                // if inferredNumberAttributeName is not null, attach list size as attribute.  Otherwise, do nothing.
+                if (!(inferredNumberAttributeName == null || inferredNumberAttributeName.equals(""))) {
+                    nodeAtt.setAttribute(nodeGoId, inferredNumberAttributeName, inferredCoveredGenesS.size());
+                }
+            }
+            // Inferred gene list was already calculated.  If inferredNumberAttributeName is not null, check to see
+            // if list size was already attached as attribute.  If not, get size and attach.
+            else if (!(inferredNumberAttributeName == null || inferredNumberAttributeName.equals(""))) {
+                if (!nodeAtt.hasAttribute(nodeGoId, inferredNumberAttributeName)) {
+                    nodeAtt.setAttribute(nodeGoId, inferredNumberAttributeName, inferredCoveredGenesL.size());
+                }
+            }
+
+        }
+
+    }
+
 
 	/**This method resets the coverage statistics in the model layer, and recalculates them based on which nodes have been selected 
 	 * for inclusion in the slim set (based on the GOSlimmer.goNodeInSimlSetAttributeName CyAttribute of the node).
@@ -722,13 +793,15 @@ public class GOSlimmerController  {
 	}
 
 	public void assignGeneSynonymCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneSynonymMap) {
-		this.assignCoverageAttributesToNetworks(goIdToGeneSynonymMap, GOSlimmer.directlyAnnotatedGenesSynonymAttributeName, GOSlimmer.inferredAnnotatedGenesSynonymAttributeName);
-	}
+		//this.assignCoverageAttributesToNetworks(goIdToGeneSynonymMap, GOSlimmer.directlyAnnotatedGenesSynonymAttributeName, GOSlimmer.inferredAnnotatedGenesSynonymAttributeName);
+        this.assignCoverageAttributesToNetworks(goIdToGeneSynonymMap, GOSlimmer.directlyAnnotatedGenesSynonymAttributeName, GOSlimmer.inferredAnnotatedGenesSynonymAttributeName, null, null);
+    }
 
 	public void assignGeneIdCoverageAttributesToNetworks(Map<String, List<String>> goIdToGeneIdMap) {
-		this.assignCoverageAttributesToNetworks(goIdToGeneIdMap, GOSlimmer.directlyAnnotatedGenesAttributeName, GOSlimmer.inferredAnnotatedGenesAttributeName);
-		
-	}
+		//this.assignCoverageAttributesToNetworks(goIdToGeneIdMap, GOSlimmer.directlyAnnotatedGenesAttributeName, GOSlimmer.inferredAnnotatedGenesAttributeName);
+        this.assignCoverageAttributesToNetworks(goIdToGeneIdMap, GOSlimmer.directlyAnnotatedGenesAttributeName, GOSlimmer.inferredAnnotatedGenesAttributeName, GOSlimmer.directlyAnnotatedGeneNumberAttributeName, GOSlimmer.inferredAnnotatedGeneNumberAttributeName);        
+
+    }
 
 	public GONamespace getNamespace() {
 		return namespace;
