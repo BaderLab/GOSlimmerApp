@@ -73,5 +73,12 @@ public class GOSlimmerGUIViewSettings {
      */
     public static int showGODefinitionAsToolTipSize = 50;
 
+    /**
+     * Setting which determines what children are displayed when a node is expanded.
+     * If the value is false, then all children are shown.  If the value is true, then only those children with
+     * associated genes (direct or inferred) will be shown.
+     */
+    public static boolean expandNodesWithGenes = false;
+
 
 }

@@ -67,6 +67,7 @@ import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.model.GOSlimmerCoverageStatBean;
 import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
 import org.ccbr.bader.yeast.view.gui.SelectedGOTermsPanel;
+import org.ccbr.bader.yeast.view.gui.GOSlimmerGUIViewSettings;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -218,8 +219,11 @@ public class GOSlimmerController  {
 	public void expandNodeUnlimited(Node snode) {
 		NodeView snodeView = networkView.getNodeView(snode);
 		networkView.showGraphObject(snodeView);
-		
-		double x = snodeView.getXPosition();
+
+        // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
+        boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
+        
+        double x = snodeView.getXPosition();
 		double y = snodeView.getYPosition();
 		double h = snodeView.getHeight();
 		double w = snodeView.getWidth();
@@ -238,16 +242,30 @@ public class GOSlimmerController  {
 		double maxNodeWidth = 0;
 		double nodeWidthSum = 0;
 		List<NodeView> childNodeViews = new ArrayList<NodeView>(); 
-		
-		for (int i = 0; i<incomingEdges.length;i++) {
+		int directGenes = 0;
+        int inferredGenes = 0;
+
+        for (int i = 0; i<incomingEdges.length;i++) {
 			EdgeView ev = networkView.getEdgeView(incomingEdges[i]);
 			
-			networkView.showGraphObject(ev);
+
 			Node childNode = ev.getEdge().getSource();
 			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
 			
-			
-			expandNodeUnlimited(childNode);
+			/* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
+			 * then display/expand child only if it has at least one associated gene (direct or inferred).
+			 */
+            if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
+                directGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+                inferredGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
+
+                if (expandNodesWithGenes && ((directGenes + inferredGenes)==0)) {
+                    continue;
+                }
+            }
+            networkView.showGraphObject(ev);
+
+            expandNodeUnlimited(childNode);
 			
 			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
 			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
@@ -296,8 +314,11 @@ public class GOSlimmerController  {
 		if (depth <=0) return;
 		NodeView snodeView = networkView.getNodeView(snode);
 		networkView.showGraphObject(snodeView);
-		
-		double x = snodeView.getXPosition();
+
+        // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
+        boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
+
+        double x = snodeView.getXPosition();
 		double y = snodeView.getYPosition();
 		double h = snodeView.getHeight();
 		double w = snodeView.getWidth();
@@ -315,17 +336,31 @@ public class GOSlimmerController  {
 		double maxNodeHeight = 0;
 		double maxNodeWidth = 0;
 		double nodeWidthSum = 0;
-		List<NodeView> childNodeViews = new ArrayList<NodeView>(); 
-		
-		for (int i = 0; i<incomingEdges.length;i++) {
+		List<NodeView> childNodeViews = new ArrayList<NodeView>();
+        int directGenes = 0;
+        int inferredGenes = 0;
+
+        for (int i = 0; i<incomingEdges.length;i++) {
 			EdgeView ev = networkView.getEdgeView(incomingEdges[i]);
-			
-			networkView.showGraphObject(ev);
+				
 			Node childNode = ev.getEdge().getSource();
 			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
 			
-			
-			expandNodeToDepth(childNode,depth-1);
+			/* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
+			 * then display/expand child only if it has at least one associated gene (direct or inferred).
+			 */
+            if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
+                directGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+                inferredGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
+
+                if (expandNodesWithGenes && ((directGenes + inferredGenes)==0)) {
+                    continue;
+                }
+            }
+
+            networkView.showGraphObject(ev);
+
+            expandNodeToDepth(childNode,depth-1);
 			
 			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
 			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());

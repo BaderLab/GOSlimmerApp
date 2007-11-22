@@ -132,6 +132,28 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 	}
     /* End of added code */
 
+    /* Added by Laetitia Morrison
+     * Checkbox to determine what children nodes to display when a node is expanded.
+     * If box is checked, then only the children nodes which have associated genes (either direct or inferred)
+     * will be shown.  If box is unchecked, then all children will be displayed.
+     */
+    JCheckBox expandNodesWithGenes;
+	private final String expandNodesWithGenesLabel = "Expand nodes with associated genes only";
+	private final String expandNodesWithGenesToolTip = "If checked, only those children with associate genes " +
+													  lsep + "(direct or inferred) will be shown when a node is " +
+                                                      lsep + "expanded.";
+
+	private JCheckBox getExpandNodesCheckBox() {
+		if (expandNodesWithGenes==null) {
+			expandNodesWithGenes = new JCheckBoxMod(expandNodesWithGenesLabel);
+			expandNodesWithGenes.setSelected(GOSlimmerGUIViewSettings.expandNodesWithGenes);
+			expandNodesWithGenes.setToolTipText(expandNodesWithGenesToolTip);
+			expandNodesWithGenes.addActionListener(this);
+		}
+		return expandNodesWithGenes;
+	}
+    /* End of added code */
+
     private JCheckBox expandNodeDepthCheckbox;
 	private JTextField expandNodeDepthTextField;
 	
@@ -194,6 +216,7 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
 		this.add(getLCheckBox());
         this.add(getDefnCheckBox());
+        this.add(getExpandNodesCheckBox());
         this.add(getDisplayUserGeneStatisticsCheckBox());
 		this.add(getExpandNodeDepthCheckbox());
 		this.add(getExpandNodeTextField());
@@ -234,6 +257,9 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 			}
             else if (src == showGODefinitionAsToolTip) {
                 GOSlimmerGUIViewSettings.showGODefinitionAsToolTip = showGODefinitionAsToolTip.isSelected();
+            }
+            else if (src == expandNodesWithGenes) {
+                GOSlimmerGUIViewSettings.expandNodesWithGenes = expandNodesWithGenes.isSelected();
             }
             else if (src == expandNodeDepthCheckbox) {
 				boolean useFiniteExpansionDepth = expandNodeDepthCheckbox.isSelected();
