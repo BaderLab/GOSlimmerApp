@@ -187,7 +187,9 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 			//execute task in background for importing the user gene set.
 			TaskManager.executeTask(new Task() {
 
-				public String getTitle() {
+                private TaskMonitor taskMonitor=null;
+
+                public String getTitle() {
 					return "Importing Gene ID File and attaching matching Genes to GO Terms";
 				}
 
@@ -210,11 +212,15 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 						e.printStackTrace();
 						return;
 					}
-					
-				}
+                    catch (RuntimeException e) {
+                        taskMonitor.setException(e, e.getMessage());
+                        return;
+                    }
 
-				public void setTaskMonitor(TaskMonitor arg0) throws IllegalThreadStateException {
-					// TODO Auto-generated method stub
+                }
+
+				public void setTaskMonitor(TaskMonitor taskMonitor) throws IllegalThreadStateException {
+					this.taskMonitor = taskMonitor;
 					
 				}
 				
@@ -266,7 +272,7 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		//TODO insert checks to ensure format is acceptable
 		if (line.matches(".*\\s.*")) {
 			String errorMessage = "Parse error while processing gene ID file:  cannot have whitespaces within a Gene ID.  Invalid line was: " + line;
-			JOptionPane.showMessageDialog(null, errorMessage,"Error parsing user gene file",JOptionPane.ERROR_MESSAGE);
+			//JOptionPane.showMessageDialog(null, errorMessage,"Error parsing user gene file",JOptionPane.ERROR_MESSAGE);
 			throw new RuntimeException(errorMessage);
 		}
 		return line; //trimmed
