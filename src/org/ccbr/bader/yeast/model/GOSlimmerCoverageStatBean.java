@@ -42,6 +42,7 @@ import org.ccbr.bader.yeast.GOSlimmerUtil;
 
 import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;
+import cytoscape.task.TaskMonitor;
 
 import giny.model.Node;
 
@@ -172,12 +173,14 @@ public class GOSlimmerCoverageStatBean {
 	 * Note that this is much more expensive an operation than adding a node, because it must ensure that the removed 
 	 * gene is not covered by any other selected go term
 	 * @param goNode the node being removed to the slim set
+     * @param taskMonitor TaskMonitor to be updated with task progress, if applicable
 	 */
-	public void removeFromSlimSet(Node goNode) {
+	public void removeFromSlimSet(Node goNode, TaskMonitor taskMonitor) {
+
         String goid = goNode.getIdentifier();
 
-        removeNodesGenes(goNode);
-		if (isUserGeneStatisticsSetup) removeNodesUserGenes(goNode);
+        removeNodesGenes(goNode, taskMonitor);
+		if (isUserGeneStatisticsSetup) removeNodesUserGenes(goNode, taskMonitor);
 		
 		/* Update the fraction covered statistics */
 		updateFractionCovered();
@@ -191,17 +194,33 @@ public class GOSlimmerCoverageStatBean {
 	
 	/**Removes node's associated user genes from the set of covered user genes, if they are not covered by a still selected node
 	 * @param goNode the go node who's user genes are to be removed, if not still covered
+     * @param taskMonitor TaskMonitor to be updated with task progress, if applicable
 	 */
-	private void removeNodesUserGenes(Node goNode) {
-		String goid = goNode.getIdentifier();
+	private void removeNodesUserGenes(Node goNode, TaskMonitor taskMonitor) {
+        if (taskMonitor!=null) {
+            taskMonitor.setPercentCompleted(0);
+            taskMonitor.setStatus("User genes...");
+        }
+        String goid = goNode.getIdentifier();
 		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to re-add it
 		
 		/* Update the covered gene set */
 		
 		//brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
 		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true,true);
-		for(String coveredGene:coveredGenes) {
-			boolean isStillInferredCovered = false;
+		int numGenes = coveredGenes.size();
+        int count = 0;
+        int complete = 0;
+        int lastComplete = 0;
+        for(String coveredGene:coveredGenes) {
+			if (taskMonitor != null) {
+                complete = (int)(((double) count / numGenes) * 100);
+                if ((complete!= lastComplete) && ((complete % 10) == 0)) {
+                    lastComplete = complete;
+                    taskMonitor.setPercentCompleted(complete);
+                }
+            }
+            boolean isStillInferredCovered = false;
 			boolean isStillDirectlyCovered = false;
 			
 			//iterate through remaining slim set goid's, and for each one see if it also contains the gene covered by the goNode being removed
@@ -235,7 +254,8 @@ public class GOSlimmerCoverageStatBean {
 			if (!isStillDirectlyCovered) {
 				directlyCoveredUserGeneIds.remove(coveredGene);
 			}
-		}
+            count++;
+        }
 		
 
 		
@@ -243,17 +263,33 @@ public class GOSlimmerCoverageStatBean {
 
 	/**Removes node's associated annotation file genes from the set of covered user genes, if they are not covered by a still selected node
 	 * @param goNode the go node who's annotation file genes are to be removed, if not still covered
+     * @param taskMonitor TaskMonitor to be updated with task progress, if applicable
 	 */
-	private void removeNodesGenes(Node goNode) {
-		String goid = goNode.getIdentifier();
+	private void removeNodesGenes(Node goNode, TaskMonitor taskMonitor) {
+        if (taskMonitor!=null) {
+            taskMonitor.setPercentCompleted(0);
+            taskMonitor.setStatus("All genes...");
+        }
+        String goid = goNode.getIdentifier();
 		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to re-add it
 		
 		/* Update the covered gene set */
 		
 		//brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
 		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true);
-		for(String coveredGene:coveredGenes) {
-			boolean isStillInferredCovered = false;
+        int numGenes = coveredGenes.size();
+        int count = 0;
+        int complete = 0;
+        int lastComplete = 0;
+        for(String coveredGene:coveredGenes) {
+            if (taskMonitor != null) {
+                complete = (int)(((double) count / numGenes) * 100);
+                if ((complete!= lastComplete) && ((complete % 10) == 0)) {
+                    lastComplete = complete;
+                    taskMonitor.setPercentCompleted(complete);
+                }
+            }
+            boolean isStillInferredCovered = false;
 			boolean isStillDirectlyCovered = false;
 			
 			//iterate through remaining slim set goid's, and for each one see if it also contains the gene covered by the goNode being removed
@@ -287,7 +323,8 @@ public class GOSlimmerCoverageStatBean {
 			if (!isStillDirectlyCovered) {
 				directlyCoveredGeneIds.remove(coveredGene);
 			}
-		}
+            count++;
+        }
 		
 
 		

@@ -48,6 +48,7 @@ import cytoscape.Cytoscape;
 import cytoscape.task.Task;
 import cytoscape.task.TaskMonitor;
 import cytoscape.task.util.TaskManager;
+import cytoscape.task.ui.JTaskConfig;
 import cytoscape.visual.VisualStyle;
 
 /**Adds GOSlimmer actions to the node context menu.  The actions added allow the user to collapse, expand, 
@@ -103,9 +104,13 @@ public class NodeContextMenuActionListener implements ActionListener {
 				controller.addNodeToSlimSet(node);
 			}
 			else if (jbSource.getText().equals(deselectButtonText)) {
-				TaskManager.executeTask(new Task() {
+                JTaskConfig config = new JTaskConfig();
+                config.displayStatus(true);
+                TaskManager.executeTask(new Task() {
 
-					public String getTitle() {
+                    private TaskMonitor taskMonitor = null;
+
+                    public String getTitle() {
 						return "Recalculating Coverage Statistics";
 					}
 
@@ -115,16 +120,19 @@ public class NodeContextMenuActionListener implements ActionListener {
 					}
 
 					public void run() {
-						controller.removeNodeFromSlimSet(node);
-						
-					}
+                        if (taskMonitor == null) {
+                            throw new IllegalStateException("Task Monitor is not set.");
+                        }
+                        taskMonitor.setPercentCompleted(0);
+                        controller.removeNodeFromSlimSet(node, taskMonitor);
+                    }
 
-					public void setTaskMonitor(TaskMonitor arg0) throws IllegalThreadStateException {
-						// TODO Auto-generated method stub
+					public void setTaskMonitor(TaskMonitor taskMonitor) throws IllegalThreadStateException {
+                        this.taskMonitor = taskMonitor;
 						
 					}
 					
-				}, null);
+				}, config);
 				
 			}
 			else {

@@ -74,6 +74,7 @@ import cytoscape.Cytoscape;
 import cytoscape.data.CyAttributes;
 import cytoscape.data.attr.MultiHashMapDefinition;
 import cytoscape.view.CyNetworkView;
+import cytoscape.task.TaskMonitor;
 
 /**Controller for manipulation of a GOSlimmer GO Namespace subgraph network and associated model objects.
  * Each instance is associated with a single GO namespace subgraph and provides an interface for manipulating that 
@@ -450,17 +451,24 @@ public class GOSlimmerController  {
 	
 	/**Removes a specified node to the GO slim set, updating statistics accordingly
 	 * @param node node to be removed to slim set
+     * @param taskMonitor TaskMonitor to be updated with task progress (if applicable)
 	 */
-	public void removeNodeFromSlimSet(Node node) {
+	public void removeNodeFromSlimSet(Node node, TaskMonitor taskMonitor) {
 		//set the 'selected for slim set' attribute to false
 		nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName, false);
 		//TODO update coverage statistics
-		statBean.removeFromSlimSet(node);
+		statBean.removeFromSlimSet(node, taskMonitor);
 		updateViewStatistics();
 	}
 	
-	
-	DecimalFormat formatter = new DecimalFormat("00.00%");
+   /**Removes a specified node to the GO slim set, updating statistics accordingly
+	 * @param node node to be removed to slim set
+	 */
+    public void removeNodeFromSlimSet(Node node) {
+        removeNodeFromSlimSet(node, null);
+    }
+
+    DecimalFormat formatter = new DecimalFormat("00.00%");
 	/**
 	 * Updates the view of the coverage statistics to agree with the datamodel.  This is intended to be called whenever the 
 	 * statistics are updated.
