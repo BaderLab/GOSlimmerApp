@@ -51,7 +51,7 @@ import cytoscape.task.util.TaskManager;
 import cytoscape.task.ui.JTaskConfig;
 import cytoscape.visual.VisualStyle;
 
-/**Adds GOSlimmer actions to the node context menu.  The actions added allow the user to collapse, expand, 
+/**Adds GOSlimmer actions to the node context menu.  The actions added allow the user to collapse, expand,
  * and prune nodes, as well as to select or unselect the node for inclusion in the GO Slim Set.
  * 
  * @author mikematan
@@ -72,7 +72,7 @@ public class NodeContextMenuActionListener implements ActionListener {
 	private String cancelButtonText = "Cancel";
 	private String selectButtonText = "Select";
 	private String deselectButtonText = "Deselect";
-	
+
 	public void actionPerformed(ActionEvent e) {
 		
 		Object source = e.getSource();
@@ -80,15 +80,18 @@ public class NodeContextMenuActionListener implements ActionListener {
 			JMenuItem jbSource = (JMenuItem) source;
 			
 			if (jbSource.getText().equals(collapseButtonText)) {
-				controller.collapseNode(node);
+				ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, node, "Node Collapse");
+                controller.collapseNode(node);
+                undoableEdit.post();
 				
 				//the dialog has fulfilled it's purpose, so dispose of it
 			}
 			else if (jbSource.getText().equals(expandButtonText)) {
 				System.out.println("expand button depressed");
-				controller.expandNode(node);
-				
-			}
+                ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, node, "Node Expand");
+                controller.expandNode(node);
+                undoableEdit.post();
+            }
 			else if (jbSource.getText().equals(pruneButtonText)) {
 				System.out.println("Prune button depressed");
 				controller.pruneNode(node);

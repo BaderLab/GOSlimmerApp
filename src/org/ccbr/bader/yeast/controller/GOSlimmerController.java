@@ -100,6 +100,9 @@ public class GOSlimmerController  {
 	private JLabel inferredCoverageStatisticViewLabel;
     private SelectedGOTermsPanel selectedGOTermsPanel;      // Collapsable panel for list of currently selected terms
 
+    private Set<Node> visibleNodes;                         // Set of visible nodes for this network
+    private Set<Integer> visibleEdges;                      // Set of indices of visible edges for this network
+
     /**
 	 * The GO Namespace of the controlled network subgraph
 	 */
@@ -122,7 +125,9 @@ public class GOSlimmerController  {
 		this.networkView = networkView;
 		this.statBean = statBean;
 		this.session = session;
-	}
+        visibleNodes = new HashSet<Node>();
+        visibleEdges = new HashSet<Integer>();
+    }
 
 //	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
 //		this.network=network;
@@ -162,10 +167,22 @@ public class GOSlimmerController  {
 //			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
 //				networkView.putClientData(edgeIsHiddenPropertyName, true);
-				networkView.hideGraphObject(ev);
-				
-				pruneNode(ev.getEdge().getSource());
-			//}
+				hideEdge(outgoingEdge);
+                Node childNode = ev.getEdge().getSource();
+
+                // Check to see if this node has another visible parent.  If not, then hide it.  If so, leave it as is.
+                boolean pruneNode = true;
+                int[] edges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
+                for (int edge:edges) {
+                    if (isVisibleEdge(edge) && (edge!=outgoingEdge)) {
+                        pruneNode = false;                        
+                    }
+                }
+
+                if (pruneNode) {
+                    pruneNode(childNode);
+                }
+            //}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
 		}
 		updateViewStatistics();
@@ -176,8 +193,9 @@ public class GOSlimmerController  {
 	public void pruneNode(Node snode) {
 		removeNodeFromSlimSet(snode);
 		//hide this node for starters
-		networkView.hideGraphObject(networkView.getNodeView(snode));
-		//retrieve the outgoing edges, such that we can collapse them into this one
+        hideNode(snode);
+
+        //retrieve the outgoing edges, such that we can collapse them into this one
 		int[] outgoingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
 		for (int outgoingEdge:outgoingEdges) {
 			EdgeView ev = networkView.getEdgeView(outgoingEdge);
@@ -187,8 +205,8 @@ public class GOSlimmerController  {
 //			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
 //				networkView.putClientData(edgeIsHiddenPropertyName, true);
-				networkView.hideGraphObject(ev);
-				
+                hideEdge(outgoingEdge);
+
 				pruneNode(ev.getEdge().getSource());
 			//}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
@@ -219,7 +237,7 @@ public class GOSlimmerController  {
 	 */
 	public void expandNodeUnlimited(Node snode) {
 		NodeView snodeView = networkView.getNodeView(snode);
-		networkView.showGraphObject(snodeView);
+        showNode(snode);
 
         // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
         boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
@@ -264,7 +282,7 @@ public class GOSlimmerController  {
                     continue;
                 }
             }
-            networkView.showGraphObject(ev);
+            showEdge(incomingEdges[i]);
 
             expandNodeUnlimited(childNode);
 			
@@ -314,7 +332,7 @@ public class GOSlimmerController  {
 	public void expandNodeToDepth(Node snode,int depth) {
 		if (depth <=0) return;
 		NodeView snodeView = networkView.getNodeView(snode);
-		networkView.showGraphObject(snodeView);
+		showNode(snode);
 
         // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
         boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
@@ -359,7 +377,8 @@ public class GOSlimmerController  {
                 }
             }
 
-            networkView.showGraphObject(ev);
+            showEdge(incomingEdges[i]);
+            showNode(childNode);
 
             expandNodeToDepth(childNode,depth-1);
 			
@@ -865,8 +884,36 @@ public class GOSlimmerController  {
 		return true;
 	}
 
+    public boolean isVisibleNode(Node node) {
+        return visibleNodes.contains(node);
+    }
 
+    public boolean isVisibleEdge(int edge) {
+        return visibleEdges.contains(edge);
+    }
 
-	
+    public void hideNode(Node node) {
+    	NodeView nodeView = networkView.getNodeView(node);
+		networkView.hideGraphObject(nodeView);
+        visibleNodes.remove(node);
+    }
+
+	public void showNode(Node node) {
+        NodeView nodeView = networkView.getNodeView(node);
+        networkView.showGraphObject(nodeView);
+        visibleNodes.add(node);
+    }
+
+    public void hideEdge(int edge) {
+        EdgeView edgeView = networkView.getEdgeView(edge);
+        networkView.hideGraphObject(edgeView);
+        visibleEdges.remove(edge);
+    }
+
+    public void showEdge(int edge) {
+        EdgeView edgeView = networkView.getEdgeView(edge);
+        networkView.showGraphObject(edgeView);
+        visibleEdges.add(edge);
+    }
 	
 }
