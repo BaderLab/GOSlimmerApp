@@ -4,7 +4,6 @@ import ding.view.DGraphView;
 
 import javax.swing.undo.AbstractUndoableEdit;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
-import giny.model.Node;
 
 
 import undo.Undo;
@@ -19,25 +18,23 @@ public class ExpandCollapseEdit extends AbstractUndoableEdit {
 
 	private DGraphView m_view;
     private GOSlimmerController controller;
-    private Node node;
 
     private String m_label;
 
-	public ExpandCollapseEdit(GOSlimmerController controller, Node node, String label) {
+	public ExpandCollapseEdit(GOSlimmerController controller, String label) {
 		super();
 		this.controller = controller;
-        this.node = node;
         m_label = label;
 
 		saveOldPositions();
 	}
 
 	protected void saveOldPositions() {
-		origState = new ExpandedState(controller, node);
+		origState = new ExpandedState(controller);
 	}
 
 	protected void saveNewPositions() {
-		newState = new ExpandedState(controller, node);
+		newState = new ExpandedState(controller);
 	}
     
 

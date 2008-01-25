@@ -156,26 +156,27 @@ public class GOSlimmerController  {
 	public void collapseNode(Node snode) {
 		networkView.getNodeView(snode);
 		
-		//retrieve the outgoing edges, such that we can collapse them into this one
-		int[] outgoingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		if (outgoingEdges==null) return;
-		for (int outgoingEdge:outgoingEdges) {
-			EdgeView ev = networkView.getEdgeView(outgoingEdge);
+		//retrieve the incoming edges (from children nodes), such that we can collapse them into this one
+        int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
+		if (incomingEdges==null) return;
+		for (int incomingEdge:incomingEdges) {
+			EdgeView ev = networkView.getEdgeView(incomingEdge);
 			
 //			int edgeId =ev.getEdge().getRootGraphIndex();
 //			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
 //			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
 //				networkView.putClientData(edgeIsHiddenPropertyName, true);
-				hideEdge(outgoingEdge);
+				hideEdge(incomingEdge);
                 Node childNode = ev.getEdge().getSource();
 
                 // Check to see if this node has another visible parent.  If not, then hide it.  If so, leave it as is.
                 boolean pruneNode = true;
                 int[] edges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
                 for (int edge:edges) {
-                    if (isVisibleEdge(edge) && (edge!=outgoingEdge)) {
-                        pruneNode = false;                        
+                    if (isVisibleEdge(edge) && (edge!=incomingEdge)) {
+                        pruneNode = false;
+                        break;
                     }
                 }
 
@@ -195,20 +196,33 @@ public class GOSlimmerController  {
 		//hide this node for starters
         hideNode(snode);
 
-        //retrieve the outgoing edges, such that we can collapse them into this one
-		int[] outgoingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		for (int outgoingEdge:outgoingEdges) {
-			EdgeView ev = networkView.getEdgeView(outgoingEdge);
+        //retrieve the incoming edges (from children nodes), such that we can collapse them into this one
+		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
+		for (int incomingEdge:incomingEdges) {
+			EdgeView ev = networkView.getEdgeView(incomingEdge);
 			
 //			int edgeId =ev.getEdge().getRootGraphIndex();
 //			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
 //			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
 			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
 //				networkView.putClientData(edgeIsHiddenPropertyName, true);
-                hideEdge(outgoingEdge);
+            hideEdge(incomingEdge);
+            Node childNode = ev.getEdge().getSource();
 
-				pruneNode(ev.getEdge().getSource());
-			//}
+            // Check to see if this node has another visible parent.  If not, then hide it.  If so, leave it as is.
+            boolean pruneNode = true;
+            int[] edges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
+            for (int edge : edges) {
+                if (isVisibleEdge(edge) && (edge != incomingEdge)){
+                    pruneNode = false;
+                    break;
+                }
+            }
+
+            if (pruneNode) {
+                pruneNode(childNode);
+            }
+            //}
 			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
 			
 		}

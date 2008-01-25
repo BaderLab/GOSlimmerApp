@@ -80,7 +80,7 @@ public class NodeContextMenuActionListener implements ActionListener {
 			JMenuItem jbSource = (JMenuItem) source;
 			
 			if (jbSource.getText().equals(collapseButtonText)) {
-				ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, node, "Node Collapse");
+				ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Node Collapse");
                 controller.collapseNode(node);
                 undoableEdit.post();
 				
@@ -88,7 +88,7 @@ public class NodeContextMenuActionListener implements ActionListener {
 			}
 			else if (jbSource.getText().equals(expandButtonText)) {
 				System.out.println("expand button depressed");
-                ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, node, "Node Expand");
+                ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Node Expand");
                 controller.expandNode(node);
                 undoableEdit.post();
             }

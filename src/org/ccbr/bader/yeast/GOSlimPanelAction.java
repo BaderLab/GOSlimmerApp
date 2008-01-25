@@ -152,7 +152,8 @@ public class GOSlimPanelAction implements ActionListener {
 					newSessionPanel.setViewSettingsPanelVisible(false);
 					newSessionPanel.setFileExportPanelVisible(false);
 					newSessionPanel.setUserGeneSetImportPanelVisible(false);
-				}
+                    newSessionPanel.setAutomaticGOSetGeneratorPanelVisible(false);                    
+                }
 
 				if (!alreadyOpened) {
 //					goSlimmerSessionsTabbedPane = new JTabbedPane();

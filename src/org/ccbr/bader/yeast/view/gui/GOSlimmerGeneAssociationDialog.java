@@ -380,7 +380,8 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 								panel.setNamespaceSubpanelsVisible(true);
 								panel.setFileExportPanelVisible(true);
 								panel.setUserGeneSetImportPanelVisible(true);
-							}
+                                panel.setAutomaticGOSetGeneratorPanelVisible(true);                                
+                            }
 							updateSelectedAnnotationFileLabelText();
 						} catch (FileNotFoundException e) {
 							JOptionPane.showMessageDialog(Cytoscape.getDesktop(),"Failed to apply gene annotation data because File could not be found: " + e.getMessage(), "Error",JOptionPane.ERROR_MESSAGE);

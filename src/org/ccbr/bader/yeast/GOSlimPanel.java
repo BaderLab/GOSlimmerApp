@@ -65,6 +65,7 @@ import org.ccbr.bader.yeast.view.gui.UserGeneSetImportPanel;
 import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 import org.ccbr.bader.yeast.view.gui.SelectedGOTermsPanel;
+import org.ccbr.bader.yeast.view.gui.AutomaticGOSetGeneratorPanel;
 
 import cytoscape.Cytoscape;
 import cytoscape.view.CytoscapeDesktop;
@@ -83,7 +84,8 @@ public class GOSlimPanel extends JPanel {
 	
 	private GOSlimmerControlPanelToGraphInterface cptgi = null;
 	
-
+    private AutomaticGOSetGeneratorPanel generatorPanel;
+    
 	/**
 	 * The GOSlimmer session object which this panel is associated with
 	 */
@@ -119,8 +121,10 @@ public class GOSlimPanel extends JPanel {
 		
 		this.add(getFileExportPanel());
 		
-
-		session.setGOSlimPanel(this);
+        generatorPanel = new AutomaticGOSetGeneratorPanel(session);
+        this.add(generatorPanel);
+        
+        session.setGOSlimPanel(this);
 	}
 	
 	private FileExportPanel getFileExportPanel() {
@@ -364,5 +368,8 @@ public class GOSlimPanel extends JPanel {
 	public  void setFileExportPanelVisible(boolean visible) {
 		fileExportPanel.setVisible(visible);
 	}
-	
+
+    public void setAutomaticGOSetGeneratorPanelVisible(boolean visible) {
+        generatorPanel.setVisible(visible);
+    }
 }
