@@ -71,10 +71,15 @@ public class GOSlimPanelAction implements ActionListener {
 	boolean alreadyOpened = false;
 //	GOSlimPanel goSlimPanel =null;
 
-		
-	public GOSlimPanelAction() {
+    GOSlimmerUndo undo;
+    private int undoLimit = 15;
+    private int prevUndoLimit;
+
+
+    public GOSlimPanelAction() {
 		// TODO Auto-generated constructor stub
-	}
+        undo = new GOSlimmerUndo();
+    }
 
 
 	private static final String lsep = System.getProperty("line.separator");
@@ -95,7 +100,10 @@ public class GOSlimPanelAction implements ActionListener {
 				//delete goslimmer specific attributes:
 				GOSlimmerUtil.deleteGOSlimmerAttributes();
 				alreadyOpened=false;
-			}
+
+                // Reset the limit of depth for undo to original value
+                undo.setLimit(prevUndoLimit);
+            }
 			else if (src.getText().equals("Start GOSlimmer")) {
 				
 				//Unfortuntately, because cyattributes are defined globally for all nodes with the same id, we can't at this time 
@@ -108,7 +116,9 @@ public class GOSlimPanelAction implements ActionListener {
 					return;
 				}
 				
-
+                // Store the current undo depth limit, and reset to GOSlimmer limit
+                prevUndoLimit = undo.getLimit();
+                undo.setLimit(undoLimit);
 
 				
 
