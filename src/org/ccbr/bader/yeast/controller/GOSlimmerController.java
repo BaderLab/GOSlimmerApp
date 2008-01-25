@@ -299,13 +299,16 @@ public class GOSlimmerController  {
             showEdge(incomingEdges[i]);
 
             expandNodeUnlimited(childNode);
-			
-			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
-			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
-			nodeWidthSum += childNodeV.getWidth();
-			childNodeViews.add(childNodeV);
 
-		}
+            if (!isVisibleNode(childNode)) {
+
+                maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
+			    maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
+			    nodeWidthSum += childNodeV.getWidth();
+			    childNodeViews.add(childNodeV);
+            }
+
+        }
 		double nodeSpacingX = 10.0;
 		double nodeSpacingY = 5.0;
 		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
@@ -392,16 +395,19 @@ public class GOSlimmerController  {
             }
 
             showEdge(incomingEdges[i]);
-            showNode(childNode);
 
             expandNodeToDepth(childNode,depth-1);
-			
-			maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
-			maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
-			nodeWidthSum += childNodeV.getWidth();
-			childNodeViews.add(childNodeV);
 
-		}
+            if (!isVisibleNode(childNode)) {
+                showNode(childNode);
+                
+                maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
+			    maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
+			    nodeWidthSum += childNodeV.getWidth();
+			    childNodeViews.add(childNodeV);
+            }
+
+        }
 		double nodeSpacingX = 10.0;
 		double nodeSpacingY = 5.0;
 		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
