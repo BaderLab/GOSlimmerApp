@@ -83,13 +83,17 @@ public class NodeContextMenuActionListener implements ActionListener {
 				ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Node Collapse");
                 controller.collapseNode(node);
                 undoableEdit.post();
-				
+
 				//the dialog has fulfilled it's purpose, so dispose of it
 			}
 			else if (jbSource.getText().equals(expandButtonText)) {
-				System.out.println("expand button depressed");
+                boolean fullExpand = false;
+                if (e.getModifiers() == 18) { // ctrl button modifier pressed
+                    fullExpand = true;
+                }
+                System.out.println("expand button depressed");
                 ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Node Expand");
-                controller.expandNode(node);
+                controller.expandNode(node, fullExpand);
                 undoableEdit.post();
             }
 			else if (jbSource.getText().equals(pruneButtonText)) {

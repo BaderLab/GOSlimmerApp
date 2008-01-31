@@ -102,6 +102,7 @@ public class GOSlimmerController  {
 
     private Set<Node> visibleNodes;                         // Set of visible nodes for this network
     private Set<Integer> visibleEdges;                      // Set of indices of visible edges for this network
+    private Set<Node> prunedNodes;                          // Set of nodes which have been pruned by the user
 
     /**
 	 * The GO Namespace of the controlled network subgraph
@@ -127,6 +128,7 @@ public class GOSlimmerController  {
 		this.session = session;
         visibleNodes = new HashSet<Node>();
         visibleEdges = new HashSet<Integer>();
+        prunedNodes = new HashSet<Node>();
     }
 
 //	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
@@ -144,91 +146,69 @@ public class GOSlimmerController  {
 	private boolean useFiniteExpansionDepth = false;
 	private int nodeExpansionDepth = 1;
 
-	
-	//two ways to implement:  hide as we go down, or hide only as we find edges without childre
-	//two kinds of parents:  those which are part of the dag to be collapsed, and those which aren't
-	//nodes with parents of the latter type should not be collapsed - they are not part of the dag to be collapsed
-	//collateral damage mode
-	/**View manipulation method which collapses the descendants of a GO node into that node.  That is, the descendants will 
+    /**
+	 * View manipulation method which collapses the descendants of a GO node into that node.  That is, the descendants will 
 	 * no longer be visible in the network view. 
 	 * @param snode the network node for whom the descendants are to be collapsed
+     *
+     * Restructured by Laetitia Morrison, Jan 08
+     * Modified from recursive implementation to iterative to improve speed of execution
 	 */
 	public void collapseNode(Node snode) {
-		networkView.getNodeView(snode);
-		
-		//retrieve the incoming edges (from children nodes), such that we can collapse them into this one
-        int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		if (incomingEdges==null) return;
-		for (int incomingEdge:incomingEdges) {
-			EdgeView ev = networkView.getEdgeView(incomingEdge);
-			
-//			int edgeId =ev.getEdge().getRootGraphIndex();
-//			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
-//			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
-			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
-//				networkView.putClientData(edgeIsHiddenPropertyName, true);
-				hideEdge(incomingEdge);
-                Node childNode = ev.getEdge().getSource();
+		Set<Node> nodesToIterate = new HashSet<Node>();
+        Set<Node> nodesToIterateNextLevel = new HashSet<Node>();
 
-                // Check to see if this node has another visible parent.  If not, then hide it.  If so, leave it as is.
-                boolean pruneNode = true;
-                int[] edges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
-                for (int edge:edges) {
-                    if (isVisibleEdge(edge) && (edge!=incomingEdge)) {
-                        pruneNode = false;
-                        break;
+        nodesToIterate.add(snode);
+
+        while (!nodesToIterate.isEmpty()) {
+
+            for (Node node : nodesToIterate) {
+
+                // get incoming edges (from children nodes)
+                int[] incomingEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+                for (int incomingEdge : incomingEdges) {
+
+                    // hide this edge
+                    hideEdge(incomingEdge);
+
+                    // get the child node, and hide it if it has no other visible parent
+                    Node childNode = network.getEdge(incomingEdge).getSource();
+
+                    boolean hideNode = true;
+                    int[] parentEdges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
+                    for (int parentEdge : parentEdges) {
+                        if (isVisibleEdge(parentEdge) && parentEdge != incomingEdge) {
+                            hideNode = false;
+                            break;
+                        }
+                    }
+
+                    if (hideNode) {
+                        nodesToIterateNextLevel.add(childNode);
+                        removeNodeFromSlimSet(childNode);
+                        hideNode(childNode);
                     }
                 }
+            }
+            nodesToIterate.clear();
+            nodesToIterate.addAll(nodesToIterateNextLevel);
+            nodesToIterateNextLevel.clear();
+        }
 
-                if (pruneNode) {
-                    pruneNode(childNode);
-                }
-            //}
-			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
-		}
-		updateViewStatistics();
+		//updateViewStatistics();
 	}
-	/**View manipulation method which removes a node and all of its the descendant nodes from the view
+
+    /**View manipulation method which removes a node and all of its the descendant nodes from the view
+     * The nodes is then marked as 'pruned', and is not displayed when a parent node is expanded unless a 'fullExpand'
+     * is specified. (added by Laetitia Morrison, Jan 08)
 	 * @param snode the network node to be removed from the view, along with its descendants
 	 */
 	public void pruneNode(Node snode) {
-		removeNodeFromSlimSet(snode);
-		//hide this node for starters
+        collapseNode(snode);
+        removeNodeFromSlimSet(snode);
         hideNode(snode);
-
-        //retrieve the incoming edges (from children nodes), such that we can collapse them into this one
-		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		for (int incomingEdge:incomingEdges) {
-			EdgeView ev = networkView.getEdgeView(incomingEdge);
-			
-//			int edgeId =ev.getEdge().getRootGraphIndex();
-//			String edgeIsHiddenPropertyName =  "Edge " + edgeId + " hidden";
-//			Boolean edgeIsHiddenPropertyValue = (Boolean) networkView.getClientData(edgeIsHiddenPropertyName);
-			//if (edgeIsHiddenPropertyValue== null || !edgeIsHiddenPropertyValue) {
-//				networkView.putClientData(edgeIsHiddenPropertyName, true);
-            hideEdge(incomingEdge);
-            Node childNode = ev.getEdge().getSource();
-
-            // Check to see if this node has another visible parent.  If not, then hide it.  If so, leave it as is.
-            boolean pruneNode = true;
-            int[] edges = network.getAdjacentEdgeIndicesArray(childNode.getRootGraphIndex(), false, false, true);
-            for (int edge : edges) {
-                if (isVisibleEdge(edge) && (edge != incomingEdge)){
-                    pruneNode = false;
-                    break;
-                }
-            }
-
-            if (pruneNode) {
-                pruneNode(childNode);
-            }
-            //}
-			//else, we've already traversed this part of the graph, so just in case it is cyclic, don't proceed; otherwise we will have a stack overflow
-			
-		}
-		//TODO move this call to a special public method, and create private version of prunenode which doesn't call this, since it is wasteful
-		updateViewStatistics();
-	}
+        prunedNodes.add(snode);
+    }
 	
 
 	
@@ -236,20 +216,22 @@ public class GOSlimmerController  {
 	 * The depth to which descendants will be made visible depends on what settings the user has selected.
 	 * The node views of the descendants are arranged in a heirarchical manner below their parents.
 	 * @param snode the network node who's descendants are to be made visible.
+     * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
 	 */
-	public void expandNode(Node snode) {
+	public void expandNode(Node snode, boolean fullExpand) {
 		if (useFiniteExpansionDepth) {
-			expandNodeToDepth(snode, nodeExpansionDepth);
+			expandNodeToDepth(snode, nodeExpansionDepth, fullExpand);
 		}
 		else {
-			expandNodeUnlimited(snode);
+			expandNodeUnlimited(snode, fullExpand);
 		}
 	}
 	
 	/**Refined version of expandNode() which expands all descendants of the given node
 	 * @param snode the network node who's descendants are to be made visible.
+     * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
 	 */
-	public void expandNodeUnlimited(Node snode) {
+	public void expandNodeUnlimited(Node snode, boolean fullExpand) {
 		NodeView snodeView = networkView.getNodeView(snode);
         showNode(snode);
 
@@ -284,8 +266,18 @@ public class GOSlimmerController  {
 
 			Node childNode = ev.getEdge().getSource();
 			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
-			
-			/* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
+
+            // If node has been pruned, display it only if fullExpand is true (in which case, remove it from the pruned list)
+            if (prunedNodes.contains(childNode)) {
+                if (fullExpand) {
+                    prunedNodes.remove(childNode);
+                }
+                else {
+                    continue;
+                }
+            }
+
+            /* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
 			 * then display/expand child only if it has at least one associated gene (direct or inferred).
 			 */
             if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
@@ -298,7 +290,7 @@ public class GOSlimmerController  {
             }
             showEdge(incomingEdges[i]);
 
-            expandNodeUnlimited(childNode);
+            expandNodeUnlimited(childNode, fullExpand);
 
             if (!isVisibleNode(childNode)) {
 
@@ -345,8 +337,9 @@ public class GOSlimmerController  {
 	/**Refined version of expandNode() which expands all descendants to a specified depth
 	 * @param snode the node to expand
 	 * @param depth the depth to which the DAG should be expanded
+     * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
 	 */
-	public void expandNodeToDepth(Node snode,int depth) {
+	public void expandNodeToDepth(Node snode,int depth, boolean fullExpand) {
 		if (depth <=0) return;
 		NodeView snodeView = networkView.getNodeView(snode);
 		showNode(snode);
@@ -381,8 +374,18 @@ public class GOSlimmerController  {
 				
 			Node childNode = ev.getEdge().getSource();
 			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
-			
-			/* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
+
+            // If node has been pruned, display it only if fullExpand is true (in which case, remove it from the pruned list)
+            if (prunedNodes.contains(childNode)) {
+                if (fullExpand) {
+                    prunedNodes.remove(childNode);
+                }
+                else {
+                    continue;
+                }
+            }
+
+            /* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
 			 * then display/expand child only if it has at least one associated gene (direct or inferred).
 			 */
             if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
@@ -396,7 +399,7 @@ public class GOSlimmerController  {
 
             showEdge(incomingEdges[i]);
 
-            expandNodeToDepth(childNode,depth-1);
+            expandNodeToDepth(childNode,depth-1, fullExpand);
 
             if (!isVisibleNode(childNode)) {
                 showNode(childNode);
@@ -493,12 +496,15 @@ public class GOSlimmerController  {
      * @param taskMonitor TaskMonitor to be updated with task progress (if applicable)
 	 */
 	public void removeNodeFromSlimSet(Node node, TaskMonitor taskMonitor) {
-		//set the 'selected for slim set' attribute to false
-		nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName, false);
-		//TODO update coverage statistics
-		statBean.removeFromSlimSet(node, taskMonitor);
-		updateViewStatistics();
-	}
+
+        if (statBean.getSlimGoNodes().contains(node)) {
+            //set the 'selected for slim set' attribute to false
+		    nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName, false);
+		    //TODO update coverage statistics
+		    statBean.removeFromSlimSet(node, taskMonitor);
+		    updateViewStatistics();
+        }
+    }
 	
    /**Removes a specified node to the GO slim set, updating statistics accordingly
 	 * @param node node to be removed to slim set

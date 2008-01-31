@@ -223,7 +223,7 @@ public class GOSlimmerSession {
 			//I only want the first level of expansion shown at first, though I want the 2nd level layout out properly for later expansion.
 			//TODO determine if this is acceptable given the performance penalty it entails.
 			controller.collapseNode(rootNode);
-			controller.expandNodeToDepth(rootNode, 1);
+			controller.expandNodeToDepth(rootNode, 1, true);
 			
 			//zoom view to fit all content, and then update it.  Code inspired from cytoscape.actions.ZoomSelectedAction 
 			controller.getNetworkView().fitContent();

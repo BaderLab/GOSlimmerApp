@@ -201,59 +201,51 @@ public class GOSlimmerCoverageStatBean {
             taskMonitor.setPercentCompleted(0);
             taskMonitor.setStatus("User genes...");
         }
-        String goid = goNode.getIdentifier();
-		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to re-add it
+		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to remove it
 		
 		/* Update the covered gene set */
-		
-		//brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
-		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true,true);
-		int numGenes = coveredGenes.size();
+
+        // Get list of user genes that are covered by other terms in go set
+        Set<String> directlyCoveredUserGenes = new HashSet<String>();
+        Set<String> inferredCoveredUserGenes = new HashSet<String>();
+
+        for (Node slimNode:slimGoNodes) {
+            if (!slimNode.equals(goNode)){
+                directlyCoveredUserGenes.addAll(GOSlimmerUtil.getDirectlyCoveredUserGenes(slimNode));
+                inferredCoveredUserGenes.addAll(GOSlimmerUtil.getInferredCoveredUserGenes(slimNode));
+            }
+        }
+
+        // Get list of user genes covered by this node
+        Set<String> coveredUserGenes = new HashSet<String>();
+        coveredUserGenes.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true, true));
+
+        // parameters to update task monitor
+        int numGenes = coveredUserGenes.size();
         int count = 0;
         int complete = 0;
         int lastComplete = 0;
-        for(String coveredGene:coveredGenes) {
-			if (taskMonitor != null) {
+
+        //brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
+        for (String gene: coveredUserGenes) {
+
+            // Update task monitor with progress
+            if (taskMonitor != null) {
                 complete = (int)(((double) count / numGenes) * 100);
                 if ((complete!= lastComplete) && ((complete % 10) == 0)) {
                     lastComplete = complete;
                     taskMonitor.setPercentCompleted(complete);
                 }
             }
-            boolean isStillInferredCovered = false;
-			boolean isStillDirectlyCovered = false;
-			
-			//iterate through remaining slim set goid's, and for each one see if it also contains the gene covered by the goNode being removed
-			for (Node slimGoNode:slimGoNodes) {
-				if (slimGoNode == goNode) continue;
-				//the following commented out code block was commented out and replaced with what follows for purposes of optimization
-//				List<String> slimCoveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(slimGoNode, true);
-//				if (slimCoveredGenes.contains(coveredGene)) {
-//					isStillCovered = true;
-//					
-//					break; //no need to continue iterating, we've found the gene of interest
-//				}
-				List<String> slimDirectlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredUserGenes(slimGoNode);
-				List<String> slimInferredCoveredGenes = GOSlimmerUtil.getInferredCoveredUserGenes(slimGoNode);
-				
-				if (slimDirectlyCoveredGenes.contains(coveredGene)) {
-					isStillDirectlyCovered = true;
-					isStillInferredCovered = true;
-				}
-				else if (slimInferredCoveredGenes.contains(coveredGene)) {
-					isStillInferredCovered = true;
-				}
-				
-				if (isStillDirectlyCovered && isStillInferredCovered) break;
-				
-				
-			}
-			if (!isStillInferredCovered) {
-				inferredCoveredUserGeneIds.remove(coveredGene);
-			}
-			if (!isStillDirectlyCovered) {
-				directlyCoveredUserGeneIds.remove(coveredGene);
-			}
+
+            // determine if this gene is still covered (both directly and inferred)
+            if (!directlyCoveredUserGenes.contains(gene)) {
+                directlyCoveredUserGeneIds.remove(gene);
+
+                if (!inferredCoveredUserGenes.contains(gene)) {
+                    inferredCoveredUserGeneIds.remove(gene);
+                }
+            }
             count++;
         }
 		
@@ -270,18 +262,36 @@ public class GOSlimmerCoverageStatBean {
             taskMonitor.setPercentCompleted(0);
             taskMonitor.setStatus("All genes...");
         }
-        String goid = goNode.getIdentifier();
-		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to re-add it
+		if (!slimGoNodes.contains(goNode)) return; // not in set, so no need to remove it
 		
 		/* Update the covered gene set */
-		
-		//brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
-		List<String> coveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true);
+
+        // Get list of genes that are covered by other terms in go set
+        Set<String> directlyCoveredGenes = new HashSet<String>();
+        Set<String> inferredCoveredGenes = new HashSet<String>();
+
+        for (Node slimNode:slimGoNodes) {
+            if (!slimNode.equals(goNode)){
+                directlyCoveredGenes.addAll(GOSlimmerUtil.getDirectlyCoveredGenes(slimNode));
+                inferredCoveredGenes.addAll(GOSlimmerUtil.getInferredCoveredGenes(slimNode));
+            }
+        }
+
+        // Get list of genes covered by this node
+        Set<String> coveredGenes = new HashSet<String>();
+        coveredGenes.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(goNode, true));
+
+        // parameters to update task monitor
         int numGenes = coveredGenes.size();
         int count = 0;
         int complete = 0;
         int lastComplete = 0;
-        for(String coveredGene:coveredGenes) {
+
+
+        //brute force implementation:  iterate through each gene covered by this node, and see if it should be removed
+        for (String gene: coveredGenes) {
+
+            // Update task monitor with progress
             if (taskMonitor != null) {
                 complete = (int)(((double) count / numGenes) * 100);
                 if ((complete!= lastComplete) && ((complete % 10) == 0)) {
@@ -289,48 +299,23 @@ public class GOSlimmerCoverageStatBean {
                     taskMonitor.setPercentCompleted(complete);
                 }
             }
-            boolean isStillInferredCovered = false;
-			boolean isStillDirectlyCovered = false;
-			
-			//iterate through remaining slim set goid's, and for each one see if it also contains the gene covered by the goNode being removed
-			for (Node slimGoNode:slimGoNodes) {
-				if (slimGoNode == goNode) continue;
-				//the following commented out code block was commented out and replaced with what follows for purposes of optimization
-//				List<String> slimCoveredGenes = GOSlimmerUtil.getGenesCoveredByGoNode(slimGoNode, true);
-//				if (slimCoveredGenes.contains(coveredGene)) {
-//					isStillCovered = true;
-//					
-//					break; //no need to continue iterating, we've found the gene of interest
-//				}
-				List<String> slimDirectlyCoveredGenes = GOSlimmerUtil.getDirectlyCoveredGenes(slimGoNode);
-				List<String> slimInferredCoveredGenes = GOSlimmerUtil.getInferredCoveredGenes(slimGoNode);
-				
-				if (slimDirectlyCoveredGenes.contains(coveredGene)) {
-					isStillDirectlyCovered = true;
-					isStillInferredCovered = true;
-				}
-				else if (slimInferredCoveredGenes.contains(coveredGene)) {
-					isStillInferredCovered = true;
-				}
-				
-				if (isStillDirectlyCovered && isStillInferredCovered) break;
-				
-				
-			}
-			if (!isStillInferredCovered) {
-				inferredCoveredGeneIds.remove(coveredGene);
-			}
-			if (!isStillDirectlyCovered) {
-				directlyCoveredGeneIds.remove(coveredGene);
-			}
+
+            // determine if this gene is still covered (both directly and inferred)
+            if (!directlyCoveredGenes.contains(gene)) {
+                directlyCoveredGeneIds.remove(gene);
+
+                if (!inferredCoveredGenes.contains(gene)) {
+                    inferredCoveredGeneIds.remove(gene);
+                }
+            }
             count++;
         }
-		
 
-		
+
+
 	}
-	
-	
+
+
 	/**
 	 * Updates the stats on the fraction of genes covered based on the sets of user and annotation file genes covered by the 
 	 * slim set terms.  This method is not automatically called on adding/removing operations since it would impact performance.
