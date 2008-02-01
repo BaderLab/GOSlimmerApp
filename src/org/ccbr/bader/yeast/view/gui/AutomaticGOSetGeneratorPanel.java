@@ -188,7 +188,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                     int numTopTerms = (Integer) numTermsTextField.getValue();
 
                     // Get list of Go terms with best gene coverage (based on current set of selected go terms)
-                    String[] topTermsString = generator.getTopTermsStrings(controller.getStatBean().getSlimGoNodes(), numTopTerms);
+                    String[] topTermsString = generator.getTopTermsStringsInferred(controller.getStatBean().getSlimGoNodes(), numTopTerms);
 
                     // Display list of GO terms in scroll pane
                     JList tempList = (JList) coveringSetScrollPane.getViewport().getView();

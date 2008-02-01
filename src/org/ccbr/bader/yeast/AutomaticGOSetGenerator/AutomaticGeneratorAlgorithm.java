@@ -65,16 +65,16 @@ public class AutomaticGeneratorAlgorithm {
     }
 
     /**
-     * Returns an array of strings representing the GO terms with the best coverage of the remaining uncovered genes.
-     * Each string in the array is in the format <GOTerm name> (<GOTerm id>): <Number of remaining genes covered>.
+     * Returns an array of strings representing the GO terms with the best direct coverage of the remaining uncovered
+     * genes. Each string in the array is in the format <GOTerm name> (<GOTerm id>): <Number of remaining genes covered>.
      * If a user gene set has been imported, than the gene set considered for coverage is the user gene set.
      * Otherwise, the returned strings represent the nodes with the best coverage of the complete gene set.
      * @param selectedGONodes the set of GO term nodes which have already been selected
      * @param numTerms the number of terms to return in the array
-     * @return an array of strings representing the GO terms with the best coverage of the remaining uncovered genes.
+     * @return an array of strings representing the GO terms with the best direct coverage of the remaining uncovered genes.
      * The size of the array will be the minimum of numTerms and the number of GOTerms with a gene coverage greater than 0.
      */
-    public String[] getTopTermsStrings(Set<Node> selectedGONodes, int numTerms) {
+    public String[] getTopTermsStringsDirect(Set<Node> selectedGONodes, int numTerms) {
         CyNetwork network = Cytoscape.getCurrentNetwork();
 
         Set<String> geneIds = null;
@@ -133,10 +133,105 @@ public class AutomaticGeneratorAlgorithm {
                     }
                 }
 
-                // Create GOSetTerm and add to list
-                GOSetTerm goSetTerm = new GOSetTerm(node, newCoveredGenes.size());
+                // Create GOSetTerm and add to list if it covers at least one gene
+                if (newCoveredGenes.size()>0) {
+                    GOSetTerm goSetTerm = new GOSetTerm(node, newCoveredGenes.size());
 
-                goTermList.add(goSetTerm);
+                    goTermList.add(goSetTerm);
+                }
+
+            }
+        }
+
+        // Sort list based on number of remaining genes covered
+        Collections.sort(goTermList);
+
+        // Build string array to return
+        int numSortedTerms = goTermList.size();
+        int actualNumTerms = Math.min(numTerms, numSortedTerms);
+        String[] goTermsStr = new String[actualNumTerms];
+        for (int i=0; i<actualNumTerms; i++) {
+            goTermsStr[i] = (goTermList.get(numSortedTerms - 1 - i)).getDescriptiveString();
+        }
+
+        return goTermsStr;
+    }
+
+    /**
+     * Returns an array of strings representing the GO terms with the inferred best coverage of the remaining uncovered
+     * genes. Each string in the array is in the format <GOTerm name> (<GOTerm id>): <Number of remaining genes covered>.
+     * If a user gene set has been imported, than the gene set considered for coverage is the user gene set.
+     * Otherwise, the returned strings represent the nodes with the best coverage of the complete gene set.
+     * @param selectedGONodes the set of GO term nodes which have already been selected
+     * @param numTerms the number of terms to return in the array
+     * @return an array of strings representing the GO terms with the best inferred coverage of the remaining uncovered genes.
+     * The size of the array will be the minimum of numTerms and the number of GOTerms with a gene coverage greater than 0.
+     */
+    public String[] getTopTermsStringsInferred(Set<Node> selectedGONodes, int numTerms) {
+        CyNetwork network = Cytoscape.getCurrentNetwork();
+
+        Set<String> geneIds = null;
+
+        // Determine the gene set for which coverage of Go terms should be determined
+        boolean userGenesImported = session.isUserGeneSetImported();
+        if (userGenesImported) {  // user gene set was imported, so use user gene set
+            geneIds = new HashSet<String>(session.getUserGeneSet());
+        }
+        else { // no user gene set, use all genes
+            geneIds = session.getGaru().getGeneIds();
+        }
+
+        ArrayList<GOSetTerm> goTermList = new ArrayList<GOSetTerm>();
+
+        // Get list of covered genes
+        Set<String> coveredGenes = new HashSet<String>();
+        for (Node node : selectedGONodes) {
+            coveredGenes.addAll(GOSlimmerUtil.listToSet(GOSlimmerUtil.getGenesCoveredByGoNode(node, true, userGenesImported)));
+        }
+
+        // Get list of uncovered genes from covered genes and all genes
+        Set<String> uncoveredGenes = new HashSet<String>();
+        for (String gene:geneIds) {
+            if (!coveredGenes.contains(gene)) {
+                uncoveredGenes.add(gene);
+            }
+        }
+        int numUncoveredGenes = uncoveredGenes.size();
+
+        // Sort nodes by coverage for remaining genes.
+
+        // Iterate through all nodes in network, and determine the coverage of the remaining uncovered genes.
+        Iterator nodes_i = network.nodesIterator();
+        while(nodes_i.hasNext()) {
+            Node node = (Node) nodes_i.next();
+            if (!selectedGONodes.contains(node)) {
+
+                Set<String> nodeCoveredGenes = new HashSet<String>(GOSlimmerUtil.getGenesCoveredByGoNode(node, true, userGenesImported));
+
+                Set<String> newCoveredGenes = new HashSet<String>();
+
+                // Select set to iterate through depending on size to cut down on execution time
+                if (nodeCoveredGenes.size() < numUncoveredGenes) {
+                    for (String gene:nodeCoveredGenes) {
+                        if (uncoveredGenes.contains(gene)) {
+                            newCoveredGenes.add(gene);
+                        }
+                    }
+                }
+                else {
+                    for (String gene:uncoveredGenes) {
+                        if (nodeCoveredGenes.contains(gene)) {
+                            newCoveredGenes.add(gene);
+                        }
+                    }
+                }
+
+                // Create GOSetTerm and add to list if it covers at least one gene
+                if (newCoveredGenes.size()>0) {
+                    GOSetTerm goSetTerm = new GOSetTerm(node, newCoveredGenes.size());
+
+                    goTermList.add(goSetTerm);
+                }
 
             }
         }
