@@ -100,6 +100,12 @@ public class GOSlimmer {
 //	/*This will record the name of the ontology which GOSlimmer is working on, as derived from the name of the network being worked on*/
 //	public static String ontologyName;
 //	
-//	public static GeneAssociationReaderUtil geneAssociationReader; 
+//	public static GeneAssociationReaderUtil geneAssociationReader;
+
+    /**
+     * The name of the cytoscape attribute for the formatted go term name (which has been wrapped to multiple lines
+     * according to the maximum label length.
+     */
+    public static final String formattedOntologyNameAttributeName = "GOSlimmer.FORMATTED_NAME";
 	
 }

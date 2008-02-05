@@ -80,5 +80,11 @@ public class GOSlimmerGUIViewSettings {
      */
     public static boolean expandNodesWithGenes = false;
 
+    /**
+     * Setting which determines the maximum width (in characters) of the GO term name labels.  Any labels longer than this
+     * width will be wrapped onto multiple lines.
+     */
+    public static final int formattedOntologyNameMaxLength = 15;
+
 
 }

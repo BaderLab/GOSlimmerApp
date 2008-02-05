@@ -317,7 +317,9 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                 Node parentNode = line.get(i - 1);
                 if (!controller.isVisibleNode(childNode)) {  // not visible, so must display it
 
-                    double maxX = Double.NEGATIVE_INFINITY;
+                    double maxXAlreadyVisible = Double.MIN_VALUE;
+                    FontMetrics metrics;
+                    Component component = view.getComponent();
 
                     if (i == 1) {
                         // child of the top-most parent in the line, so check and see if any other children are
@@ -325,7 +327,6 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
 
                         // Loop through the incoming edges (from children nodes) of the top-most node in the line
                         // and determine which (if any) of the children are visible
-                        Set<Node> visibleChildren = new HashSet<Node>();
 
                         // Get incoming edges (from children)
                         int[] incomingEdges = controller.getNetwork().getAdjacentEdgeIndicesArray(parentNode.getRootGraphIndex(), false, true, false);
@@ -334,40 +335,51 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                             Node child = ev.getEdge().getSource();
 
                             if (controller.isVisibleNode(child)) {
-                                visibleChildren.add(child);
-                            }
 
-                        }
+                                // Want to draw new children to the right of the children that are already visible.
+                                // This child is already visible - figure out if its right most edge is past the current max value
 
+                                NodeView cNodeView = view.getNodeView(child);
 
-                        if (visibleChildren.size() > 0) {
+                                // get width of label
+                                metrics = component.getFontMetrics(cNodeView.getLabel().getFont());
+                                String labelText = cNodeView.getLabel().getText();
+                                String[] textLines = labelText.split("\n");
 
-                            // Want to display new children to the right of the already displayed children
-                            // Loop through already displayed children, and determine the right-most coordinate.
-                            for (Node nextChild : visibleChildren) {
-                                NodeView cNodeView = view.getNodeView(nextChild);
-                                if (cNodeView.getXPosition() > maxX) {
-                                    maxX = cNodeView.getXPosition();
+                                // calculate width of widest line in the label
+                                int labelWidth = 0;
+                                for (String textLine : textLines) {
+                                    int length = metrics.stringWidth(textLine);
+                                    if (length > labelWidth) {
+                                        labelWidth = length;
+                                    }
+                                }
+
+                                // get node width (maximum of label width and node width)
+                                double totalWidth = Math.max(labelWidth, cNodeView.getWidth());
+
+                                // determine if right most edge of child is past current max value
+
+                                if (cNodeView.getXPosition() + totalWidth/2 > maxXAlreadyVisible) {
+                                    maxXAlreadyVisible = cNodeView.getXPosition() + totalWidth/2;
                                 }
                             }
                         }
+
                     }
 
                     // draw the node and its siblings that need to be drawn at the same time
 
                     Set<Node> childrenToDraw = parentChildList.get(parentNode);
 
-                    // Get coordinates and node size of parent node
-                    NodeView pView = view.getNodeView(parentNode);
-                    double x = pView.getXPosition();
-                    double y = pView.getYPosition();
-                    double h = pView.getHeight();
 
                     double maxNodeHeight = 0;
-                    double maxNodeWidth = 0;
-                    double nodeWidthSum = 0;
 
+                    // Data structures for layout
                     List<NodeView> childNodeViews = new ArrayList<NodeView>();
+                    HashMap<NodeView, Dimension> nodeSizes = new HashMap<NodeView, Dimension>();
+
+
 
                     // Loop through the children nodes to be drawn.  Calculate the maximum height and width, as well
                     // as the sum of the widths, and store the node views.
@@ -386,48 +398,38 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                             controller.showEdge(edge);
                         }
 
-                        maxNodeHeight = Math.max(maxNodeHeight, cView.getHeight());
-                        maxNodeWidth = Math.max(maxNodeWidth, cView.getWidth());
-                        nodeWidthSum += cView.getWidth();
+                        // get width/height of label
+                        metrics = component.getFontMetrics(cView.getLabel().getFont());
+                        String labelText = cView.getLabel().getText();
+                        String[] textLines = labelText.split("\n");
+
+                        // calculate width of widest line in the label
+                        int labelWidth = 0;
+                        for (String textLine : textLines) {
+                            int length = metrics.stringWidth(textLine);
+                            if (length > labelWidth) {
+                                labelWidth = length;
+                            }
+                        }
+
+                        // get node width (maximum of label width and node width)
+                        double totalWidth = Math.max(labelWidth, cView.getWidth());
+
+                        // calculate height of label
+                        int labelHeight = metrics.getHeight() * textLines.length;
+
+                        // get node height (maximum of label height and node height)
+                        double totalHeight = Math.max(labelHeight, cView.getHeight());
+                        
+                        maxNodeHeight = Math.max(maxNodeHeight, totalHeight);
                         childNodeViews.add(cView);
+                        Dimension d = new Dimension();
+                        d.setSize(totalWidth, totalHeight);
+                        nodeSizes.put(cView, d);
                     }
 
                     // Layout nodes
-
-                    double nodeSpacingX = 10.0;
-                    double nodeSpacingY = 5.0;
-                    double baseY = y + h / 2 + maxNodeHeight / 2 + nodeSpacingY;
-                    baseY = Math.max(baseY, y + 50);
-
-                    double startX;
-                    if (maxX == Double.NEGATIVE_INFINITY) {
-                        startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size()) / 2;
-                    } else {
-                        startX = maxX + nodeSpacingX;
-                    }
-
-                    double verticalStaggar = 34.0;
-
-                    // Now iterate through the childnodeviews and position them heirarchically
-                    double lastCx = 0.0;
-                    double lastCw = 0.0;
-                    boolean firstIter = true;
-                    for (int j = 0; j < childNodeViews.size(); j++) {
-                        NodeView childNodeV = childNodeViews.get(j);
-                        double cy, cx;
-                        double cw = childNodeV.getWidth();
-                        if (firstIter) {
-                            cx = startX;
-                            firstIter = false;
-                        } else {
-                            cx = lastCx + lastCw / 2 + nodeSpacingX + cw;
-                        }
-                        cy = baseY + (j % 5 * verticalStaggar);
-                        childNodeV.setXPosition(cx);
-                        childNodeV.setYPosition(cy);
-                        lastCw = cw;
-                        lastCx = cx;
-                    }
+                    controller.layoutChildren(parentNode, childNodeViews, nodeSizes, maxNodeHeight, maxXAlreadyVisible);
 
 
                 } else { // already visible (displayed in another parentage line), but need to show edge

@@ -46,6 +46,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import java.awt.Color;
 import javax.swing.JMenuItem;
@@ -59,6 +61,7 @@ import org.ccbr.bader.yeast.view.gui.AdvancedViewSettingsPanel;
 import org.ccbr.bader.yeast.view.gui.FileExportPanel;
 import org.ccbr.bader.yeast.view.gui.GOSlimmerGeneAssociationDialog;
 import org.ccbr.bader.yeast.view.gui.NodeContextMenuActionListener;
+import org.ccbr.bader.yeast.view.gui.GOSlimmerGUIViewSettings;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -221,8 +224,9 @@ public class GOSlimmerSession {
 			//hll.actionPerformed(null);
 			
 			//I only want the first level of expansion shown at first, though I want the 2nd level layout out properly for later expansion.
-			//TODO determine if this is acceptable given the performance penalty it entails.
-			controller.collapseNode(rootNode);
+			//TODO determine if this is acceptable given the performance penalty it entails.  \
+            controller.showNode(rootNode);
+            controller.collapseNode(rootNode);
 			controller.expandNodeToDepth(rootNode, 1, true);
 			
 			//zoom view to fit all content, and then update it.  Code inspired from cytoscape.actions.ZoomSelectedAction 
@@ -247,7 +251,10 @@ public class GOSlimmerSession {
 		Node node = null;
 		while(nodeIterator.hasNext()) {
 			node = (Node) nodeIterator.next();
-			String nodeOntologyNamespace = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.namespace");
+            // add formatted ontology name to node attributes
+            String name = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.name");
+            nodeAtt.setAttribute(node.getIdentifier(), GOSlimmer.formattedOntologyNameAttributeName, formatName(name));
+            String nodeOntologyNamespace = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.namespace");
 			if (bio_pro_name.equalsIgnoreCase(nodeOntologyNamespace)) {
 				bioProNodes.add(node);
 				//bioProEdges.addAll(network.getAdjacentEdgesList(node, true, true, true));
@@ -421,7 +428,45 @@ public class GOSlimmerSession {
 	public GOSlimPanel getGOSlimPanel() {
 		return this.goSlimPanel;
 	}
-	
+
+    private String formatName(String name) {
+        int curLength = 0;
+        String newName = "";
+        int maxSize = GOSlimmerGUIViewSettings.formattedOntologyNameMaxLength;
+
+        Pattern pattern = Pattern.compile("[ \t\n\f\r]");
+        Matcher matcher = pattern.matcher(name);
+        int index = 0;
+        while (matcher.find(index)) {
+            String word = name.substring(index, matcher.start());
+            String whiteSpace = name.substring(matcher.start(), matcher.end());
+
+            if (curLength + word.length() + whiteSpace.length() < maxSize) {
+                newName = newName + word + whiteSpace;
+                curLength = curLength + word.length() + whiteSpace.length();
+            }
+            else if (curLength + word.length() < maxSize) {
+                newName = newName + word + "\n";
+                curLength = 0;
+            }
+            else {
+                newName = newName + "\n" + word + whiteSpace;
+                curLength = word.length() + whiteSpace.length();
+            }
+
+            index = matcher.end();
+        }
+        String lastWord = name.substring(index);
+        if (curLength + lastWord.length() > maxSize) {
+            newName = newName + "\n" + lastWord;
+        }
+        else {
+            newName = newName + lastWord;
+        }
+
+        return newName;
+        
+    }
 	
 	
 }

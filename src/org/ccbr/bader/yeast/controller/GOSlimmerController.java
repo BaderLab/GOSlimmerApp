@@ -38,6 +38,7 @@ import giny.model.Node;
 import giny.view.EdgeView;
 import giny.view.NodeView;
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedWriter;
@@ -53,6 +54,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -207,6 +209,12 @@ public class GOSlimmerController  {
         collapseNode(snode);
         removeNodeFromSlimSet(snode);
         hideNode(snode);
+
+        // hide all edges to parent nodes
+        int[] outgoingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, false, true);
+        for (int outgoingEdge: outgoingEdges) {
+            hideEdge(outgoingEdge);
+        }
         prunedNodes.add(snode);
     }
 	
@@ -217,232 +225,241 @@ public class GOSlimmerController  {
 	 * The node views of the descendants are arranged in a heirarchical manner below their parents.
 	 * @param snode the network node who's descendants are to be made visible.
      * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
+     *
+     * Restructured by Laetitia Morrison, Jan 08
+     * Combined two expansion modes into one method
 	 */
 	public void expandNode(Node snode, boolean fullExpand) {
 		if (useFiniteExpansionDepth) {
 			expandNodeToDepth(snode, nodeExpansionDepth, fullExpand);
 		}
 		else {
-			expandNodeUnlimited(snode, fullExpand);
-		}
-	}
-	
-	/**Refined version of expandNode() which expands all descendants of the given node
-	 * @param snode the network node who's descendants are to be made visible.
-     * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
-	 */
-	public void expandNodeUnlimited(Node snode, boolean fullExpand) {
-		NodeView snodeView = networkView.getNodeView(snode);
-        showNode(snode);
-
-        // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
-        boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
-        
-        double x = snodeView.getXPosition();
-		double y = snodeView.getYPosition();
-		double h = snodeView.getHeight();
-		double w = snodeView.getWidth();
-		
-		double minYDist = h/2;
-		
-		//retrieve the incoming edges, such that we can expand them
-		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		int numChildren = incomingEdges.length;
-		
-
-		//going to have to go with fixed spacing, since we don't know the size of the nodes ahead of time
-		//alternatively, we can perform another loop after we've assess all the children.
-		
-		double maxNodeHeight = 0;
-		double maxNodeWidth = 0;
-		double nodeWidthSum = 0;
-		List<NodeView> childNodeViews = new ArrayList<NodeView>(); 
-		int directGenes = 0;
-        int inferredGenes = 0;
-
-        for (int i = 0; i<incomingEdges.length;i++) {
-			EdgeView ev = networkView.getEdgeView(incomingEdges[i]);
-			
-
-			Node childNode = ev.getEdge().getSource();
-			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
-
-            // If node has been pruned, display it only if fullExpand is true (in which case, remove it from the pruned list)
-            if (prunedNodes.contains(childNode)) {
-                if (fullExpand) {
-                    prunedNodes.remove(childNode);
-                }
-                else {
-                    continue;
-                }
-            }
-
-            /* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
-			 * then display/expand child only if it has at least one associated gene (direct or inferred).
-			 */
-            if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
-                directGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
-                inferredGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
-
-                if (expandNodesWithGenes && ((directGenes + inferredGenes)==0)) {
-                    continue;
-                }
-            }
-            showEdge(incomingEdges[i]);
-
-            expandNodeUnlimited(childNode, fullExpand);
-
-            if (!isVisibleNode(childNode)) {
-
-                maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
-			    maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
-			    nodeWidthSum += childNodeV.getWidth();
-			    childNodeViews.add(childNodeV);
-            }
-
+            expandNodeToDepth(snode, Integer.MAX_VALUE, fullExpand);
         }
-		double nodeSpacingX = 10.0;
-		double nodeSpacingY = 5.0;
-		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
-		double baseY = y + h/2 + maxNodeHeight/2 + nodeSpacingY;
-		baseY = Math.max(baseY, y+50);
-		double startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size())/2;
-		
-		double verticalStaggar = 34.0;
-		
-		//now iterate through the childnodeviews and position them heirarchically
-		double lastCx = 0.0;
-		double lastCw = 0.0;
-		boolean firstIter = true;
-		for(int i = 0;i<childNodeViews.size();i++) {
-			NodeView childNodeV = childNodeViews.get(i);
-			double cy,cx;
-			double cw = childNodeV.getWidth();
-			if (firstIter) {
-				cx = startX;
-				firstIter = false;
-			}
-			else {
-				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
-			}
-			cy = baseY + ((i%2!=0)?verticalStaggar:0);
-			cy = baseY + (i%5*verticalStaggar);
-			childNodeV.setXPosition(cx);
-			childNodeV.setYPosition(cy);
-			lastCw = cw;
-			lastCx = cx;
-		}
 	}
 	
 	/**Refined version of expandNode() which expands all descendants to a specified depth
 	 * @param snode the node to expand
-	 * @param depth the depth to which the DAG should be expanded
+	 * @param depth the depth to which the DAG should be expanded.  If depth=Integer.MAX_VALUE, then expansion depth is unlimited.
      * @param fullExpand true if pruned nodes should be displayed on expand, false otherwise
+     *
+     * Restructured by Laetitia Morrison, Jan 08
+     * Modified from recursive implementation to iterative to improve speed of execution, and combined two
+     * expansion modes into one method.  
 	 */
 	public void expandNodeToDepth(Node snode,int depth, boolean fullExpand) {
 		if (depth <=0) return;
-		NodeView snodeView = networkView.getNodeView(snode);
-		showNode(snode);
 
+        Set<Node> nodesToIterate = new HashSet<Node>();
+        Set<Node> nodesToIterateNextLevel = new HashSet<Node>();
+        int curDepth = depth;
+        
         // Determine which children nodes will be shown on 'expand' (all children or just those with associated genes)
         boolean expandNodesWithGenes = GOSlimmerGUIViewSettings.expandNodesWithGenes;
 
-        double x = snodeView.getXPosition();
-		double y = snodeView.getYPosition();
-		double h = snodeView.getHeight();
-		double w = snodeView.getWidth();
-		
-		double minYDist = h/2;
-		
-		//retrieve the incoming edges, such that we can expand them
-		int[] incomingEdges = network.getAdjacentEdgeIndicesArray(snode.getRootGraphIndex(), false, true, false);
-		int numChildren = incomingEdges.length;
-		
+        // Data structures for expand layout
+        List<NodeView> childNodeViews = new ArrayList<NodeView>();
+        HashMap<NodeView, Dimension> nodeSizes = new HashMap<NodeView, Dimension>();
+        
+        int directGenes;
+        int inferredGenes;
 
-		//going to have to go with fixed spacing, since we don't know the size of the nodes ahead of time
-		//alternatively, we can perform another loop after we've assess all the children.
-		
-		double maxNodeHeight = 0;
-		double maxNodeWidth = 0;
-		double nodeWidthSum = 0;
-		List<NodeView> childNodeViews = new ArrayList<NodeView>();
-        int directGenes = 0;
-        int inferredGenes = 0;
+        FontMetrics metrics;
+        Component component = networkView.getComponent();
 
-        for (int i = 0; i<incomingEdges.length;i++) {
-			EdgeView ev = networkView.getEdgeView(incomingEdges[i]);
-				
-			Node childNode = ev.getEdge().getSource();
-			NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
+        nodesToIterate.add(snode);  // start with the node to expand
 
-            // If node has been pruned, display it only if fullExpand is true (in which case, remove it from the pruned list)
-            if (prunedNodes.contains(childNode)) {
-                if (fullExpand) {
-                    prunedNodes.remove(childNode);
+        while (!nodesToIterate.isEmpty() && curDepth > 0) {
+
+            for (Node node : nodesToIterate) {
+
+                double maxNodeHeight = 0;
+                childNodeViews.clear();
+                nodeSizes.clear();
+                double maxXAlreadyVisible = Double.MIN_VALUE;
+
+                // get incoming edges (from children nodes)
+                int[] incomingEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+                for (int incomingEdge : incomingEdges) {
+
+                    // Get child node, and determine whether this child should be shown
+                    Node childNode = network.getEdge(incomingEdge).getSource();
+
+                    // If node has been pruned, display it only if fullExpand is true (in which case, remove it from the pruned list)
+                    if (prunedNodes.contains(childNode)) {
+                        if (fullExpand) {
+                            prunedNodes.remove(childNode);
+                        } else {
+                            continue;
+                        }
+                    }
+
+                    /* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
+                      * then display/expand child only if it has at least one associated gene (direct or inferred).
+                      */
+                    if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
+                        directGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+                        inferredGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(), GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
+
+                        if (expandNodesWithGenes && ((directGenes + inferredGenes) == 0)) {
+                            continue;
+                        }
+                    }
+
+                    showEdge(incomingEdge);
+                    nodesToIterateNextLevel.add(childNode);
+
+                    // get corresponding node view
+                    NodeView childNodeV = networkView.getNodeView(childNode.getRootGraphIndex());
+
+                    // get width/height of label
+                    metrics = component.getFontMetrics(childNodeV.getLabel().getFont());
+                    String labelText = childNodeV.getLabel().getText();
+                    String[] lines = labelText.split("\n");
+
+                    // calculate width of widest line in the label
+                    int labelWidth = 0;
+                    for (String line : lines) {
+                        int length = metrics.stringWidth(line);
+                        if (length > labelWidth) {
+                            labelWidth = length;
+                        }
+                    }
+
+                    // get node width (maximum of label width and node width)
+                    double totalWidth = Math.max(labelWidth, childNodeV.getWidth());
+
+                    // calculate height of label
+                    int labelHeight = metrics.getHeight() * lines.length;
+
+                    // get node height (maximum of label height and node height)
+                    double totalHeight = Math.max(labelHeight, childNodeV.getHeight());
+
+                    if (!isVisibleNode(childNode)) {
+
+                        // if node isn't already visible, show the node, and add it to the list of nodes to be laid out.
+                        // Keep track of the maximum node height
+
+                        showNode(childNode);
+
+                        maxNodeHeight = Math.max(maxNodeHeight, totalHeight);
+
+                        childNodeViews.add(childNodeV);
+                        Dimension d = new Dimension();
+                        d.setSize(totalWidth, totalHeight);
+                        nodeSizes.put(childNodeV, d);
+                    }
+                    else {
+                        // child is already visible - figure out if its right most edge is past the current max value
+
+                        if (childNodeV.getXPosition() + totalWidth/2 > maxXAlreadyVisible) {
+                            maxXAlreadyVisible = childNodeV.getXPosition() + totalWidth/2;
+                        }
+                    }
                 }
-                else {
-                    continue;
-                }
+
+                layoutChildren(node, childNodeViews, nodeSizes, maxNodeHeight, maxXAlreadyVisible);
+
+
             }
 
-            /* If genes have been annotated and 'expand nodes with genes associated only' checkbox is checked
-			 * then display/expand child only if it has at least one associated gene (direct or inferred).
-			 */
-            if (nodeAtt.hasAttribute(childNode.getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName)) {
-                directGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
-                inferredGenes = nodeAtt.getIntegerAttribute(childNode.getIdentifier(),GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
-
-                if (expandNodesWithGenes && ((directGenes + inferredGenes)==0)) {
-                    continue;
-                }
+            nodesToIterate.clear();
+            nodesToIterate.addAll(nodesToIterateNextLevel);
+            nodesToIterateNextLevel.clear();
+            if (curDepth != Integer.MAX_VALUE) {
+                curDepth = curDepth -1;
             }
-
-            showEdge(incomingEdges[i]);
-
-            expandNodeToDepth(childNode,depth-1, fullExpand);
-
-            if (!isVisibleNode(childNode)) {
-                showNode(childNode);
-                
-                maxNodeHeight = Math.max(maxNodeHeight,childNodeV.getHeight());
-			    maxNodeWidth = Math.max(maxNodeWidth,childNodeV.getWidth());
-			    nodeWidthSum += childNodeV.getWidth();
-			    childNodeViews.add(childNodeV);
-            }
-
         }
-		double nodeSpacingX = 10.0;
-		double nodeSpacingY = 5.0;
-		double avgNodeWidth = nodeWidthSum/childNodeViews.size();
-		double baseY = y + h/2 + maxNodeHeight/2 + nodeSpacingY;
-		baseY = Math.max(baseY, y+50);
-		double startX = x - (nodeWidthSum + nodeSpacingX * childNodeViews.size())/2;
-		
-		double verticalStaggar = 34.0;
-		
-		//now iterate through the childnodeviews and position them heirarchically
-		double lastCx = 0.0;
-		double lastCw = 0.0;
-		boolean firstIter = true;
-		for(int i = 0;i<childNodeViews.size();i++) {
-			NodeView childNodeV = childNodeViews.get(i);
-			double cy,cx;
-			double cw = childNodeV.getWidth();
-			if (firstIter) {
-				cx = startX;
-				firstIter = false;
-			}
-			else {
-				cx = lastCx + lastCw/2 + nodeSpacingX + cw;
-			}
-			cy = baseY + ((i%2!=0)?verticalStaggar:0);
-			cy = baseY + (i%5*verticalStaggar);
-			childNodeV.setXPosition(cx);
-			childNodeV.setYPosition(cy);
-			lastCw = cw;
-			lastCx = cx;
-		}
-	}
+
+    }
+
+    /**
+     * Method to layout the children nodes of a node. Nodes will be laid out below the parent node, and staggered in
+     * groups of 5 nodes.  In addition, they will be laid to the right of 'startX' if a value is given.
+     * If startX = Double.MIN_VALUE, then the nodes will be centered horizontally under the parent node.
+     * @param parent the parent node
+     * @param childNodeViews a list of NodeView objects for the children that are to be laid out
+     * @param nodeSizes a HashMap containing the nodeViews and their dimensions (encompassing both the node and its label)
+     * @param maxNodeHeight the maximum node height of the nodes to be laid out
+     * @param startX a parameter which gives the user control over the horizontal location of the children nodes.  The nodes will be placed to the right of startX.  If startX=Double.MIN_VALUE, then there is no restriction, and the nodes will be centered under the parent node.
+	 */
+    public void layoutChildren(Node parent, List<NodeView> childNodeViews, HashMap<NodeView, Dimension> nodeSizes, double maxNodeHeight, double startX) {
+
+        // Get coordinates of parent node
+        NodeView pView = networkView.getNodeView(parent);
+        double x = pView.getXPosition();
+        double y = pView.getYPosition();
+        double h = pView.getHeight();
+
+        double nodeSpacingX = 2.0;
+        double nodeSpacingY = 5.0;
+        double baseY = y + h / 2 + maxNodeHeight / 2 + nodeSpacingY;
+        baseY = Math.max(baseY, y + 50);
+
+        double lastCx = 0.0;
+        double lastCw = 0.0;
+        double lastCy = baseY;
+        double lastCh = 0.0;
+        double startLine = 0.0;
+        double maxRightEdge = 0.0;
+
+        HashMap<NodeView, Dimension> positions = new HashMap<NodeView, Dimension>(); // store the hierarchical positions of the nodes
+
+        //now iterate through the childnodeviews, position them hierarchically and store the calculated positions
+        for (int i = 0; i < childNodeViews.size(); i++) {
+            NodeView childNodeV = childNodeViews.get(i);
+            double cy, cx;
+            double cw = nodeSizes.get(childNodeV).getWidth();
+            double ch = nodeSizes.get(childNodeV).getHeight();
+
+            if (i % 5 == 0) { // first node of every group
+                cy = baseY + ch / 2;
+                cx = startLine + lastCw / 2 + cw / 2;
+            } else { // remaining nodes of a group
+                cy = lastCy + lastCh / 2 + nodeSpacingY + ch / 2;
+                cx = lastCx + lastCw / 2 + nodeSpacingX + cw / 2;
+            }
+
+            // Keep track of right most edge to be used in centering nodes under parent node (if necessary)
+            double rightEdge = cx + cw / 2;
+            if (rightEdge > maxRightEdge) {
+                maxRightEdge = rightEdge;
+            }
+
+            // Store the hierarchical node positions
+            Dimension pos = new Dimension();
+            pos.setSize(cx, cy);
+            positions.put(childNodeV, pos);
+
+            lastCw = cw;
+            lastCx = cx;
+            lastCh = ch;
+            lastCy = cy;
+
+            // Each group will overlap to start at the same 'x' position as the third node in the previous group, so store
+            // coordinate if necessary
+            if (((i % 5) + 1) % 3 == 0) {
+                startLine = lastCx;
+            }
+        }
+
+        // Position nodes so that they are below the parent node, and either to the right of 'startX' or centered under the parent node, as necessary
+        double totalChildWidth = maxRightEdge;
+        double startPos;
+        if (startX == Double.MIN_VALUE) {
+            startPos = x - totalChildWidth/2;
+        }
+        else {
+            startPos = startX + nodeSpacingX;
+        }
+
+        // Position the nodes
+        for (NodeView childV : positions.keySet()) {
+            Dimension pos = positions.get(childV);
+            childV.setXPosition(pos.getWidth() + startPos);
+            childV.setYPosition(pos.getHeight());
+        }
+    }
 	
 //	/**
 //	 * @param snode the node to expand

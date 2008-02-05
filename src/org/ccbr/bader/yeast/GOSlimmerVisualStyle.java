@@ -166,7 +166,7 @@ public class GOSlimmerVisualStyle extends VisualStyle {
 			
 			
 			if (GOSlimmerGUIViewSettings.labelNodesWithOntologyName) {
-				String ontname = nodeAtt.getStringAttribute(node.getIdentifier(), "ontology.name");
+				String ontname = nodeAtt.getStringAttribute(node.getIdentifier(),  GOSlimmer.formattedOntologyNameAttributeName); // use formatted ontology name
 				//only use the first maxNodeLabelLength characters of ontname for the label;  TODO comment out when node tooltips are properly implemented
 //				appr.setLabel(ontname.length()<maxNodeLabelLength?ontname:ontname.substring(0, maxNodeLabelLength));
 //				appr.setToolTip(ontname);
