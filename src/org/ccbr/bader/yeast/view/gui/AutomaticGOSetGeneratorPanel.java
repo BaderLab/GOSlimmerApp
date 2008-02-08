@@ -92,6 +92,12 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
         if (coveringSetScrollPane == null) {
             coveringSetScrollPane = new JScrollPane();
             coveringSetScrollPane.setToolTipText(coveringSetScrollPaneToolTip);
+            coveringSetScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+            // set size of scroll pane
+            Dimension dim = new Dimension();
+            dim.setSize(275.0, 94.0);
+            coveringSetScrollPane.setPreferredSize(dim);
 
             // Create JList item for scroll pane
             JList coveringSetList = new JList(coveringSetNames);

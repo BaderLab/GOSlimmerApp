@@ -14,7 +14,6 @@ import cytoscape.data.CyAttributes;
 
 public class GOSetTerm implements Comparable {
     private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-    private int maxCharacters = 30;
 
     private Node goNode;
     private int numRemainingGenesCovered;
@@ -46,9 +45,6 @@ public class GOSetTerm implements Comparable {
 
     public String toString() {
         String name = nodeAtt.getStringAttribute(goNode.getIdentifier(), "ontology.name");
-        if (name.length()>maxCharacters) {
-            name = name.substring(0,maxCharacters) + "...";
-        }
         return name + " (" + goNode.toString() + "): " + numRemainingGenesCovered;
     }
 
@@ -59,9 +55,6 @@ public class GOSetTerm implements Comparable {
      */
     public String getDescriptiveString() {
         String name = nodeAtt.getStringAttribute(goNode.getIdentifier(), "ontology.name");
-        if (name.length()>maxCharacters) {
-            name = name.substring(0,maxCharacters) + "...";
-        }
         return name + " (" + goNode.toString() + "): " + numRemainingGenesCovered;
     }
     

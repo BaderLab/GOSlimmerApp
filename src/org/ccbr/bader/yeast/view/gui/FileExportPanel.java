@@ -34,6 +34,8 @@
 package org.ccbr.bader.yeast.view.gui;
 
 import java.awt.BorderLayout;
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -86,9 +88,18 @@ public class FileExportPanel extends JPanel implements ActionListener {
 	
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Export"));
-		this.setLayout(new BorderLayout());
-		this.add(getExportAnnotationFileButton(), BorderLayout.NORTH);
-		this.add(getExportSlimSetFileButton(), BorderLayout.SOUTH);
+		//this.setLayout(new BorderLayout());
+        this.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = 0;
+        c.gridy = 0;
+        this.add(getExportAnnotationFileButton(),c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        this.add(getExportSlimSetFileButton(), c);
 	}
 	
 	private static final String lsep = System.getProperty("line.separator");

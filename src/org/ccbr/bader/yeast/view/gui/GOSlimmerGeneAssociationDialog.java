@@ -159,10 +159,12 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 		c.anchor = GridBagConstraints.FIRST_LINE_START;
 		c.gridx=0;
 		c.gridy=0;
+        c.gridwidth = 2;
+
+        this.add(getSelectedAnnotationFileLabel(),c);
 		
-		this.add(getSelectedAnnotationFileLabel(),c);
-		
-		c.gridx=0;
+		c.gridwidth = 1;
+        c.gridx=0;
 		c.gridy=1;
 		this.add(getAnnotationComboBox(),c);
 		c.gridx=1;

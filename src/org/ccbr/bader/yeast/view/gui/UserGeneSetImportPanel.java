@@ -35,6 +35,8 @@ package org.ccbr.bader.yeast.view.gui;
 
 import giny.model.Node;
 
+import java.awt.GridBagLayout;
+import java.awt.GridBagConstraints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -90,15 +92,23 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 	private static final String lsep = System.getProperty("line.separator");
 	
 	private GOSlimmerSession session;
-	
-	public UserGeneSetImportPanel(GOSlimmerSession session) {
+    private GridBagConstraints c;
+
+    public UserGeneSetImportPanel(GOSlimmerSession session) {
 		this.session = session;
 	}
 	
-	
+
 	private void initComponents() {
 		this.setBorder(BorderFactory.createTitledBorder("Import User Gene Set"));
-		this.add(getImportGeneSetButton());
+
+        this.setLayout(new GridBagLayout());
+        c = new GridBagConstraints();
+
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = 0;
+        c.gridy = 0;
+        this.add(getImportGeneSetButton(), c);
 		//initiallize these two, but do not add them until they have info to display, as otherwise they will take up empty space
 		getUnmatchedIdsLabel();
 		getMatchedIdsLabel();
@@ -327,9 +337,19 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 		updateTotalUserIdsLabel(geneIds);
 		updateUnmatchedIdsLabel(unmatchedIds);
 		updateMatchedIdsLabel(matchedIds);
-		this.add(getTotalIdsLabel());
-		this.add(getMatchedIdsLabel());
-		this.add(getUnmatchedIdsLabel());
+
+        c.anchor = GridBagConstraints.LINE_START;
+        c.gridx = 0;
+        c.gridy = 1;
+        this.add(getTotalIdsLabel(),c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        this.add(getMatchedIdsLabel(),c);
+
+        c.gridx = 0;
+        c.gridy = 3;
+        this.add(getUnmatchedIdsLabel(),c);
 		
 		for(GOSlimmerController controller:session.getNamespaceToController().values()) {
 			//recalculate the user gene statistics based on this newly imported user gene ID file

@@ -48,6 +48,12 @@ public class SelectedGOTermsPanel extends JCollapsablePanel implements MouseList
         if (selectedGOTermsScrollPane == null) {
             selectedGOTermsScrollPane = new JScrollPane();
             selectedGOTermsScrollPane.setToolTipText(selectedGOTermsToolTip);
+            selectedGOTermsScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+
+            // Set size of scroll pane
+            Dimension dim = new Dimension();
+            dim.setSize(325.0, 94.0);
+            selectedGOTermsScrollPane.setPreferredSize(dim);
 
             // Create JList item for scroll pane
             JList selectedTermsList = new JList(selectedTerms);
@@ -64,7 +70,13 @@ public class SelectedGOTermsPanel extends JCollapsablePanel implements MouseList
 	 * Initializes the widget's subcomponents and layout
 	 */
 	private void initComponents() {
-		this.setLayout(new GridLayout(0,1));
+		//this.setLayout(new GridLayout(0,1));
+        this.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.CENTER;
+        c.gridx = 0;
+        c.gridy = 0;
         this.add(getSelectedGOTermsScrollPane());
     }
 

@@ -145,7 +145,7 @@ public class GOSlimPanel extends JPanel {
 	public UserGeneSetImportPanel getUserGeneSetImportPanel() {
 		if (userGeneSetImportPanel == null) {
 			userGeneSetImportPanel = new UserGeneSetImportPanel(session);
-			userGeneSetImportPanel.setLayout(new GridLayout(0,1));
+			//userGeneSetImportPanel.setLayout(new GridLayout(0,1));
 		}
 		return userGeneSetImportPanel;
 	}
