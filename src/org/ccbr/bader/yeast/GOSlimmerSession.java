@@ -274,9 +274,9 @@ public class GOSlimmerSession {
         celComEdges.addAll(network.getConnectingEdges(new ArrayList(celComNodes)));
 
         String networkTitle = network.getTitle();
-		CyNetwork molFunNetwork = Cytoscape.createNetwork(molFunNodes, molFunEdges, networkTitle + "_molecular_function", network, true);
-		CyNetwork bioProNetwork = Cytoscape.createNetwork(bioProNodes, bioProEdges, networkTitle + "_biological_process", network, true);
-		CyNetwork celComNetwork = Cytoscape.createNetwork(celComNodes, celComEdges, networkTitle + "_cellular_component", network, true);
+		CyNetwork molFunNetwork = Cytoscape.createNetwork(molFunNodes, molFunEdges, networkTitle + "_molecular_function", network, false);
+		CyNetwork bioProNetwork = Cytoscape.createNetwork(bioProNodes, bioProEdges, networkTitle + "_biological_process", network, false);
+		CyNetwork celComNetwork = Cytoscape.createNetwork(celComNodes, celComEdges, networkTitle + "_cellular_component", network, false);
 		List<CyNetwork> subNetworks = new ArrayList<CyNetwork>();
 		subNetworks.add(molFunNetwork);
 		subNetworks.add(bioProNetwork);
