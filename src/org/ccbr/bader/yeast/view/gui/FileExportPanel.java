@@ -149,7 +149,18 @@ public class FileExportPanel extends JPanel implements ActionListener {
 			if (retval == JFileChooser.APPROVE_OPTION) {
 				File exportFile = chooser.getSelectedFile();
 				if (src == exportAnnotationFileButton) {
-					Map<String,Set<String>> goTermRemap = new HashMap<String, Set<String>>();
+                    // For the file to be re-imported as a gene annotation file, the file name must being with 'gene_association'.
+                    // Check if we should prefix the file name with 'gene_association' or not.
+                    if (!exportFile.getName().startsWith("gene_association")) {
+                        int appendName = JOptionPane.showConfirmDialog(this, "For this file to be re-imported as a gene annotation file" + lsep +
+                                "the file name must begin with 'gene_association'." + lsep +
+                                "Would you like to prefix your file name by 'gene_association'?", "Confirm File Name", JOptionPane.YES_NO_OPTION);
+                        if (appendName==JOptionPane.YES_OPTION) {
+                            exportFile = new File(exportFile.getParentFile(),"gene_association_" + exportFile.getName());
+                        }
+
+                    }
+                    Map<String,Set<String>> goTermRemap = new HashMap<String, Set<String>>();
 					for(GOSlimmerController controller: controllers) {
 						try {
 							try {
@@ -223,7 +234,7 @@ public class FileExportPanel extends JPanel implements ActionListener {
 		BufferedWriter w = new BufferedWriter(new FileWriter(remapFile));
 		GeneAnnotationRemapWriter gaw = new GeneAnnotationRemapWriter(w,goTermRemap);
 		//create header
-		gaw.write("!This Gene Annotation File contains entries which have been remapped onto a smaller set of GO terms");
+		gaw.write("!This Gene Annotation File contains entries which have been remapped onto a smaller set of GO terms" + lsep);
 		Collection<String[]> entries = originalFileReader.getAnnotationEntries();
 		for (String[] entry:entries) {
 			gaw.writeRemappedEntry(entry);
