@@ -301,7 +301,7 @@ public class GOSlimmerSession {
 				NodeContextMenuActionListener listener = new NodeContextMenuActionListener(node.getNode(),controller);
 				
 				//for each button, initialize it with the proper name, add the above actionlistener and add to the context menu
-				for(String menuItemName:new String[]{"Collapse","Prune","Expand","Deselect"}) {
+				for(String menuItemName:new String[]{"Collapse","Prune","Expand"}) {
 					JMenuItem menuItem = new JMenuItem(menuItemName);
 					//menuItem.addActionListener(slimmerController);
 					menuItem.addActionListener(listener);
@@ -321,10 +321,16 @@ public class GOSlimmerSession {
                 else {
                     itemColor = new Color(0,0,0);
                 }
-                JMenuItem menuItem = new JMenuItem(itemName);
-                menuItem.setForeground(itemColor);
-                menuItem.addActionListener(listener);
-                menu.add(menuItem);
+                JMenuItem selectMenuItem = new JMenuItem(itemName);
+                selectMenuItem.setForeground(itemColor);
+                selectMenuItem.addActionListener(listener);
+                menu.add(selectMenuItem);
+
+                // add 'Deselect' menu item after 'Select'
+                JMenuItem deselectMenuItem = new JMenuItem("Deselect");
+                deselectMenuItem.addActionListener(listener);
+                menu.add(deselectMenuItem);
+
             }
 			
 		};

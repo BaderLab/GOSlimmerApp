@@ -213,12 +213,12 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 //		this.setBorder(BorderFactory.createTitledBorder("Advanced Settings"));
 		this.setLayout(new GridLayout(0,1));
 		this.add(getIncludeDeCheckBox());
-		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
-		this.add(getLCheckBox());
         this.add(getDefnCheckBox());
-        this.add(getExpandNodesCheckBox());
+		this.add(getSizeNodesBasedOnNumUserGenesAnnotatedCheckbox());
         this.add(getDisplayUserGeneStatisticsCheckBox());
-		this.add(getExpandNodeDepthCheckbox());
+        this.add(getExpandNodesCheckBox());
+        this.add(getLCheckBox());
+        this.add(getExpandNodeDepthCheckbox());
 		this.add(getExpandNodeTextField());
 		
 	}

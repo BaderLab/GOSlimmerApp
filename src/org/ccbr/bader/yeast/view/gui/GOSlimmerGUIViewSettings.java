@@ -78,7 +78,7 @@ public class GOSlimmerGUIViewSettings {
      * If the value is false, then all children are shown.  If the value is true, then only those children with
      * associated genes (direct or inferred) will be shown.
      */
-    public static boolean expandNodesWithGenes = false;
+    public static boolean expandNodesWithGenes = true;
 
     /**
      * Setting which determines the maximum width (in characters) of the GO term name labels.  Any labels longer than this

@@ -69,21 +69,21 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
     private JLabel numTermsLabel;
     private JLabel getNumTermsLabel() {
         if (numTermsLabel == null) {
-            numTermsLabel = new JLabelMod("Number of terms to generate:");
+            numTermsLabel = new JLabelMod("Number of terms to find:");
         }
         return numTermsLabel;
     }
 
-    private JButton generateCoveringTermsButton;
-	private String generateCoveringTermsButtonText = "Find Best Covering Terms";
-	private String generateCoveringTermsButtonToolTip = "Generate a list of the best covering terms for the remaining uncovered genes";
-	private JButton getGenerateCoveringTermsButton() {
-		if (generateCoveringTermsButton==null) {
-			generateCoveringTermsButton = new JButtonMod(generateCoveringTermsButtonText);
-			generateCoveringTermsButton.addActionListener(this);
-			generateCoveringTermsButton.setToolTipText(generateCoveringTermsButtonToolTip);
+    private JButton findCoveringTermsButton;
+	private String findCoveringTermsButtonText = "Find Best Covering Terms";
+	private String findCoveringTermsButtonToolTip = "Find the best covering terms for the remaining uncovered genes";
+	private JButton getFindCoveringTermsButton() {
+		if (findCoveringTermsButton==null) {
+			findCoveringTermsButton = new JButtonMod(findCoveringTermsButtonText);
+			findCoveringTermsButton.addActionListener(this);
+			findCoveringTermsButton.setToolTipText(findCoveringTermsButtonToolTip);
         }
-		return generateCoveringTermsButton;
+		return findCoveringTermsButton;
 	}
 
     private JScrollPane coveringSetScrollPane;
@@ -108,16 +108,16 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
         return coveringSetScrollPane;
     }
 
-    private JButton findCoveringTermButton;
-	private String findCoveringTermButtonText = "Find";
-	private String findCoveringTermButtonToolTip = "Find selected covering term in GO diagram";
-	private JButton getFindCoveringTermButton() {
-		if (findCoveringTermButton==null) {
-			findCoveringTermButton = new JButtonMod(findCoveringTermButtonText);
-			findCoveringTermButton.addActionListener(this);
-			findCoveringTermButton.setToolTipText(findCoveringTermButtonToolTip);
+    private JButton showCoveringTermButton;
+	private String showCoveringTermButtonText = "Show";
+	private String showCoveringTermButtonToolTip = "Show selected covering term in GO diagram";
+	private JButton getShowCoveringTermButton() {
+		if (showCoveringTermButton==null) {
+			showCoveringTermButton = new JButtonMod(showCoveringTermButtonText);
+			showCoveringTermButton.addActionListener(this);
+			showCoveringTermButton.setToolTipText(showCoveringTermButtonToolTip);
         }
-		return findCoveringTermButton;
+		return showCoveringTermButton;
 	}
 
 	/**
@@ -134,7 +134,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
         c.gridwidth = 3;
         c.gridx=0;
 		c.gridy=0;
-        this.add(getGenerateCoveringTermsButton(),c);
+        this.add(getFindCoveringTermsButton(),c);
 
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -155,7 +155,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
         c.gridwidth = 1;
         c.gridx=2;
         c.gridy=2;
-        this.add(getFindCoveringTermButton(),c);
+        this.add(getShowCoveringTermButton(),c);
 
         c.anchor = GridBagConstraints.LINE_START;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -170,8 +170,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
 		Object src = event.getSource();
         if (src instanceof JButton) {
             JButton bsrc = (JButton) src;
-            if (bsrc.equals(generateCoveringTermsButton)) {  // Generate list of covering terms
-                System.out.println("generating list of GO terms with highest gene coverage...");
+            if (bsrc.equals(findCoveringTermsButton)) {  // Generate list of covering terms
                 AutomaticGeneratorAlgorithm generator = new AutomaticGeneratorAlgorithm(session);
                 CyNetwork network = Cytoscape.getCurrentNetwork();
 
@@ -189,7 +188,6 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                 }
 
                 if (namespace!=null) {
-                    System.out.println("network is: " + namespace.getName());
 
                     int numTopTerms = (Integer) numTermsTextField.getValue();
 
@@ -204,7 +202,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                 }
 
             }
-            else if (bsrc.equals(findCoveringTermButton)) {
+            else if (bsrc.equals(showCoveringTermButton)) {
                                 
                 JList list = (JList) coveringSetScrollPane.getViewport().getView();
                 if (list.getSelectedIndex()!= -1) {
@@ -214,8 +212,6 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                     int pStartIndex = fullName.lastIndexOf("(");
                     int pEndIndex = fullName.indexOf(")",pStartIndex);
                     String goId = fullName.substring(pStartIndex+1, pEndIndex);
-
-                    System.out.println("Finding GO term " + goId + "......");
 
                     /* Get network and network view associated with this panel/list */
                     CyNetwork network = Cytoscape.getCurrentNetwork();
@@ -241,7 +237,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                         }
                     }
                     if (goNode==null) {
-                        System.out.println("this node is not in this network");
+                        System.out.println("This node is not in this network");
                     }
                     else {
                         //System.out.println("found the node: " + goNode);
@@ -259,7 +255,7 @@ public class AutomaticGOSetGeneratorPanel extends JCollapsablePanel implements A
                             if (controller!=null) {
 
                                 // Save expand/collapse state for all nodes in graph
-                                ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Find Node");
+                                ExpandCollapseEdit undoableEdit = new ExpandCollapseEdit(controller, "Show Node");
 
                                 // Find and display the node in the graph, and select it in cytoscape
                                 displayNode(goNode, controller, view);
