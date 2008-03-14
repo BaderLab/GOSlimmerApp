@@ -372,4 +372,8 @@ public class GOSlimPanel extends JPanel {
     public void setAutomaticGOSetGeneratorPanelVisible(boolean visible) {
         generatorPanel.setVisible(visible);
     }
+
+    public void setAdvancedUserGeneOptions(boolean enableAdvancedUserGeneOptions) {
+        viewSettingsPanel.setUserGeneOptions(enableAdvancedUserGeneOptions);
+    }
 }

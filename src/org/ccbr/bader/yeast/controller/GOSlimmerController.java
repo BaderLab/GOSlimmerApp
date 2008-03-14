@@ -114,8 +114,10 @@ public class GOSlimmerController  {
 	 * The session which this controller is a part of
 	 */
 	private GOSlimmerSession session;
-	
-	/**Creates a new controller for the specified network, as part of the specified session
+
+    private static final String lsep = System.getProperty("line.separator");
+
+    /**Creates a new controller for the specified network, as part of the specified session
 	 * @param namespace the GO namespace of the managed network
 	 * @param network the network model of the GO namespace subgraph which is being controlled
 	 * @param networkView the network view associated with the network
@@ -921,7 +923,8 @@ public class GOSlimmerController  {
 		PrintWriter out = new PrintWriter(new FileWriter(exportFile,true));
 		//TODO get slim set from stat bean
 		for(Node slimNode:this.statBean.getSlimGoNodes()) {
-			out.println(slimNode.getIdentifier());
+            String name = nodeAtt.getStringAttribute(slimNode.getIdentifier(), "ontology.name");
+            out.write(slimNode.getIdentifier() + "\t" + name + lsep);
 		}
 		out.close();
 		return true;

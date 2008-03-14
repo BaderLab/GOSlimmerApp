@@ -214,7 +214,9 @@ public class UserGeneSetImportPanel extends JPanel implements ActionListener {
 						//update user gene count in the session, so that coverage can be properly calculated by the statbeans
 						session.setUserGeneSetImported(true);
 						session.setUserGeneSet(geneIds);
-					} catch (FileNotFoundException e) {
+                        // set advanced user gene options to true by default
+                        session.getGOSlimPanel().setAdvancedUserGeneOptions(true);
+                    } catch (FileNotFoundException e) {
 						JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Failed to import Gene Set;  Could not find specified file","Error",JOptionPane.ERROR_MESSAGE);
 						return;
 					} catch (IOException e) {

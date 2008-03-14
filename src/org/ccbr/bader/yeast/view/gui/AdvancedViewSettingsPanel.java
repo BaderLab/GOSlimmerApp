@@ -315,5 +315,16 @@ public class AdvancedViewSettingsPanel extends JCollapsablePanel implements Acti
 		//this next line is only performed if the text was successfully parsed as an integer
 		for(GOSlimmerController controller: controllers) controller.setExpansionDepth(newExpansionDepth);
 	}
+
+    public void setUserGeneOptions(boolean enableUserGeneOptions) {
+        sizeNodesBasedOnNumUserGenesAnnotatedCheckbox.setSelected(enableUserGeneOptions);
+        GOSlimmerGUIViewSettings.sizeNodesBasedOnUserGeneAnnotation = enableUserGeneOptions;
+
+        displayUserGeneStatisticsCheckBox.setSelected(enableUserGeneOptions);
+        for(GOSlimmerController controller: controllers) {
+            controller.setDisplayUserGeneCoverageStatistics(enableUserGeneOptions);
+        }
+        Cytoscape.getCurrentNetworkView().redrawGraph(false, true);
+    }
 	
 }
