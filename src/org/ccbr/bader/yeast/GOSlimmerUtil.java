@@ -534,7 +534,12 @@ public class GOSlimmerUtil {
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.goNodeInSlimSetAttributeName);
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedUserGenesAttributeName);
 		Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedUserGenesAttributeName);
-	}
+        Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+        Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
+        Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.directlyAnnotatedGenesSynonymAttributeName);
+        Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.inferredAnnotatedGenesSynonymAttributeName);
+        Cytoscape.getNodeAttributes().deleteAttribute(GOSlimmer.formattedOntologyNameAttributeName);
+    }
 
 	public static void defineGOSlimmerAttributes() {
 		
