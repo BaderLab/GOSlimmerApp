@@ -961,5 +961,218 @@ public class GOSlimmerController  {
         networkView.showGraphObject(edgeView);
         visibleEdges.add(edge);
     }
-	
+
+
+    /**
+     * Displays a node in the network by finding all the 'parentage lines' from this node to the first visible parent
+     * in the graph, and displays these lines, laying out the nodes as necessary.
+     *
+     * @param node       the GO term node to be displayed in the network
+     */
+    public void displayNode(Node node) {
+
+        HashMap<Node, Set<Node>> parentChildList = new HashMap<Node, Set<Node>>();
+
+        // Get all 'parentage lines' from 'node' to the first visible parent in the graph
+        Set<List<Node>> allLines = getParentLines(node, parentChildList);
+
+        // Loop through each 'parentage line', and display it as necessary
+        for (List<Node> line : allLines) {
+
+            // The first node in the list is the already visible parent, so we loop through the other nodes, and
+            // display them as necessary (if they haven't already been displayed by another 'parentage line')
+            for (int i = 1; i < line.size(); i++) {
+
+                Node childNode = line.get(i);
+                Node parentNode = line.get(i - 1);
+                if (!isVisibleNode(childNode)) {  // not visible, so must display it
+
+                    double maxXAlreadyVisible = Double.MIN_VALUE;
+                    FontMetrics metrics;
+                    Component component = networkView.getComponent();
+
+                    if (i == 1) {
+                        // child of the top-most parent in the line, so check and see if any other children are
+                        // visible, and layout as necessary
+
+                        // Loop through the incoming edges (from children nodes) of the top-most node in the line
+                        // and determine which (if any) of the children are visible
+
+                        // Get incoming edges (from children)
+                        int[] incomingEdges = network.getAdjacentEdgeIndicesArray(parentNode.getRootGraphIndex(), false, true, false);
+                        for (int incomingEdge : incomingEdges) {
+                            EdgeView ev = networkView.getEdgeView(incomingEdge);
+                            Node child = ev.getEdge().getSource();
+
+                            if (isVisibleNode(child)) {
+
+                                // Want to draw new children to the right of the children that are already visible.
+                                // This child is already visible - figure out if its right most edge is past the current max value
+
+                                NodeView cNodeView = networkView.getNodeView(child);
+
+                                // get width of label
+                                metrics = component.getFontMetrics(cNodeView.getLabel().getFont());
+                                String labelText = cNodeView.getLabel().getText();
+                                String[] textLines = labelText.split("\n");
+
+                                // calculate width of widest line in the label
+                                int labelWidth = 0;
+                                for (String textLine : textLines) {
+                                    int length = metrics.stringWidth(textLine);
+                                    if (length > labelWidth) {
+                                        labelWidth = length;
+                                    }
+                                }
+
+                                // get node width (maximum of label width and node width)
+                                double totalWidth = Math.max(labelWidth, cNodeView.getWidth());
+
+                                // determine if right most edge of child is past current max value
+
+                                if (cNodeView.getXPosition() + totalWidth / 2 > maxXAlreadyVisible) {
+                                    maxXAlreadyVisible = cNodeView.getXPosition() + totalWidth / 2;
+                                }
+                            }
+                        }
+
+                    }
+
+                    // draw the node and its siblings that need to be drawn at the same time
+
+                    Set<Node> childrenToDraw = parentChildList.get(parentNode);
+
+
+                    double maxNodeHeight = 0;
+
+                    // Data structures for layout
+                    List<NodeView> childNodeViews = new ArrayList<NodeView>();
+                    HashMap<NodeView, Dimension> nodeSizes = new HashMap<NodeView, Dimension>();
+
+                    // Loop through the children nodes to be drawn.  Calculate the maximum height and width, as well
+                    // as the sum of the widths, and store the node views.
+                    // Also, show the node and the edge between the node and the parent node.
+                    for (Node thisChild : childrenToDraw) {
+                        NodeView cView = networkView.getNodeView(thisChild);
+
+                        // Show the node, and the edge between this node and the parent node
+                        showNode(thisChild);
+
+                        // find edge to show
+                        int[] nodesToConnect = {thisChild.getRootGraphIndex(), parentNode.getRootGraphIndex()};
+                        int[] edges = network.getConnectingEdgeIndicesArray(nodesToConnect);
+
+                        for (int edge : edges) {
+                            showEdge(edge);
+                        }
+
+                        // get width/height of label
+                        metrics = component.getFontMetrics(cView.getLabel().getFont());
+                        String labelText = cView.getLabel().getText();
+                        String[] textLines = labelText.split("\n");
+
+                        // calculate width of widest line in the label
+                        int labelWidth = 0;
+                        for (String textLine : textLines) {
+                            int length = metrics.stringWidth(textLine);
+                            if (length > labelWidth) {
+                                labelWidth = length;
+                            }
+                        }
+
+                        // get node width (maximum of label width and node width)
+                        double totalWidth = Math.max(labelWidth, cView.getWidth());
+
+                        // calculate height of label
+                        int labelHeight = metrics.getHeight() * textLines.length;
+
+                        // get node height (maximum of label height and node height)
+                        double totalHeight = Math.max(labelHeight, cView.getHeight());
+
+                        maxNodeHeight = Math.max(maxNodeHeight, totalHeight);
+                        childNodeViews.add(cView);
+                        Dimension d = new Dimension();
+                        d.setSize(totalWidth, totalHeight);
+                        nodeSizes.put(cView, d);
+                    }
+
+                    // Layout nodes
+                   layoutChildren(parentNode, childNodeViews, nodeSizes, maxNodeHeight, maxXAlreadyVisible);
+
+
+                } else { // already visible (displayed in another parentage line), but need to show edge
+
+                    // find edge to show
+                    int[] nodesToConnect = {childNode.getRootGraphIndex(), parentNode.getRootGraphIndex()};
+                    int[] edges = network.getConnectingEdgeIndicesArray(nodesToConnect);
+
+                    for (int edge : edges) {
+                        showEdge(edge);
+                    }
+                }
+
+            }
+
+        }
+
+    }
+
+    /**
+     * Method to get the 'parentage lines' from this node to the first visible parent in the network.
+     *
+     * @param node            the GO term node for which to determine the 'parentage lines'
+     * @param parentChildList a hashmap storing the list of children that need to be displayed for each node that needs to be drawn in the network
+     * @return set containing lists of nodes representing a 'parentage line', where the first entry is the first visible parent in the network, and the last entry is the 'node'.
+     *         Code copied from AutomaticGOSetGeneratorPanel.java
+     */
+    private Set<List<Node>> getParentLines(Node node, HashMap<Node, Set<Node>> parentChildList) {
+
+        Set<List<Node>> allpaths = new HashSet<List<Node>>();
+
+        if (isVisibleNode(node)) {
+            return allpaths;
+        }
+
+        /* Loop through the outgoing edges (to parent nodes)*/
+        int[] outgoingEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, false, true);
+        for (int outgoingEdge : outgoingEdges) {
+
+            EdgeView ev = networkView.getEdgeView(outgoingEdge);
+            Node parentNode = ev.getEdge().getTarget();
+
+            // If parent node is already in parentChildList, then add this node to the set of nodes that need to be displayed
+            // for this parent node
+            if (parentChildList.containsKey(parentNode)) {
+                parentChildList.get(parentNode).add(node);
+            } else {  // Otherwise, add the parent node and this node to the parentChildList
+                Set<Node> childSet = new HashSet<Node>();
+                childSet.add(node);
+                parentChildList.put(parentNode, childSet);
+            }
+
+            // Create a set to hold the 'parentage lines' for this node
+            Set<List<Node>> parentLines;
+
+            // If the parent node is not currently visible, then call this method recursively
+            if (!isVisibleNode(parentNode)) {
+                parentLines = getParentLines(parentNode, parentChildList);
+
+            } else {  // Otherwise, create a new set and add the parent node
+                List<Node> singleList = new ArrayList<Node>();
+                singleList.add(parentNode);
+
+                parentLines = new HashSet<List<Node>>();
+                parentLines.add(singleList);
+            }
+
+            // Loop through all 'parentage lines', and add this node to the end of the line, then add this line to the set
+            for (List<Node> thisList : parentLines) {
+                thisList.add(node);
+                allpaths.add(thisList);
+            }
+
+        }
+
+        return allpaths;
+    }
 }
