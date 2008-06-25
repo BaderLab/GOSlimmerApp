@@ -71,6 +71,12 @@ public class GOSlimmerPlugin extends CytoscapePlugin
         item = new JMenuItem("Exit GOSlimmer");
         item.addActionListener(actionListener);
         submenu.add(item);
+
+        //About box
+        item = new JMenuItem("About");
+        item.addActionListener(new GOSlimmerAboutAction());
+        submenu.add(item);       
+
         menu.add(submenu);
     }
 
