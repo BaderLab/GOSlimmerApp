@@ -35,6 +35,7 @@
 package org.ccbr.bader.yeast;
 
 import giny.model.Node;
+import giny.model.Edge;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +49,7 @@ import java.util.Stack;
 
 import org.ccbr.bader.yeast.export.GOFormatException;
 import org.ccbr.bader.yeast.export.RootNodeNotSelectedException;
+import org.ccbr.bader.yeast.controller.GOSlimmerController;
 
 import cytoscape.CyNetwork;
 import cytoscape.Cytoscape;
@@ -64,8 +66,9 @@ import cytoscape.data.ontology.Ontology;
 public class GOSlimmerUtil {
 
 	private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-	
-	/**This method calculates the number of genes which a given GO node covers.  It is calculated based on the nodes attributes, 
+    private static final CyAttributes edgeAtt = Cytoscape.getEdgeAttributes();
+
+    /**This method calculates the number of genes which a given GO node covers.  It is calculated based on the nodes attributes,
 	 * specifically those which record the lists of genes which the GO node annotates.  The boolean parameters allow the user 
 	 * to specify exactly what types of annotation are to be included in the calculation. 
 	 *  
@@ -520,9 +523,165 @@ public class GOSlimmerUtil {
 			}
 		}
 	}
-	
 
-	private static boolean isSelected(Node goNode) {
+    /**This method will create a hashmap containing the OBO relationships remap.
+     * The hashmap keys represent the identifiers for the selected nodes (nodes in the slim set) and the values
+     * are hashmaps that represent the parent relationships.  The parent relationship hashmap contains the closest
+     * selected ancestor along each ancestor path, as well as the corresponding relationship for that ancestor.
+     * The keys in the parent relationship hashmap are the identifiers of the closest selected ancestor node, and the
+     * values are sets of strings representing the relationship type along each path to get to that ancestor node.
+     *
+	 * @param controller controller for the network for which to create the OBO relationship remap.
+     * @return hashmap representing the OBO relationship remap
+     * @throws GOSlimmerException Exception thrown if the rood node for this network is not selected (in the slim set)
+     */
+    public static  Map<String, Map<String, Set<String>>> createOBORemapReliationships(GOSlimmerController controller) throws GOSlimmerException {
+		Map<String, Map<String, Set<String>>> oboRelationships = new HashMap<String, Map<String, Set<String>>>();
+
+        CyNetwork godag = controller.getNetwork();
+
+        Node rootNode = GOSlimmerUtil.getRootNode(godag);
+
+        if (!isSelected(rootNode)) {
+            throw new RootNodeNotSelectedException("Cannot remap because root node is not selected; some annotations would be lost.");
+        }
+
+        // Loop through the nodes in the slim set, and for each one, build the parent relationship hashtable
+        Set<Node> selectedNodes = controller.getStatBean().getSlimGoNodes();
+        for (Node selectedNode: selectedNodes) {
+            Map<String, Set<String>>  parentRelationships = new HashMap<String, Set<String>>();
+
+            List<Node> unselectedParentNodes = new ArrayList<Node>();
+            List<String> unselectedParentRelationships = new ArrayList<String>();
+
+            // Get outgoing neighbours (ie. parents)
+            int[] parentIndexes = godag.getAdjacentEdgeIndicesArray(selectedNode.getRootGraphIndex(),false, false, true);
+            for (int parentIndex: parentIndexes) {
+
+                // Get parent node and relationship type
+                Edge parentEdge = godag.getEdge(parentIndex);
+                String relationship = edgeAtt.getStringAttribute(parentEdge.getIdentifier(),"interaction");
+                Node parentNode = parentEdge.getTarget();
+
+                // If the parent is selected, then it will be added as one of the selected ancestors, and the relationship
+                // type will be added to the parent relationship hashmap.
+                // Otherwise, the parent and corresponding relationship are added to the unselected lists, and will be
+                // iterated through in turn to find the closest selected ancestors along each ancestry path.
+                if (isSelected(parentNode)) {
+                    Set<String> relationships;
+
+                    // If the parent is already in the ancestor list, then get the set of relationships for that parent
+                    // and add the current relationship to that set.
+                    // If the parent is not already in the ancestor list, create a new set of relationships for that parent
+                    // and add both the parent and the relationship to the parent relationship hashtable
+                    if (parentRelationships.containsKey(parentNode.getIdentifier())) {
+                        relationships = parentRelationships.get(parentNode.getIdentifier());
+                    }
+                    else {
+                        relationships = new HashSet<String>();
+                    }
+                    relationships.add(relationship);
+                    parentRelationships.put(parentNode.getIdentifier(), relationships);
+                }
+                else {
+                    unselectedParentNodes.add(parentNode);
+                    unselectedParentRelationships.add(relationship);
+                }
+            }
+
+            // Loop until there are no more unselected ancestors in the unselected ancestor list
+            while (!unselectedParentNodes.isEmpty()) {
+
+                // Iterate through each unselected ancestor
+                for (int index=0; index<unselectedParentNodes.size(); index++) {
+
+                    Node unselectedNode = unselectedParentNodes.get(index);
+                    String unselectedRelationship = unselectedParentRelationships.get(index);
+
+                    // Remove parent and relationship from lists
+                    unselectedParentNodes.remove(index);
+                    unselectedParentRelationships.remove(index);
+
+                    // Get outgoing neighbours (ie. parents)
+                    int[] parents = godag.getAdjacentEdgeIndicesArray(unselectedNode.getRootGraphIndex(),false, false, true);
+
+                    for (int parentIndex: parents) {
+
+                        // Get parent node and relationship type
+                        Edge parentEdge = godag.getEdge(parentIndex);
+                        String relationship = edgeAtt.getStringAttribute(parentEdge.getIdentifier(),"interaction");
+                        Node parentNode = parentEdge.getTarget();
+
+                        // Calculate the cumulative relationship to get to this point in the ancestry path
+                        String cumulativeRelationship = computeRelationship(unselectedRelationship, relationship);
+
+                        // If the parent is selected, then it will be added as one of the selected ancestors, and the
+                        // cumulative relationship type will be added to the parent relationship hashmap.
+                        // Otherwise, the parent and corresponding cumulative relationship are added to the unselected lists, and will be
+                        // iterated through in turn to find the closest selected ancestors along each ancestry path.
+                        if (isSelected(parentNode)) {
+                            Set<String> relationships;
+
+                            // If the parent is already in the ancestor list, then get the set of relationships for that parent
+                            // and add the current relationship to that set.
+                            // If the parent is not already in the ancestor list, create a new set of relationships for that parent
+                            // and add both the parent and the relationship to the parent relationship hashtable
+                            if (parentRelationships.containsKey(parentNode.getIdentifier())) {
+                                relationships = parentRelationships.get(parentNode.getIdentifier());
+                            }
+                            else {
+                                relationships = new HashSet<String>();
+                            }
+                            relationships.add(cumulativeRelationship);
+                            parentRelationships.put(parentNode.getIdentifier(), relationships);
+                        }
+                        else {
+                            unselectedParentNodes.add(parentNode);
+                            unselectedParentRelationships.add(cumulativeRelationship);
+
+                        }
+                    }
+                }
+            }
+
+            // Add the selected node and the parent relationship hashmap to the OBO relationship remap
+            oboRelationships.put(selectedNode.getIdentifier(), parentRelationships);
+        }
+
+        return oboRelationships;
+
+	}
+
+    /**This method computes the cumulative relationship when two different relationships are found along
+     * one path to a selected ancestor.
+     *
+	 * @param currentRelationship the current relationship to this ancestor
+     * @param newRelationship the new relationship to this ancestor
+     * @return string representing the cumulative relationship to this ancestor
+     */
+    private static String computeRelationship(String currentRelationship, String newRelationship) {
+        // If there was no previous relationship, then return the new relationship.
+        // If both relationships are 'is_a', then return 'is_a'
+        // If the current relationship is 'is_a' but the new relationship is different, return the new relationship
+        // If the current relationship is not 'is_a', then return this current relationship (keeping the first non 'is_a'
+        // found along any path.
+        if (currentRelationship.equals("")) {
+            return newRelationship;
+        }
+        else if (currentRelationship.equals("is_a")) {
+            if (newRelationship.equals("is_a")) {
+                return "is_a";
+            }
+            else {
+                return newRelationship;
+            }
+        }
+        else {
+            return currentRelationship;
+        }
+    }
+
+    private static boolean isSelected(Node goNode) {
 		Boolean isSelected =  nodeAtt.getBooleanAttribute(goNode.getIdentifier(), GOSlimmer.goNodeInSlimSetAttributeName);
 		if (isSelected ==null) return false;
 		return isSelected;

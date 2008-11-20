@@ -62,7 +62,12 @@ import org.ccbr.bader.yeast.GOSlimmerUtil;
 import org.ccbr.bader.yeast.controller.GOSlimmerController;
 import org.ccbr.bader.yeast.export.GeneAnnotationRemapWriter;
 import org.ccbr.bader.yeast.export.RootNodeNotSelectedException;
+import org.ccbr.bader.yeast.export.OBOExtensionFileFilter;
 import org.ccbr.bader.yeast.view.gui.misc.JButtonMod;
+import org.ccbr.bader.yeast.export.GOTermEntry;
+import org.ccbr.bader.yeast.export.GOOBOWriter;
+import org.ccbr.bader.yeast.export.GOOBOHeader;
+import org.ccbr.bader.yeast.export.OBOFormatException;
 
 import cytoscape.task.TaskMonitor;
 import cytoscape.task.Task;
@@ -72,6 +77,20 @@ import cytoscape.view.CyNetworkView;
 import cytoscape.CyNetwork;
 
 import giny.model.Node;
+
+import static cytoscape.data.ontology.readers.OBOTags.ID;
+import static cytoscape.data.ontology.readers.OBOTags.NAME;
+import static cytoscape.data.ontology.readers.OBOTags.NAMESPACE;
+import static cytoscape.data.ontology.readers.OBOTags.ALT_ID;
+import static cytoscape.data.ontology.readers.OBOTags.DEF;
+import static cytoscape.data.ontology.readers.OBOTags.DEF_ORIGIN;
+import static cytoscape.data.ontology.readers.OBOTags.COMMENT;
+import static cytoscape.data.ontology.readers.OBOTags.SUBSET;
+import static cytoscape.data.ontology.readers.OBOTags.SYNONYM;
+import static cytoscape.data.ontology.readers.OBOTags.XREF;
+
+import cytoscape.data.CyAttributes;
+
 /**GUI Widget for exporting remapped annotation files.
  * 
  * @author mikematan
@@ -82,8 +101,12 @@ public class FileExportPanel extends JPanel implements ActionListener {
 	private Collection<GOSlimmerController> controllers;
 
 	private GOSlimmerSession session;
-	
-	public FileExportPanel(Collection<GOSlimmerController> controllers,GOSlimmerSession session) {
+
+    private static final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+
+    protected static final String TERM_TAG = "[Term]";
+
+    public FileExportPanel(Collection<GOSlimmerController> controllers,GOSlimmerSession session) {
 		this.controllers = controllers;
 		this.session=session;
 	}
@@ -98,7 +121,7 @@ public class FileExportPanel extends JPanel implements ActionListener {
         this.setLayout(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
 
-        c.anchor = GridBagConstraints.CENTER;
+        c.anchor = GridBagConstraints.FIRST_LINE_START;
         c.gridx = 0;
         c.gridy = 0;
         this.add(getExportAnnotationFileButton(),c);
@@ -109,7 +132,22 @@ public class FileExportPanel extends JPanel implements ActionListener {
 
         c.gridx = 0;
         c.gridy = 2;
+        this.add(getExportSlimSetOBOFileButton(),c);
+
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.gridwidth = GridBagConstraints.REMAINDER;      
+        c.gridx = 0;
+        c.gridy = 3;
+        this.add(getOBOSettingsPanel(), c);
+
+        c.fill = GridBagConstraints.NONE;
+        c.gridx = 0;
+        c.gridy = 4;
         this.add(getImportSlimSetFileButton(), c);
+
+        c.gridx = 0;
+        c.gridy = 5;
+        this.add(getImportSlimSetOBOFileButton(),c);
     }
 	
 	private static final String lsep = System.getProperty("line.separator");
@@ -163,7 +201,43 @@ public class FileExportPanel extends JPanel implements ActionListener {
         }
 
 
-	public void actionPerformed(ActionEvent event) {
+    JButton importSlimSetOBOFileButton;
+    private static final String importSlimSetOBOFileButtonText = "Import Slim Set OBO File";
+    private static final String importSlimSetOBOFileButtonToolTip =
+            "Import an 'OBO' formatted file containing the desired slim set.";
+
+    private JButton getImportSlimSetOBOFileButton() {
+        if (importSlimSetOBOFileButton == null) {
+            importSlimSetOBOFileButton = new JButtonMod(importSlimSetOBOFileButtonText);
+            importSlimSetOBOFileButton.addActionListener(this);
+            importSlimSetOBOFileButton.setToolTipText(importSlimSetOBOFileButtonToolTip);
+        }
+        return importSlimSetOBOFileButton;
+    }
+
+    JButton exportSlimSetOBOFileButton;
+    private static final String exportSlimSetOBOFileButtonText = "Export Slim Set OBO File";
+    private static final String exportSlimSetOBOFileButtonToolTip =
+            "Export an 'OBO' formatted file containing your selected slim set.";
+
+    private JButton getExportSlimSetOBOFileButton() {
+        if (exportSlimSetOBOFileButton == null) {
+            exportSlimSetOBOFileButton = new JButtonMod(exportSlimSetOBOFileButtonText);
+            exportSlimSetOBOFileButton.addActionListener(this);
+            exportSlimSetOBOFileButton.setToolTipText(exportSlimSetOBOFileButtonToolTip);
+        }
+        return exportSlimSetOBOFileButton;
+    }
+
+    private AdvancedOBOSettingsPanel OBOSettingsPanel;
+    private AdvancedOBOSettingsPanel getOBOSettingsPanel() {
+        if (OBOSettingsPanel == null) {
+            OBOSettingsPanel = new AdvancedOBOSettingsPanel();
+        }
+        return OBOSettingsPanel;
+    }
+
+    public void actionPerformed(ActionEvent event) {
 		Object src = event.getSource();
 		if (src instanceof JButton) {
 			//all export options require choosing a file, so do so before determining which export operation to perform
@@ -215,7 +289,57 @@ public class FileExportPanel extends JPanel implements ActionListener {
 		        }
 
 	        }
-            else {
+            
+            else if (src == importSlimSetOBOFileButton) {
+                chooser.setFileFilter(new OBOExtensionFileFilter());
+                int retval = chooser.showOpenDialog(this);
+                if (retval==JFileChooser.APPROVE_OPTION) {
+			        final File slimSetFile = chooser.getSelectedFile();
+
+                    TaskManager.executeTask(new Task() {
+
+                        private TaskMonitor taskMonitor=null;
+
+                        public String getTitle() {
+					        return "Importing slim set obo file and building slim set";
+				        }
+
+				        public void halt() {
+
+				        }
+
+				        public void run() {
+					        try {
+						        Collection<String> goTermIds = readOBOFile(slimSetFile);
+						        buildSlimSet(goTermIds);
+                            } catch (FileNotFoundException e) {
+						        JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Failed to import slim set;  Could not find specified file","Error",JOptionPane.ERROR_MESSAGE);
+						        return;
+					        } catch (IOException e) {
+						        JOptionPane.showMessageDialog(Cytoscape.getDesktop(), "Failed to import slim Set;  Error while reading file","Error",JOptionPane.ERROR_MESSAGE);
+						        e.printStackTrace();
+						        return;
+					        }
+                            catch (RuntimeException e) {
+                                taskMonitor.setException(e, e.getMessage());
+                                return;
+                            }
+
+                        }
+
+				        public void setTaskMonitor(TaskMonitor taskMonitor) throws IllegalThreadStateException {
+					        this.taskMonitor = taskMonitor;
+
+				        }
+
+			        }, null);
+
+
+
+                }
+            }
+
+            else { // one of the export options
 
                 int retval = chooser.showSaveDialog(this);
 			    if (retval == JFileChooser.APPROVE_OPTION) {
@@ -290,9 +414,51 @@ public class FileExportPanel extends JPanel implements ActionListener {
 					    	JOptionPane.showMessageDialog(this, "Failed to create file listing selected Slim Set terms ","Error",JOptionPane.ERROR_MESSAGE);
 					    }
                     }
+                    else if (src == exportSlimSetOBOFileButton) {
+                        if (exportFile.exists()) {
+					    	if (!exportFile.delete()) {
+						    	JOptionPane.showMessageDialog(this, "Failed to overwrite selected export file '" + exportFile.getName() + "'.");
+						    }
+					    }
+					    Map<String, Map<String, Set<String>>> ontRelationshipRemap = new HashMap<String, Map<String, Set<String>>>();
+					    for(GOSlimmerController controller: controllers) {
+
+                            try {
+							    try {
+                                    // this will throw an exception if the root node is not selected
+                                    ontRelationshipRemap.putAll(GOSlimmerUtil.createOBORemapReliationships(controller));
+                                    
+                                } catch (RootNodeNotSelectedException e) {
+								    //TODO
+								    int rv = JOptionPane.showConfirmDialog(this, "Root node of GO namespace " + controller.getNamespace().getName() + " must be included in slim set for export.  Include root node and continue?", "Warning:  root term not selected", JOptionPane.YES_NO_OPTION);//, arg1)Dialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+								    if (rv == JOptionPane.YES_OPTION) {
+								    	//add the root node to the slimset and try the remapping again
+								    	controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
+                                        ontRelationshipRemap.putAll(GOSlimmerUtil.createOBORemapReliationships(controller));
+								    }
+								    else {
+									    JOptionPane.showMessageDialog(this, "File export has been aborted");
+									    break;
+								    }
+							    }
+
+						    } catch (GOSlimmerException e) {
+							    JOptionPane.showMessageDialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+							    return;
+						    }
+
+					    }
+					    try {
+                            createRemappedOntologyFile(exportFile, ontRelationshipRemap);
+					    } catch (IOException e) {
+						    JOptionPane.showMessageDialog(this,"Failed to create remapped OBO ontology file due to IO Error: "+ e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
+						    return;
+					    }
+                    }
                 }
 			}
-		}
+
+        }
 		
 	}
 
@@ -332,7 +498,6 @@ public class FileExportPanel extends JPanel implements ActionListener {
         }
         return GOIds;
     }
-
 
     /**
      * Parses a line of the slim set list file.  Line is expected to be a tab delimited line, with the first field containing the GO term ID.  Trailing whitespace is allowed.
@@ -378,6 +543,213 @@ public class FileExportPanel extends JPanel implements ActionListener {
              JOptionPane.showMessageDialog(this, "The following GO ids were invalid: " + lsep + remainingGOIds.toString(), "Invalid GO term Ids", JOptionPane.WARNING_MESSAGE);
              System.out.println("the following GO ids were invalid:" + remainingGOIds.toString());
         }
-
     }
+
+    /**
+     * Parse the slim set obo file imported by the user
+     *
+     * @param slimSetFile the .obo file specified by the user which contains the slim set
+     * @return a collection of GO term IDs parsed from the file
+     * @throws IOException
+     */
+    private Collection<String> readOBOFile(File slimSetFile) throws IOException {
+
+        Collection<String> GOIds = new HashSet<String>();
+        BufferedReader bufRd = new BufferedReader(new FileReader(slimSetFile));
+
+        String line;
+
+		while ((line = bufRd.readLine()) != null) {
+			// Read header
+			if (line.startsWith(TERM_TAG)) {
+				String goId = readEntry(bufRd);
+                if (goId != null) {
+                    GOIds.add(goId);
+                    System.out.println("goId: " + goId);
+                }
+			}
+		}
+
+		try {
+            bufRd.close();
+
+		}
+        catch (IOException ioe) {
+		}
+        finally {
+			bufRd = null;
+		}
+
+        return GOIds;
+    }
+
+
+
+
+
+
+	/**
+	 * Read one Ontology Term
+	 *
+	 * @param rd
+	 * @throws IOException
+     * @return id of this ontology entry
+     */
+
+	private String readEntry(final BufferedReader rd) throws IOException {
+		String id = "";
+		String line = null;
+
+		while (true) {
+			line = rd.readLine().trim();
+
+			if (line.length() == 0)
+				break;
+
+			final int colonInx = line.indexOf(':');
+			final String key = line.substring(0, colonInx).trim();
+			final String val = line.substring(colonInx + 1).trim();
+			Node source = null;
+
+			if (key.equals(ID.toString())) {
+				// There's only one id.
+				return val;
+			}
+
+		}
+        return null;
+    }
+
+    /**Create a modified version of the imported ontology file containing only those GO terms in the slim set
+	 * @param remapFile the file to write the remapped annotation data to
+	 * @param ontRelationshipRemap the map of selected GO term ids to a map of their selected parents and corresponding relationships
+     * @throws IOException
+	 */
+	private void createRemappedOntologyFile(File remapFile,Map<String, Map<String, Set<String>>> ontRelationshipRemap) throws IOException {
+		BufferedWriter w = new BufferedWriter(new FileWriter(remapFile));
+
+        GOOBOWriter oboWriter = new GOOBOWriter(w);
+
+        // get header information from advanced OBO options
+        String user = OBOSettingsPanel.getUserName();
+        String subsetdefCode = OBOSettingsPanel.getSubsetdefCode();
+        String subsetdefDefinition = OBOSettingsPanel.getSubsetdefDefinition();
+        String subsetdefName = OBOSettingsPanel.getSubsetdefName();
+
+        // Create and write header
+        GOOBOHeader header = new GOOBOHeader("1.2");
+        header.setDate(new Date());
+        header.setAuto_generated_by("GO Slimmer Version 1.0");
+        header.setSaved_by(user);
+        header.addSubsetdef(subsetdefCode + " \"" + subsetdefDefinition + "\"");
+        header.setSynonymtypedef("systematic_synonym \"Systematic synonym\" EXACT");
+        header.setDefault_namespace("gene_ontology");
+        header.addRemark("GO_slim_name: " + subsetdefName);
+        header.addRemark("GO_slim_author: " + user);
+
+        oboWriter.writeHeader(header);
+
+        // Write the entries for the selected nodes
+
+        // get list of selected nodes
+        Set<Node> slimSetNodes = new HashSet<Node>();
+        for (GOSlimmerController controller:controllers) {
+            slimSetNodes.addAll(controller.getStatBean().getSlimGoNodes());
+        }
+
+        for (Node slimSetNode: slimSetNodes) {
+
+            // get String attributes
+            String id = slimSetNode.getIdentifier();
+            String termName = nodeAtt.getStringAttribute(id, "ontology." + NAME.toString());
+            String termNamespace = nodeAtt.getStringAttribute(id, "ontology." + NAMESPACE.toString());
+
+            String termDef = nodeAtt.getStringAttribute(id, "ontology." + DEF.toString());
+            String termComment = nodeAtt.getStringAttribute(id, "ontology." + COMMENT.toString());
+
+
+            // get attributes that may be lists
+            List<String> termDefOri = new ArrayList<String>();
+            if (nodeAtt.getType("ontology." + DEF_ORIGIN.toString()) == CyAttributes.TYPE_SIMPLE_LIST) {
+                termDefOri.addAll(nodeAtt.getListAttribute(id, "ontology." + DEF_ORIGIN.toString()));
+            }
+            else {
+                termDefOri.add(nodeAtt.getStringAttribute(id, "ontology." + DEF_ORIGIN.toString()));
+            }
+
+            List<String> termAltIds = new ArrayList<String>();
+            if (nodeAtt.getType("ontology." + ALT_ID.toString()) == CyAttributes.TYPE_SIMPLE_LIST) {
+                termAltIds.addAll(nodeAtt.getListAttribute(id, "ontology." + ALT_ID.toString()));
+            }
+            else {
+                termAltIds.add(nodeAtt.getStringAttribute(id, "ontology." + ALT_ID.toString()));
+            }
+
+            List<String> termSubsets = new ArrayList<String>();
+            if (nodeAtt.getType("ontology." + SUBSET.toString()) == CyAttributes.TYPE_SIMPLE_LIST) {
+                termSubsets.addAll(nodeAtt.getListAttribute(id, "ontology." + SUBSET.toString()));
+            }
+            else {
+                termSubsets.add(nodeAtt.getStringAttribute(id, "ontology." + SUBSET.toString()));
+            }
+            termSubsets.add(subsetdefCode);
+
+            List<String> termXRefs = new ArrayList<String>();
+            if (nodeAtt.getType("ontology." + XREF.toString()) == CyAttributes.TYPE_SIMPLE_LIST) {
+                termXRefs.addAll(nodeAtt.getListAttribute(id, "ontology." + XREF.toString()));
+            }
+            else {
+                termXRefs.add(nodeAtt.getStringAttribute(id, "ontology." + XREF.toString()));
+            }
+
+            List<String> termDisjoint = new ArrayList<String>();
+            if (nodeAtt.getType("ontology.disjoint_from") == CyAttributes.TYPE_SIMPLE_LIST) {
+                termDisjoint.addAll(nodeAtt.getListAttribute(id, "ontology.disjoint_from"));
+            }
+            else {
+                termDisjoint.add(nodeAtt.getStringAttribute(id, "ontology.disjoint_from"));
+            }
+
+            // get map attribute
+            List<String> termSynonyms = new ArrayList<String>();
+
+            if (nodeAtt.getType("ontology." + SYNONYM.toString()) == CyAttributes.TYPE_SIMPLE_MAP) {
+                Map <String,Object> synonyms = nodeAtt.getMapAttribute(id, "ontology." + SYNONYM.toString());
+                for (String key:synonyms.keySet()) {
+                    termSynonyms.add("\"" + key + "\" " + synonyms.get(key).toString());
+                }
+            }
+
+            GOTermEntry goTerm = new GOTermEntry(id, termName, termNamespace, termAltIds, termDef, termDefOri, termComment, termSubsets, termSynonyms, termXRefs, termDisjoint, null, null);
+
+            // get the remapped parent relationships for this term
+            if (ontRelationshipRemap.containsKey(id)) {
+                // get map of parents and relationships
+                Map<String, Set<String>> parentRelationshipMap = ontRelationshipRemap.get(id);
+
+                for (String parent : parentRelationshipMap.keySet()) {
+                    Set<String> relationships = parentRelationshipMap.get(parent);
+                    for (String relationship : relationships) {
+                        if (relationship.equals("is_a")) {
+                            goTerm.addIs_a(parent);
+                        } else {
+                            goTerm.addRelationship(relationship + " " + parent);
+                        }
+                    }
+                }
+
+            }
+
+
+
+
+            // write this go term information to the OBO file
+            try {
+                oboWriter.writeGOTermEntry(goTerm);
+            }
+            catch (OBOFormatException e) {
+            }
+        }
+		w.close();
+	}
 }
