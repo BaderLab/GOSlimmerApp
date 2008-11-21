@@ -567,7 +567,6 @@ public class FileExportPanel extends JPanel implements ActionListener {
 				String goId = readEntry(bufRd);
                 if (goId != null) {
                     GOIds.add(goId);
-                    System.out.println("goId: " + goId);
                 }
 			}
 		}
