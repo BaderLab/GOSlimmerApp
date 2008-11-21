@@ -366,8 +366,9 @@ public class FileExportPanel extends JPanel implements ActionListener {
 								    int rv = JOptionPane.showConfirmDialog(this, "Root node of GO namespace " + controller.getNamespace().getName() + " must be included in slim set for export.  Include root node and continue?", "Warning:  root term not selected", JOptionPane.YES_NO_OPTION);//, arg1)Dialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 								    if (rv == JOptionPane.YES_OPTION) {
 								    	//add the root node to the slimset and try the remapping again
-								    	controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
-									    goTermRemap.putAll(GOSlimmerUtil.createGoTermMultipleRemap(controller.getNetwork()));
+								    	//controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
+                                        controller.addNodeToSlimSet(controller.getRootNode());
+                                        goTermRemap.putAll(GOSlimmerUtil.createGoTermMultipleRemap(controller.getNetwork()));
 								    }
 								    else {
 									    JOptionPane.showMessageDialog(this, "File export has been aborted");
@@ -433,7 +434,8 @@ public class FileExportPanel extends JPanel implements ActionListener {
 								    int rv = JOptionPane.showConfirmDialog(this, "Root node of GO namespace " + controller.getNamespace().getName() + " must be included in slim set for export.  Include root node and continue?", "Warning:  root term not selected", JOptionPane.YES_NO_OPTION);//, arg1)Dialog(this,"Failed to remap terms due to exception: " + e.getMessage(),"Error",JOptionPane.ERROR_MESSAGE);
 								    if (rv == JOptionPane.YES_OPTION) {
 								    	//add the root node to the slimset and try the remapping again
-								    	controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
+                                        //controller.addNodeToSlimSet(GOSlimmerUtil.getRootNode(controller.getNetwork()));
+								    	controller.addNodeToSlimSet(controller.getRootNode());
                                         ontRelationshipRemap.putAll(GOSlimmerUtil.createOBORemapReliationships(controller));
 								    }
 								    else {

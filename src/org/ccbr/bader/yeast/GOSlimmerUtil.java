@@ -540,7 +540,8 @@ public class GOSlimmerUtil {
 
         CyNetwork godag = controller.getNetwork();
 
-        Node rootNode = GOSlimmerUtil.getRootNode(godag);
+        //Node rootNode = GOSlimmerUtil.getRootNode(godag);
+        Node rootNode = controller.getRootNode();
 
         if (!isSelected(rootNode)) {
             throw new RootNodeNotSelectedException("Cannot remap because root node is not selected; some annotations would be lost.");

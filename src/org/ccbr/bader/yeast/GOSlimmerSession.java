@@ -207,8 +207,9 @@ public class GOSlimmerSession {
 		//HierarchicalLayoutListener hll = new HierarchicalLayoutListener();
 		//For starters, show only the first few levels of the heirarchy
 		for(GOSlimmerController controller:namespaceToController.values()) {
-			Node rootNode  = GOSlimmerUtil.getRootNode(controller.getNetwork());
-			//collapse the root node; TODO revise to do in a more efficient manner (e.g.
+			//Node rootNode  = GOSlimmerUtil.getRootNode(controller.getNetwork());
+            Node rootNode = controller.getRootNode();
+            //collapse the root node; TODO revise to do in a more efficient manner (e.g.
 			
 			//controller.collapseNode(rootNode);
 			//Collection<Node> expandedNodes = controller.expandNodeToDepthAndReturnDAGNodes(rootNode,2);

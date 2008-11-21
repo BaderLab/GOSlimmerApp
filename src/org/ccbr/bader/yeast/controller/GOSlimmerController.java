@@ -115,6 +115,8 @@ public class GOSlimmerController  {
 	 */
 	private GOSlimmerSession session;
 
+    private Node rootNode;
+
     private static final String lsep = System.getProperty("line.separator");
 
     /**Creates a new controller for the specified network, as part of the specified session
@@ -133,6 +135,8 @@ public class GOSlimmerController  {
         visibleNodes = new HashSet<Node>();
         visibleEdges = new HashSet<Integer>();
         prunedNodes = new HashSet<Node>();
+
+        rootNode = GOSlimmerUtil.getRootNode(this.network);
     }
 
 //	public GOSlimmerController(CyNetwork network, CyNetworkView networkView, GOSlimmerCoverageStatBean statBean, JLabel viewStatLabel) {
@@ -604,6 +608,9 @@ public class GOSlimmerController  {
         this.selectedGOTermsPanel = selectedGOTermsPanel;
     }
 
+    public Node getRootNode() {
+        return rootNode;
+    }
     
     /**
 	 * Removes the coverage attributes from the nodes within this network, if they are defined.  Useful when one wants 
@@ -885,7 +892,8 @@ public class GOSlimmerController  {
 		attachInferredAnnotatedUserGenesToTerms(userGeneSet);
 		//determine the number of genes which were successfully matched, and which ones failed to be matched
 		Collection<String> matchedIds = new HashSet<String>();
-		matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(GOSlimmerUtil.getRootNode(network), true,true));
+        //matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(GOSlimmerUtil.getRootNode(network), true,true));
+        matchedIds.addAll(GOSlimmerUtil.getGenesCoveredByGoNode(getRootNode(), true,true));
 //		this.updateViewStatistics();
 
 //		difference(geneIds,matchedIds);
