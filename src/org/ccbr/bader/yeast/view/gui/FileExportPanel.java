@@ -67,6 +67,7 @@ import org.ccbr.bader.yeast.view.gui.misc.JButtonMod;
 import org.ccbr.bader.yeast.export.GOTermEntry;
 import org.ccbr.bader.yeast.export.GOOBOWriter;
 import org.ccbr.bader.yeast.export.GOOBOHeader;
+import org.ccbr.bader.yeast.export.GOOBOTypeDef;
 import org.ccbr.bader.yeast.export.OBOFormatException;
 
 import cytoscape.task.TaskMonitor;
@@ -658,6 +659,8 @@ public class FileExportPanel extends JPanel implements ActionListener {
             slimSetNodes.addAll(controller.getStatBean().getSlimGoNodes());
         }
 
+        Set<String> relationshipTypes = new HashSet<String>();
+
         for (Node slimSetNode: slimSetNodes) {
 
             // get String attributes
@@ -735,6 +738,7 @@ public class FileExportPanel extends JPanel implements ActionListener {
                             goTerm.addIs_a(parent);
                         } else {
                             goTerm.addRelationship(relationship + " " + parent);
+                            relationshipTypes.add(relationship);
                         }
                     }
                 }
@@ -751,6 +755,16 @@ public class FileExportPanel extends JPanel implements ActionListener {
             catch (OBOFormatException e) {
             }
         }
-		w.close();
+
+        // Create and write typedef stanza for 'part_of' relationship (if it exists)
+        if (relationshipTypes.contains("part_of")) {
+            GOOBOTypeDef typedef = new GOOBOTypeDef("part_of", "part_of");
+            typedef.addXref("OBO_REL:part_of");
+            typedef.setIsTransitive(true);
+
+            oboWriter.writeTypeDef(typedef);
+        }
+ 
+        w.close();
 	}
 }

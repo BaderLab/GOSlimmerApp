@@ -150,6 +150,32 @@ public class GOOBOWriter {
 	}
 
     /*
+     * Method to write a typedef to the specified writer
+     * @param typedef the typedef to be written to the file
+     * @throws IOException
+     */
+    public void writeTypeDef(GOOBOTypeDef typedef) throws IOException {
+
+        // get typedef information
+        String id = typedef.getId();
+        String name = typedef.getName();
+        List<String> xref = typedef.getXref();
+        Boolean isTransitive = typedef.getIsTransitive();
+
+        String isTransitiveStr = "";
+        if (isTransitive != null) {
+            isTransitiveStr = isTransitive.toString();
+        }
+
+        // write typedef information
+        w.write(lsep + "[Typedef]" + lsep);
+        writeTag("id", id);
+        writeTag("name", name);
+        writeTag("xref", xref);
+        writeTag("is_transitive", isTransitiveStr);
+}
+
+    /*
      * Method to write tag information
      * @param tagName Name of the tag to be written
      * @param tagValue Value of the tag to be written
