@@ -87,14 +87,17 @@ public class GOSlimmerSession {
 	//The Subgraphs of the GO Network representing each of the three sub ontologies of the GO DAG
 	private CyNetwork molFunSubGraph = null;
 	private CyNetwork bioProSubGraph = null; 
-	private CyNetwork celComSubGraph = null; 
-	
+	private CyNetwork celComSubGraph = null;
+
 	//TODO migrate this info to the GONamespace enum
 	private final String bio_pro_name = "biological_process";
 	private final String mol_fun_name = "molecular_function";
 	private final String cel_com_name = "cellular_component";
-	
-	private GOSlimmerController molFunController = null;
+
+    private final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
+    private final CyAttributes edgeAtt = Cytoscape.getEdgeAttributes();
+
+    private GOSlimmerController molFunController = null;
 	private GOSlimmerController bioProController = null;
 	private GOSlimmerController celComController = null;
 	
@@ -144,8 +147,6 @@ public class GOSlimmerSession {
 		//Set<String> ontologyNames = Cytoscape.getOntologyServer().getOntologyNames();
 //		Cytoscape.getOntologyServer().addOntology(onto);
 
-		CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-		
 		int associatedGeneCount = 0;
 
 		//create the subgraphs
@@ -235,10 +236,8 @@ public class GOSlimmerSession {
 		}
 		
 	}
-	
-	private final CyAttributes nodeAtt = Cytoscape.getNodeAttributes();
-	
-	private List<CyNetwork> createOntologyNamespaceSubGraphs(CyNetwork network) {
+
+    private List<CyNetwork> createOntologyNamespaceSubGraphs(CyNetwork network) {
 		
 		Set<Node> molFunNodes = new HashSet<Node>();
 		Set<Edge> molFunEdges = new HashSet<Edge>();
@@ -269,14 +268,63 @@ public class GOSlimmerSession {
 			}
 		}
 
+        // find root nodes
+
+        // find Biological Process root node
+        Iterator bpNodeI = bioProNodes.iterator();
+        Node bioProRootNode = (Node) bpNodeI.next();
+
+        int[] bpAncestorEdges = network.getAdjacentEdgeIndicesArray(bioProRootNode.getRootGraphIndex(), false, false, true);
+		while (bpAncestorEdges!=null && bpAncestorEdges.length>0) {
+			//get the parent node
+			bioProRootNode = network.getNode(network.getEdgeTargetIndex(bpAncestorEdges[0]));
+			bpAncestorEdges = network.getAdjacentEdgeIndicesArray(bioProRootNode.getRootGraphIndex(), false, false, true);
+		}
+
+        // find Molecular Function root node
+        Iterator mfNodeI = molFunNodes.iterator();
+        Node molFunRootNode = (Node) mfNodeI.next();
+
+        int[] mfAncestorEdges = network.getAdjacentEdgeIndicesArray(molFunRootNode.getRootGraphIndex(), false, false, true);
+		while (mfAncestorEdges!=null && mfAncestorEdges.length>0) {
+			//get the parent node
+			molFunRootNode = network.getNode(network.getEdgeTargetIndex(mfAncestorEdges[0]));
+			mfAncestorEdges = network.getAdjacentEdgeIndicesArray(molFunRootNode.getRootGraphIndex(), false, false, true);
+		}
+
+        // find Cellular Component root node
+        Iterator ccNodeI = celComNodes.iterator();
+        Node celComRootNode = (Node) ccNodeI.next();
+
+        int[] ccAncestorEdges = network.getAdjacentEdgeIndicesArray(celComRootNode.getRootGraphIndex(), false, false, true);
+		while (ccAncestorEdges!=null && ccAncestorEdges.length>0) {
+			//get the parent node
+			celComRootNode = network.getNode(network.getEdgeTargetIndex(ccAncestorEdges[0]));
+			ccAncestorEdges = network.getAdjacentEdgeIndicesArray(celComRootNode.getRootGraphIndex(), false, false, true);
+		}
+
+        // for each ontology, traverse the ontology starting at the root node, and add only those
+        // children (and the corresponding edges) corresponding to 'is_a' or 'part_of' relationships
+
+        Set<Node> bioProNodesFinal = new HashSet<Node>();
+        Set<Node> molFunNodesFinal = new HashSet<Node>();
+        Set<Node> celComNodesFinal = new HashSet<Node>();
+
+        buildSubNetwork(network, bioProRootNode, bioProNodesFinal, bioProEdges);
+        buildSubNetwork(network, molFunRootNode, molFunNodesFinal, molFunEdges);
+        buildSubNetwork(network, celComRootNode, celComNodesFinal, celComEdges);
+
+        // Remove old code that added all corresponding edges (regardless of interaction type)
+        /*
         bioProEdges.addAll(network.getConnectingEdges(new ArrayList(bioProNodes)));
         molFunEdges.addAll(network.getConnectingEdges(new ArrayList(molFunNodes)));
         celComEdges.addAll(network.getConnectingEdges(new ArrayList(celComNodes)));
+        */
 
         String networkTitle = network.getTitle();
-		CyNetwork molFunNetwork = Cytoscape.createNetwork(molFunNodes, molFunEdges, networkTitle + "_molecular_function", network, false);
-		CyNetwork bioProNetwork = Cytoscape.createNetwork(bioProNodes, bioProEdges, networkTitle + "_biological_process", network, false);
-		CyNetwork celComNetwork = Cytoscape.createNetwork(celComNodes, celComEdges, networkTitle + "_cellular_component", network, false);
+		CyNetwork molFunNetwork = Cytoscape.createNetwork(molFunNodesFinal, molFunEdges, networkTitle + "_molecular_function", network, false);
+		CyNetwork bioProNetwork = Cytoscape.createNetwork(bioProNodesFinal, bioProEdges, networkTitle + "_biological_process", network, false);
+		CyNetwork celComNetwork = Cytoscape.createNetwork(celComNodesFinal, celComEdges, networkTitle + "_cellular_component", network, false);
 		List<CyNetwork> subNetworks = new ArrayList<CyNetwork>();
 		subNetworks.add(molFunNetwork);
 		subNetworks.add(bioProNetwork);
@@ -288,8 +336,67 @@ public class GOSlimmerSession {
 		
 		return subNetworks;
 	}
-	
-	private NodeContextMenuListener getGOSlimmerNodeContextMenuListener(final GOSlimmerController controller) {
+
+    /*
+     * Helper method used to build the subnetworks for the 3 ontologies.
+     * Starting at the root node, the method iterates through the ontology, adding only
+     * those children (and the corresponding edges) that correspond to 'is_a' or 'part_of'
+     * relationships.
+     * When the method completes, the nodeSet and edgeSet contain those nodes and edges which
+     * belong to the network for the ontology.
+     * @param network complete ontology network
+     * @param rootNode root node for the ontology (subnetwork)
+     * @param nodeSet set of nodes to be included in the network for this ontology
+     * @param edgeSet set of edges to be included in the network for this ontology
+     */
+    private void buildSubNetwork(CyNetwork network, Node rootNode, Set<Node> nodeSet, Set<Edge> edgeSet) {
+        Set<Node> nodesToIterate = new HashSet<Node>();
+        Set<Node> nodesToIterateNextLevel = new HashSet<Node>();
+
+        nodeSet.add(rootNode);
+        nodesToIterate.add(rootNode);
+
+        while (!nodesToIterate.isEmpty()) {
+
+            for (Node node : nodesToIterate) {
+
+                // get incoming edges (from children nodes)
+                int[] incomingEdges = network.getAdjacentEdgeIndicesArray(node.getRootGraphIndex(), false, true, false);
+
+                // loop through each incoming edge to determine if it is an 'is_a' or 'part_of' relationship
+                // and if so, add the child node and the corresponding edge to the node and edge sets
+                // and recursively iterate to that child node
+
+                for (int incomingEdge : incomingEdges) {
+
+                    // get the edge object
+                    Edge inEdge = network.getEdge(incomingEdge);
+
+                    // get the interaction type
+                    String interactionType = edgeAtt.getStringAttribute(inEdge.getIdentifier(), "interaction");
+                    if (interactionType.equals("is_a") || interactionType.equals("part_of")) {
+
+                        // get the child node and add it to the node set
+                        Node childNode = inEdge.getSource();
+                        nodeSet.add(childNode);
+
+                        // add the edge to the edge set
+                        edgeSet.add(inEdge);
+
+                        // recursively iterate through the child node
+                        nodesToIterateNextLevel.add(childNode);
+
+                    }
+                }
+            }
+
+            nodesToIterate.clear();
+            nodesToIterate.addAll(nodesToIterateNextLevel);
+            nodesToIterateNextLevel.clear();
+        }
+    }
+
+    private NodeContextMenuListener getGOSlimmerNodeContextMenuListener(final GOSlimmerController controller) {
 		//final GOSlimmerController slimmerController = this.controller;
 		
 		//instead of adding the above graphviewchangeevent listener, could instead add to the node context menu
