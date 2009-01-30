@@ -159,7 +159,7 @@ public class GOSlimmerSession {
 		subNetworks.add(celComSubGraph);
 		
 
-			
+		/*
 
 		for (final CyNetwork subNetwork:subNetworks) {	
 			TaskManager.executeTask(new Task() {
@@ -193,14 +193,17 @@ public class GOSlimmerSession {
 
 			
 		}
+		*/
 		//Note, this must be done after the network views are created, since the controllers are associated with a particular view ; TODO eliminate this dependancy, view should be modifiable on it's own, though the hiding and unhiding of nodes should effect the model
 		//TODO continues from above:  view should need to know about the controller, but controller shouldn't need to know view enough to do detailed view manipulation;  implement view manipulation code in node context menu listener, and have it call the controller only when it needs to select/deselect nodes based on their being hidden or not
 		initializeControllersForSubGraphs();
-		
-		//initialize the nodecontextmenu's for each of the subgraphs views;  NOTE if a networkview does not yet exist for these graphs, then this fail without any warning or indication
+
+        /*
+        //initialize the nodecontextmenu's for each of the subgraphs views;  NOTE if a networkview does not yet exist for these graphs, then this fail without any warning or indication
 		Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(molFunController));
 		Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(bioProController));
 		Cytoscape.getNetworkView(celComSubGraph.getIdentifier()).addNodeContextMenuListener(getGOSlimmerNodeContextMenuListener(celComController));
+
 
 		
 		//perform some initialization of the subgraph views, so that the user isn't confronted with a hugh and covoluted network
@@ -234,8 +237,9 @@ public class GOSlimmerSession {
 			//zoom view to fit all content, and then update it.  Code inspired from cytoscape.actions.ZoomSelectedAction 
 			controller.getNetworkView().fitContent();
 			controller.getNetworkView().updateView();
+
 		}
-		
+		*/
 	}
 
     private List<CyNetwork> createOntologyNamespaceSubGraphs(CyNetwork network) {
@@ -397,7 +401,7 @@ public class GOSlimmerSession {
         }
     }
 
-    private NodeContextMenuListener getGOSlimmerNodeContextMenuListener(final GOSlimmerController controller) {
+    public NodeContextMenuListener getGOSlimmerNodeContextMenuListener(final GOSlimmerController controller) {
 		//final GOSlimmerController slimmerController = this.controller;
 		
 		//instead of adding the above graphviewchangeevent listener, could instead add to the node context menu
@@ -421,8 +425,16 @@ public class GOSlimmerSession {
                 String itemName = "Select";
                 Color itemColor;
 
-                int numAssociatedTermsStr = nodeAtt.getIntegerAttribute(node.getNode().getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
-                if (numAssociatedTermsStr == 0) {
+                // find out if there are any associated genes.  If 'include child nodes when calculating node size' is checked, then
+                // use both direct and indirect gene numbers.  Otherwise use only direct.
+
+                int numAssociatedTerms = nodeAtt.getIntegerAttribute(node.getNode().getIdentifier(), GOSlimmer.directlyAnnotatedGeneNumberAttributeName);
+
+                if (GOSlimmerGUIViewSettings.includeDescendantInferredCoveredGenesInNodeSizeCalculations == true) {
+                    numAssociatedTerms = numAssociatedTerms + nodeAtt.getIntegerAttribute(node.getNode().getIdentifier(), GOSlimmer.inferredAnnotatedGeneNumberAttributeName);
+                }
+
+                if (numAssociatedTerms == 0) {
                     itemName = itemName + " (No Associated Genes)";
                     itemColor = new Color(255,0,0);
                 }
@@ -454,9 +466,12 @@ public class GOSlimmerSession {
 //		celComController = new GOSlimmerController(celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),celComStatBean,goSlimPanel.getCelComCoverage());
 		
 		
-		molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
-		bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
-		celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+		//molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,Cytoscape.getNetworkView(molFunSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+		//bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,Cytoscape.getNetworkView(bioProSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+		//celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,Cytoscape.getNetworkView(celComSubGraph.getIdentifier()),new GOSlimmerCoverageStatBean(1,this),this);
+        molFunController = new GOSlimmerController(GONamespace.MolFun,molFunSubGraph,null,new GOSlimmerCoverageStatBean(1,this),this);
+        bioProController = new GOSlimmerController(GONamespace.BioPro,bioProSubGraph,null,new GOSlimmerCoverageStatBean(1,this),this);
+        celComController = new GOSlimmerController(GONamespace.CelCom,celComSubGraph,null,new GOSlimmerCoverageStatBean(1,this),this);
 		this.namespaceToController.put(GONamespace.BioPro, bioProController);
 		this.namespaceToController.put(GONamespace.CelCom, celComController);
 		this.namespaceToController.put(GONamespace.MolFun, molFunController);

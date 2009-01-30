@@ -55,7 +55,7 @@ public class GOSlimmerGUIViewSettings {
 	 * Setting which determines whether inferred gene coverage is factored into calculation of node size.  If false, only 
 	 * direct gene coverage by the node's GO term is used to calculate node size
 	 */
-	public static boolean includeDescendantInferredCoveredGenesInNodeSizeCalculations = false;
+	public static boolean includeDescendantInferredCoveredGenesInNodeSizeCalculations = true;
 	
 	/**
 	 * Setting which determines whether node size is calculated based on coverage by the GO term of the genes in the gene 
@@ -66,7 +66,7 @@ public class GOSlimmerGUIViewSettings {
     /**
      * Setting which determines whether GO term definition should be shown as a node tool tip.
      */
-    public static boolean showGODefinitionAsToolTip = false;
+    public static boolean showGODefinitionAsToolTip = true;
 
     /**
      * Setting which determines the width (characters) of the GO definition tool tip

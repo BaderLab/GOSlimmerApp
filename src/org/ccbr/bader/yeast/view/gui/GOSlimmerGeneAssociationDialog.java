@@ -33,6 +33,8 @@
  */
 package org.ccbr.bader.yeast.view.gui;
 
+import giny.model.Node;
+
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.ComponentOrientation;
@@ -86,6 +88,9 @@ import org.ccbr.bader.yeast.view.gui.misc.JCollapsablePanel;
 import org.ccbr.bader.yeast.view.gui.misc.JLabelMod;
 
 import cytoscape.Cytoscape;
+import cytoscape.CyNetwork;
+import cytoscape.visual.VisualStyle;
+import cytoscape.view.CyNetworkView;
 import cytoscape.bookmarks.Bookmarks;
 import cytoscape.bookmarks.DataSource;
 import cytoscape.task.Task;
@@ -448,7 +453,30 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 
 		
 		for(GONamespace ns: namespaceToController.keySet()) {
-			GOSlimmerController controller = namespaceToController.get(ns);
+
+            boolean firstTimeLoaded = false;
+
+            GOSlimmerController controller = namespaceToController.get(ns);
+            CyNetwork network = controller.getNetwork();
+
+            // check and see if controllers have a view already.  If not, then it is the first time this is called, and
+            // we should initialize the views and the node context menu
+            if (controller.getNetworkView()==null) {
+
+                firstTimeLoaded = true;
+
+                CyNetworkView subNetworkView = Cytoscape.createNetworkView(network);
+				VisualStyle vs = Cytoscape.getVisualMappingManager().setVisualStyle("GOSLIMMERVS");
+				subNetworkView.redrawGraph(false,false);
+					    //Cytoscape.getVisualMappingManager().setVisualStyle(vs);
+				subNetworkView.setVisualStyle("GOSLIMMERVS");
+                
+                controller.setNetworkView(Cytoscape.getNetworkView(network.getIdentifier()));
+
+                //initialize the nodecontextmenu's for each of the subgraphs views;  NOTE if a networkview does not yet exist for these graphs, then this fail without any warning or indication
+		        Cytoscape.getNetworkView(network.getIdentifier()).addNodeContextMenuListener(session.getGOSlimmerNodeContextMenuListener(controller));
+            }
+
 			Set<String> nsGeneIds = garu.getNamespaceGeneIds(ns);
 			//delete the coverage attributes;  TODO do this globally instead of locally
 			controller.removeCoverageAttributes();
@@ -461,7 +489,22 @@ public class GOSlimmerGeneAssociationDialog extends JPanel implements ActionList
 			controller.resetAndRecalculateStatisticsBean(nsGeneIds.size());
 			controller.getNetworkView().applyVizmapper(Cytoscape.getVisualMappingManager().getVisualStyle());
 			//TODO either unselect all nodes, or recalculate the statistics based on the new coverage attributes
-		}
+
+            // if first time loaded, then perform some initialization of the subgraph views, so that the user isn't confronted with a
+            // huge and convoluted network.
+            // For starters, show only the first few levels of the hierarchy.
+            if (firstTimeLoaded) {
+
+                Node rootNode = controller.getRootNode();
+                controller.showNode(rootNode);
+                controller.collapseNode(rootNode);
+			    controller.expandNodeToDepth(rootNode, 1, true);
+
+			    //zoom view to fit all content, and then update it.  Code inspired from cytoscape.actions.ZoomSelectedAction
+			    controller.getNetworkView().fitContent();
+			    controller.getNetworkView().updateView();
+            }
+        }
 		
 		//if a user gene set has been imported, reapply  it
 		if (session.isUserGeneSetImported()) {
